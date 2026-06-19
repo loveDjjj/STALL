@@ -82,8 +82,13 @@ def load_dinov3_model(device: str, repo_dir: str = None, weights: str = None):
         if repo_dir in sys.path:
             sys.path.remove(repo_dir)
     model = model.to(device).eval()
+    if device == "cuda" and torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
     transform = create_dinov3_transform()
-    print(f"DINOv3 model loaded on {device}")
+    if device == "cuda":
+        print(f"DINOv3 model loaded on {device} ({torch.cuda.device_count()} visible GPU(s))")
+    else:
+        print(f"DINOv3 model loaded on {device}")
     return model, transform
 
 
@@ -146,7 +151,12 @@ def load_video_frames(video_path, frame_indices=None):
     Returns:
         np.ndarray of shape [T, H, W, C] in BGR order.
     """
-    cap = cv2.VideoCapture(video_path)
+    # Some OpenCV builds mis-handle percent-encoded filenames with the default
+    # backend, while others refuse explicit FFMPEG capture-by-name. Try both.
+    cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
+    if not cap.isOpened():
+        cap.release()
+        cap = cv2.VideoCapture(video_path)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     if frame_indices is None:

@@ -304,16 +304,26 @@ def prefill_emb_cache(
         with ThreadPoolExecutor(max_workers=min(num_workers, len(chunk))) as executor:
             chunk_frames = list(executor.map(_decode, chunk))
 
+        # Drop videos that failed to yield any frames so one bad decode does not
+        # abort the whole extraction pass.
+        valid_items = [
+            (frames, job)
+            for frames, job in zip(chunk_frames, chunk)
+            if len(frames) > 0
+        ]
+        if not valid_items:
+            continue
+
         # Flatten all frames into one sequence, track per-video lengths.
-        lengths = [len(f) for f in chunk_frames]
-        flat_frames = [fr for vid in chunk_frames for fr in vid]
+        lengths = [len(frames) for frames, _ in valid_items]
+        flat_frames = [fr for frames, _ in valid_items for fr in frames]
 
         # Single GPU pass over all flattened frames.
         flat_embs = model._embed_flat_frames(flat_frames, batch_size)
 
         # Split embeddings back per video and save atomically.
         cursor = 0
-        for emb_len, (video_path, _, cache_path) in zip(lengths, chunk):
+        for emb_len, (_, (video_path, _, cache_path)) in zip(lengths, valid_items):
             emb = flat_embs[cursor : cursor + emb_len]
             cursor += emb_len
             cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -410,6 +420,8 @@ def load_csv_with_emb_cache(
         else:
             # Cache miss: extract embeddings for the downsampled frames
             frames = load_video_frames(video_path, downsample_idxs)
+            if len(frames) == 0:
+                continue
             full_emb = model.frames_to_embeddings([frames], batch_size=batch_size)[0]
             full_cache_path.parent.mkdir(parents=True, exist_ok=True)
             # Atomic write via temp file to avoid partial .pt files
