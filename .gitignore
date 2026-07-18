@@ -113,3 +113,12 @@ results/*
 !results/paper_sweeps/
 !results/paper_sweeps/**/*.csv
 !results/paper_sweeps/**/*.md
+!results/paper_sensitivity/
+!results/paper_sensitivity/**/*.csv
+!results/paper_sensitivity/**/*.md
+!results/paper_figures/
+!results/paper_figures/**/*.svg
+!results/paper_figures/**/*.png
+!results/journal_experiments/
+!results/journal_experiments/**/*.csv
+!results/journal_experiments/**/*.md

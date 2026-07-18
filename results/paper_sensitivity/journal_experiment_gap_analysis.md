@@ -1,0 +1,142 @@
+# 期刊版补充实验与可视化分析
+
+本报告基于现有 `results/paper_scores/` 和 `results/paper_sweeps/` 生成，
+不重新提取 DINOv3 特征，不使用测试批次 rank、生成器标签路由或真实/生成标签参与推理。
+
+## 已有基础消融是否足够
+
+当前基础版消融已经覆盖：
+
+- 三数据集 global-only、patch-only、Alpha-STALLED 组件消融；
+- ComGenVid 上 patch 空间、lag-1、multi-lag、motion-hard、motion-soft、同网格二阶时序消融；
+- 三数据集 global/patch 融合权重 alpha sweep。
+
+因此，不建议重复做同类基础消融。期刊版更应该补强以下证据：
+
+1. 超参数边界：alpha、patch 内部 beta、patch region、bottom-k、temporal run length；
+2. 稳定性：逐生成器增益/退化、跨数据集 best-alpha 漂移、随机采样置信区间；
+3. 失败模式：短视频覆盖缺口、patch 分支相对 global 的负迁移来源；
+4. 可解释可视化：分数分布、每生成器 delta heatmap、超参数曲线、代表性 patch anomaly map。
+
+## 本次新增的无重算特征分析
+
+### patch-only beta sweep
+
+| 数据集 | Best beta | Best AUC / AP | beta=0.10 AUC / AP |
+|---|---:|---:|---:|
+| ComGenVid | 0.10 | 0.9273 / 0.9309 | 0.9273 / 0.9309 |
+| VideoFeedback | 0.15 | 0.8231 / 0.8319 | 0.8228 / 0.8302 |
+| GenVideo | 0.25 | 0.8082 / 0.8138 | 0.8072 / 0.8092 |
+
+### fixed-alpha fusion beta sweep
+
+| 数据集 | Best beta | Best AUC / AP | beta=0.10 AUC / AP |
+|---|---:|---:|---:|
+| ComGenVid | 0.00 | 0.9205 / 0.9220 | 0.9198 / 0.9211 |
+| VideoFeedback | 0.10 | 0.8628 / 0.8750 | 0.8628 / 0.8750 |
+| GenVideo | 0.30 | 0.8396 / 0.8311 | 0.8374 / 0.8283 |
+
+## 逐生成器增益/退化结论
+
+下表列出 Alpha-STALLED 相对 global-only 的 AUC 变化范围。大于 0 表示融合提升，
+小于 0 表示 patch 分支对该生成器产生负迁移。
+
+| 数据集 | 最小 ΔAUC | 最大 ΔAUC | 平均 ΔAUC | 负迁移生成器数 |
+|---|---:|---:|---:|---:|
+| ComGenVid | +0.0638 | +0.0695 | +0.0666 | 0 |
+| VideoFeedback | -0.0749 | +0.0991 | +0.0153 | 3 |
+| GenVideo | +0.0078 | +0.1266 | +0.0413 | 0 |
+
+## Bootstrap 置信区间
+
+本次新增 `n_boot` 次逐生成器 bootstrap，分别对 global-only、patch-only 和
+Alpha-STALLED 的 AUC/AP 估计 95% CI；同时使用同一次重采样计算 paired ΔAUC/ΔAP CI。
+该分析不改变主指标，只用于判断提升是否稳定。
+
+| 数据集 | Alpha-STALLED AUC 95% CI 中位宽度 | Global-only AUC 95% CI 中位宽度 |
+|---|---:|---:|
+| ComGenVid | 0.0174 | 0.0244 |
+| VideoFeedback | 0.0185 | 0.0182 |
+| GenVideo | 0.0433 | 0.0487 |
+
+Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
+
+| 数据集 | ΔAUC 均值范围 | 95% CI 完全大于 0 的生成器数 | 95% CI 完全小于 0 的生成器数 |
+|---|---:|---:|---:|
+| ComGenVid | +0.0638 to +0.0692 | 2 | 0 |
+| VideoFeedback | -0.0709 to +0.0924 | 6 | 2 |
+| GenVideo | +0.0091 to +0.0839 | 5 | 0 |
+
+## 失败样本候选
+
+已生成 `failure_case_candidates.csv`，用于后续做代表性视频或 patch anomaly map。
+这些候选只用于事后审计，不参与模型推理。
+
+| 类别 | 样本数 | 用途 |
+|---|---:|---|
+| `generated_alpha_still_high` | 60 | Alpha-STALLED 仍最难识别的生成视频。 |
+| `generated_patch_global_conflict` | 60 | patch 分支显著高于 global，适合检查局部证据是否误导融合。 |
+| `generated_score_increased_by_alpha` | 60 | 生成视频被 Alpha-STALLED 打得更像真实，可能削弱检测。 |
+| `real_alpha_low` | 60 | Alpha-STALLED 最容易误伤的真实视频。 |
+| `real_score_decreased_by_alpha` | 60 | 真实视频被 Alpha-STALLED 打得更像生成，可能削弱真实召回。 |
+
+## 生成的图和表
+
+- `results/paper_sensitivity/beta_sensitivity_summary.csv`：beta 平均指标曲线；
+- `results/paper_sensitivity/beta_sensitivity_per_model.csv`：beta 逐生成器指标；
+- `results/paper_sensitivity/component_per_generator_delta.csv`：global、patch、Alpha-STALLED 逐生成器差值；
+- `results/paper_sensitivity/alpha_score_distribution_summary.csv`：Alpha-STALLED 分数分布统计；
+- `results/paper_sensitivity/journal_experiment_runbook.md`：后续实跑补充实验命令模板；
+- `results/paper_sensitivity/bootstrap_ci_summary.csv`：逐生成器 AUC/AP bootstrap 置信区间；
+- `results/paper_sensitivity/paired_bootstrap_delta_summary.csv`：方法差异的 paired bootstrap ΔAUC/ΔAP 置信区间；
+- `results/paper_sensitivity/failure_case_candidates.csv`：后续案例可视化和失败样本审计候选；
+- `results/paper_sensitivity/failure_case_candidates_summary.md`：失败/边界案例候选摘要；
+- `results/paper_figures/alpha_sensitivity_curves.svg`：alpha 敏感性曲线；
+- `results/paper_figures/beta_sensitivity_patch_only.svg`：patch-only beta 敏感性；
+- `results/paper_figures/beta_sensitivity_fused_alpha0p60.svg`：固定 alpha 下 beta 敏感性；
+- `results/paper_figures/per_generator_auc_delta_heatmap.svg`：逐生成器 AUC delta heatmap；
+- `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
+- `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间。
+
+## 已完成的实跑补充实验
+
+本轮完成了 ComGenVid / region=3 / bottom-k 敏感性实跑。该实验只改变
+patch 分支的低分局部证据聚合比例，用于说明主配置附近的超参数边界，
+不改变 release 默认配置。
+
+| 数据集 | region | bottom-k | 平均 AUC / AP | 状态 |
+|---|---:|---:|---:|---|
+| ComGenVid | 3 | 0.10 | 0.9245 / 0.9285 | journal_full_eval |
+| ComGenVid | 3 | 0.15 | 0.9262 / 0.9300 | journal_full_eval |
+| ComGenVid | 3 | 0.20 | 0.9273 / 0.9309 | journal_full_eval |
+| ComGenVid | 3 | 0.30 | 0.9292 / 0.9323 | journal_full_eval |
+| ComGenVid | 3 | 0.50 | 0.9312 / 0.9334 | journal_full_eval |
+
+当前完成点中，bottom-k=0.50 取得最高平均 AUC/AP。该趋势说明 ComGenVid
+上的 patch 分支并非只依赖极少数最低分局部片段；扩大低分区域聚合范围仍能
+保留检测收益。论文表述中应将其作为敏感性证据，而不是事后重选主配置。
+
+## 仍建议补充的实跑实验
+
+优先级 P0：
+
+1. **patch region size 敏感性**：region=1/2/3，在三个数据集上统一重算 patch params 与 patch score。当前配置在不同数据集使用不同 region，期刊审稿会追问是否调参过度。
+2. **aggregation 敏感性**：mean vs bottom-k mean，bottom-k ratio 建议 0.05/0.10/0.20/0.30/0.50。ComGenVid 已有较多迹象，但 VideoFeedback/GenVideo 需要对应证据。
+3. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
+
+优先级 P1：
+
+4. **duration/window 敏感性**：1s/2s/3s/4s，尤其解释 HotShot/MoonValley/Hotshot-XL 的短视频边界。
+5. **cross-dataset frozen hyperparameter**：用一个数据集选出的 alpha/beta/region，在其他数据集冻结评测，区分 oracle sweep 和可泛化配置。
+6. **runtime 和存储开销**：global-only、patch cache prefill、patch-only eval、fusion 的时间和 cache 规模。
+
+优先级 P2：
+
+7. **paired bootstrap 扩展到生成器平均指标**：当前已输出逐生成器 paired ΔAUC/ΔAP；如果手稿需要一个总体显著性结论，可进一步对生成器平均指标做 paired bootstrap。
+8. **失败样本人工审计**：从候选表检查是否来自低运动、短时长、压缩伪影或真实视频域偏移。
+
+## 图表规范
+
+本次图遵循期刊/Nature-leaning 的基础规范：优先 SVG 矢量图，PNG 作为预览；
+使用色盲友好配色；每个面板只回答一个问题；图题和轴标签直接说明变量含义；
+敏感性曲线明确标出冻结超参数位置，避免把 oracle sweep 误写成主方法选择协议。

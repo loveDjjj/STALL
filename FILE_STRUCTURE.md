@@ -69,6 +69,9 @@
 - `results/paper_scores/`：逐视频 score CSV，可复算主实验和消融指标。
 - `results/paper_tables/`：由 score CSV 计算出的 metrics、summary 和覆盖缺口。
 - `results/paper_sweeps/`：alpha sweep 输出。
+- `results/paper_sensitivity/`：期刊版补充敏感性、bootstrap CI 和逐生成器差值分析。
+- `results/paper_figures/`：由现有 CSV 派生的补充分析图，SVG 为主，PNG 为预览。
+- `results/journal_experiments/`：需要 patch cache 的期刊补充实跑实验轻量结果。
 - `results/alpha_stalled_project_manuscript_zh.md`：中文手稿和项目审计。
 - `results/alpha_stalled_full_pipeline_flow_zh.svg` 与
   `results/alpha_stalled_manuscript_tables/`：论文图表资产。

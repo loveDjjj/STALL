@@ -42,6 +42,9 @@ rank、真实/生成标签、生成器身份或来源路由。
 | `results/paper_scores/` | release 自包含逐视频分数 |
 | `results/paper_tables/` | 主实验、消融和覆盖缺口表 |
 | `results/paper_sweeps/` | alpha sweep 结果 |
+| `results/paper_sensitivity/` | 期刊版敏感性、bootstrap CI 和逐生成器差值分析 |
+| `results/paper_figures/` | 期刊版补充分析图 |
+| `results/journal_experiments/` | 需要 patch cache 的期刊补充实跑实验轻量结果 |
 | `research_archive/` | 非主线探索代码和历史脚本 |
 
 `results/` 已被精简，只保留论文/release 必需资产。历史调参、fallback、

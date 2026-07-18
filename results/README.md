@@ -70,6 +70,46 @@ persistence、source/rank selector、debug run 等结果已经删除或归档，
 best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 `configs/alpha_stalled.yaml` 中记录的冻结 alpha。
 
+## `paper_sensitivity/`
+
+基于现有逐视频分数生成的期刊版补充分析，不重新提取特征。
+
+| 文件 | 说明 |
+|---|---|
+| `journal_experiment_gap_analysis.md` | 期刊版实验缺口、已补充分析和后续实跑优先级 |
+| `journal_experiment_runbook.md` | 后续 region、aggregation、case visualization 等实跑实验命令模板 |
+| `beta_sensitivity_summary.csv` | patch 内部空间/时序权重 beta 的平均 AUC/AP 曲线 |
+| `beta_sensitivity_per_model.csv` | beta sweep 的逐生成器指标 |
+| `component_per_generator_delta.csv` | global、patch、Alpha-STALLED 逐生成器 AUC/AP 差值 |
+| `alpha_score_distribution_summary.csv` | Alpha-STALLED 分数分布统计 |
+| `bootstrap_ci_summary.csv` | 逐生成器 AUC/AP bootstrap 置信区间 |
+| `paired_bootstrap_delta_summary.csv` | 同一次重采样下的方法差异 ΔAUC/ΔAP 置信区间 |
+| `failure_case_candidates.csv` | 后续人工审计和 patch anomaly map 可视化的候选样本 |
+| `failure_case_candidates_summary.md` | 候选样本的可读摘要和案例图选择建议 |
+
+## `paper_figures/`
+
+由现有 CSV 派生的期刊版补充图表，默认同时保存 SVG 和 PNG：
+
+| 文件 | 说明 |
+|---|---|
+| `alpha_sensitivity_curves.*` | 三数据集 alpha 敏感性曲线 |
+| `beta_sensitivity_patch_only.*` | patch-only beta 敏感性曲线 |
+| `beta_sensitivity_fused_alpha0p60.*` | 固定 alpha=0.60 下 beta 敏感性曲线 |
+| `per_generator_auc_delta_heatmap.*` | 逐生成器 AUC 增益/退化 heatmap |
+| `alpha_score_distribution_panel.*` | 真实/生成 Alpha-STALLED 分数分布 |
+| `bootstrap_alpha_minus_global_auc_ci.*` | Alpha-STALLED 相对 global-only 的 AUC 增益及 paired bootstrap 区间 |
+
+## `journal_experiments/`
+
+需要全量 patch cache 的期刊补充实跑实验。当前只保留轻量 CSV/Markdown 结果，
+不提交 patch cache 或临时校准参数。
+
+| 路径 | 说明 |
+|---|---|
+| `bottomk_sensitivity/` | bottom-k 超参数敏感性实跑结果 |
+| `bottomk_sensitivity/bottomk_sensitivity_summary.md` | 已完成 bottom-k 点的可读汇总 |
+
 ## `alpha_stalled_manuscript_tables/`
 
 论文表格的 SVG/PNG 渲染资产：
