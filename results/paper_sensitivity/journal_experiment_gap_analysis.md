@@ -97,7 +97,8 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/per_generator_auc_delta_heatmap.svg`：逐生成器 AUC delta heatmap；
 - `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
 - `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间；
-- `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线。
+- `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线；
+- `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线。
 
 ## 已完成的实跑补充实验
 
@@ -121,11 +122,25 @@ patch 分支的低分局部证据聚合比例，用于说明主配置附近的�
 扩大低分区域聚合范围仍能保留检测收益。论文表述中应将其作为敏感性证据，
 而不是事后重选主配置。
 
+本轮还完成了 GenVideo / mean aggregation / same-grid second-order 的
+region size 敏感性实跑：
+
+| 数据集 | region | aggregation | 平均 AUC / AP | 状态 |
+|---|---:|---|---:|---|
+| GenVideo | 1 | mean | 0.7976 / 0.7985 | journal_full_eval |
+| GenVideo | 2 | mean | 0.8072 / 0.8092 | journal_full_eval |
+| GenVideo | 3 | mean | 0.7893 / 0.7909 | journal_full_eval |
+
+当前结果支持 GenVideo 主线使用 region=2：相对 region=1，平均 AUC 提升
++0.0097；相对 region=3，平均 AUC 提升 +0.0179。该曲线说明过大的局部邻域
+会稀释二阶时序差异，而过小邻域又可能缺少足够空间上下文。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
 
-1. **patch region size 敏感性**：region=1/2/3，在三个数据集上统一重算 patch params 与 patch score。当前配置在不同数据集使用不同 region，期刊审稿会追问是否调参过度。
+1. **patch region size 敏感性**：GenVideo 已完成 region=1/2/3，并支持
+   主线 region=2；ComGenVid 和 VideoFeedback 仍建议补齐同类证据。
 2. **aggregation 敏感性**：mean vs bottom-k mean。ComGenVid 已完成
    bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
    VideoFeedback/GenVideo 仍需要对应证据。

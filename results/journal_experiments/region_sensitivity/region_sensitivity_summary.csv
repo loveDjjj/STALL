@@ -1,0 +1,4 @@
+dataset,patch_region_size,aggregation,metrics_csv,avg_auc,avg_ap
+genvideo,1,mean,results/journal_experiments/region_sensitivity/genvideo_region1_mean_metrics.csv,0.7975701015728696,0.7984642939073815
+genvideo,2,mean,results/journal_experiments/region_sensitivity/genvideo_region2_mean_metrics.csv,0.8072406946288327,0.8092277800772452
+genvideo,3,mean,results/journal_experiments/region_sensitivity/genvideo_region3_mean_metrics.csv,0.789333951510667,0.7909270673078435

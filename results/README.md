@@ -100,6 +100,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `alpha_score_distribution_panel.*` | 真实/生成 Alpha-STALLED 分数分布 |
 | `bootstrap_alpha_minus_global_auc_ci.*` | Alpha-STALLED 相对 global-only 的 AUC 增益及 paired bootstrap 区间 |
 | `comgenvid_bottomk_sensitivity.*` | ComGenVid bottom-k 聚合比例敏感性曲线 |
+| `genvideo_region_sensitivity.*` | GenVideo patch region size 敏感性曲线 |
 
 ## `journal_experiments/`
 
@@ -110,6 +111,8 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 |---|---|
 | `bottomk_sensitivity/` | bottom-k 超参数敏感性实跑结果 |
 | `bottomk_sensitivity/bottomk_sensitivity_summary.md` | 已完成 bottom-k 点的可读汇总 |
+| `region_sensitivity/` | patch region size 敏感性实跑结果 |
+| `region_sensitivity/region_sensitivity_summary.md` | 已完成 region 点的可读汇总 |
 
 ## `alpha_stalled_manuscript_tables/`
 

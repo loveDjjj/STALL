@@ -10,10 +10,12 @@
 - 基于现有 CSV 的 beta sweep、逐生成器 delta heatmap、分数分布、bootstrap CI、paired ΔAUC/ΔAP CI、失败样本候选。
 - ComGenVid / region=3 / bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50
   的全量 patch eval 和敏感性曲线。
+- GenVideo / same-grid second-order / mean aggregation 的 region=1/2/3
+  全量 patch eval 和敏感性曲线，当前 region=2 最优，支持主线 region 选择。
 
 ## P0：patch region size 敏感性
 
-为什么要做：当前主线配置对不同数据集使用不同 patch region size。期刊审稿可能质疑是否存在数据集特异调参。需要至少证明 region=1/2/3 的趋势，而不是只报告最终配置。
+为什么要做：当前主线配置对不同数据集使用不同 patch region size。期刊审稿可能质疑是否存在数据集特异调参。GenVideo 已完成 region=1/2/3，并支持主线 region=2；ComGenVid 与 VideoFeedback 仍建议补齐同类证据。
 
 建议网格：
 
@@ -171,7 +173,7 @@ duration ∈ {1, 2, 3, 4}
 
 ## 推荐执行顺序
 
-1. 先跑 region size 敏感性。
+1. 先补齐 ComGenVid 和 VideoFeedback 的 region size 敏感性（GenVideo 已完成）。
 2. 再跑 aggregation/bottom-k 敏感性。
 3. 同时从 failure candidates 选 4-6 个案例，做 patch anomaly map。
 4. 最后根据版面决定是否补 duration 和 runtime。
