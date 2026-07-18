@@ -99,6 +99,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `per_generator_auc_delta_heatmap.*` | 逐生成器 AUC 增益/退化 heatmap |
 | `alpha_score_distribution_panel.*` | 真实/生成 Alpha-STALLED 分数分布 |
 | `bootstrap_alpha_minus_global_auc_ci.*` | Alpha-STALLED 相对 global-only 的 AUC 增益及 paired bootstrap 区间 |
+| `comgenvid_bottomk_sensitivity.*` | ComGenVid bottom-k 聚合比例敏感性曲线 |
 
 ## `journal_experiments/`
 

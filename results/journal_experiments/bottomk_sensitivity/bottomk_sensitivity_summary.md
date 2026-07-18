@@ -7,7 +7,10 @@
 | comgenvid | 3 | bottomk_mean | 0.10 | 0.9245 | 0.9285 | journal_full_eval |
 | comgenvid | 3 | bottomk_mean | 0.15 | 0.9262 | 0.9300 | journal_full_eval |
 | comgenvid | 3 | bottomk_mean | 0.20 | 0.9273 | 0.9309 | journal_full_eval |
+| comgenvid | 3 | bottomk_mean | 0.25 | 0.9282 | 0.9316 | journal_full_eval |
 | comgenvid | 3 | bottomk_mean | 0.30 | 0.9292 | 0.9323 | journal_full_eval |
+| comgenvid | 3 | bottomk_mean | 0.35 | 0.9298 | 0.9327 | journal_full_eval |
+| comgenvid | 3 | bottomk_mean | 0.40 | 0.9304 | 0.9330 | journal_full_eval |
 | comgenvid | 3 | bottomk_mean | 0.50 | 0.9312 | 0.9334 | journal_full_eval |
 
 初步结论：ComGenVid region=3 下，当前已完成 bottom-k 点中，AUC 最优为 bottomk=0.50 (0.9312)，AP 最优为 bottomk=0.50 (0.9334)。该结果用于敏感性分析，不改变 release 默认配置。

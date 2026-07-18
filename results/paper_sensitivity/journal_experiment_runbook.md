@@ -8,6 +8,8 @@
 - ComGenVid 上 patch 空间、lag-1、multi-lag、motion-hard、motion-soft、同网格二阶时序定义消融。
 - 三数据集 global/patch 融合权重 alpha sweep。
 - 基于现有 CSV 的 beta sweep、逐生成器 delta heatmap、分数分布、bootstrap CI、paired ΔAUC/ΔAP CI、失败样本候选。
+- ComGenVid / region=3 / bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50
+  的全量 patch eval 和敏感性曲线。
 
 ## P0：patch region size 敏感性
 
@@ -61,13 +63,14 @@ results/journal_experiments/region_sensitivity/region_sensitivity_summary.md
 
 ## P0：aggregation / bottom-k 敏感性
 
-为什么要做：ComGenVid 上 bottom-k 有明显作用，但 VideoFeedback/GenVideo 当前主线使用 mean。需要证明 aggregation 选择不是偶然。
+为什么要做：ComGenVid 上 bottom-k 有明显作用，且已完成加密网格；
+VideoFeedback/GenVideo 当前主线使用 mean，仍需要证明 aggregation 选择不是偶然。
 
 建议网格：
 
 ```text
 aggregation ∈ {mean, bottomk_mean}
-bottomk_ratio ∈ {0.05, 0.10, 0.20, 0.30, 0.50}  # 只对 bottomk_mean 生效
+bottomk_ratio ∈ {0.10, 0.20, 0.30, 0.50}  # 只对 bottomk_mean 生效
 patch_region_size ∈ {当前主线 region}
 patch_temp_mode = same_grid_second_order
 ```

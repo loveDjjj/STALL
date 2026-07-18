@@ -7,7 +7,14 @@ import argparse
 import re
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
+
+
+COLORS = {
+    "auc": "#0072B2",
+    "ap": "#D55E00",
+}
 
 
 def _avg_from_metrics(path: Path) -> tuple[float, float]:
@@ -26,6 +33,39 @@ def _rel(path: Path, root: Path) -> str:
         return str(path.resolve().relative_to(root.resolve()))
     except ValueError:
         return str(path)
+
+
+def _save_metric_curve(
+    df: pd.DataFrame,
+    x_col: str,
+    title: str,
+    xlabel: str,
+    output_stem: Path,
+    group_col: str | None = None,
+) -> None:
+    """Save a compact AUC/AP sensitivity curve as SVG and PNG."""
+    if df.empty:
+        return
+    output_stem.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(5.2, 3.4))
+    if group_col is None:
+        plot_groups = [("", df.sort_values(x_col))]
+    else:
+        plot_groups = [(str(key), group.sort_values(x_col)) for key, group in df.groupby(group_col)]
+
+    for label, group in plot_groups:
+        suffix = f" ({label})" if label else ""
+        ax.plot(group[x_col], group["avg_auc"], marker="o", color=COLORS["auc"], label=f"AUC{suffix}")
+        ax.plot(group[x_col], group["avg_ap"], marker="s", color=COLORS["ap"], label=f"AP{suffix}")
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Average score")
+    ax.grid(True, alpha=0.25, linewidth=0.8)
+    ax.legend(frameon=False, fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output_stem.with_suffix(".svg"))
+    fig.savefig(output_stem.with_suffix(".png"), dpi=200)
+    plt.close(fig)
 
 
 def summarize_bottomk(root: Path) -> pd.DataFrame:
@@ -80,6 +120,13 @@ def summarize_bottomk(root: Path) -> pd.DataFrame:
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_dir / "bottomk_sensitivity_summary.csv", index=False)
+    _save_metric_curve(
+        df,
+        x_col="bottomk_ratio",
+        title="ComGenVid bottom-k sensitivity",
+        xlabel="Bottom-k ratio",
+        output_stem=root / "results/paper_figures/comgenvid_bottomk_sensitivity",
+    )
     lines = [
         "# Bottom-k 敏感性实跑进展",
         "",
@@ -133,6 +180,14 @@ def summarize_region(root: Path) -> pd.DataFrame:
     df = df.sort_values(["dataset", "patch_region_size"]).reset_index(drop=True)
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_dir / "region_sensitivity_summary.csv", index=False)
+    for dataset, group in df.groupby("dataset"):
+        _save_metric_curve(
+            group,
+            x_col="patch_region_size",
+            title=f"{dataset} region-size sensitivity",
+            xlabel="Patch region size",
+            output_stem=root / f"results/paper_figures/{dataset}_region_sensitivity",
+        )
     lines = [
         "# Region size 敏感性实跑进展",
         "",

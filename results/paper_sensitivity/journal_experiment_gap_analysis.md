@@ -96,7 +96,8 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/beta_sensitivity_fused_alpha0p60.svg`：固定 alpha 下 beta 敏感性；
 - `results/paper_figures/per_generator_auc_delta_heatmap.svg`：逐生成器 AUC delta heatmap；
 - `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
-- `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间。
+- `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间；
+- `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线。
 
 ## 已完成的实跑补充实验
 
@@ -109,19 +110,25 @@ patch 分支的低分局部证据聚合比例，用于说明主配置附近的�
 | ComGenVid | 3 | 0.10 | 0.9245 / 0.9285 | journal_full_eval |
 | ComGenVid | 3 | 0.15 | 0.9262 / 0.9300 | journal_full_eval |
 | ComGenVid | 3 | 0.20 | 0.9273 / 0.9309 | journal_full_eval |
+| ComGenVid | 3 | 0.25 | 0.9282 / 0.9316 | journal_full_eval |
 | ComGenVid | 3 | 0.30 | 0.9292 / 0.9323 | journal_full_eval |
+| ComGenVid | 3 | 0.35 | 0.9298 / 0.9327 | journal_full_eval |
+| ComGenVid | 3 | 0.40 | 0.9304 / 0.9330 | journal_full_eval |
 | ComGenVid | 3 | 0.50 | 0.9312 / 0.9334 | journal_full_eval |
 
-当前完成点中，bottom-k=0.50 取得最高平均 AUC/AP。该趋势说明 ComGenVid
-上的 patch 分支并非只依赖极少数最低分局部片段；扩大低分区域聚合范围仍能
-保留检测收益。论文表述中应将其作为敏感性证据，而不是事后重选主配置。
+当前 8 个完成点呈单调上升趋势，bottom-k=0.50 取得最高平均 AUC/AP。
+该结果说明 ComGenVid 上的 patch 分支并非只依赖极少数最低分局部片段；
+扩大低分区域聚合范围仍能保留检测收益。论文表述中应将其作为敏感性证据，
+而不是事后重选主配置。
 
 ## 仍建议补充的实跑实验
 
 优先级 P0：
 
 1. **patch region size 敏感性**：region=1/2/3，在三个数据集上统一重算 patch params 与 patch score。当前配置在不同数据集使用不同 region，期刊审稿会追问是否调参过度。
-2. **aggregation 敏感性**：mean vs bottom-k mean，bottom-k ratio 建议 0.05/0.10/0.20/0.30/0.50。ComGenVid 已有较多迹象，但 VideoFeedback/GenVideo 需要对应证据。
+2. **aggregation 敏感性**：mean vs bottom-k mean。ComGenVid 已完成
+   bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
+   VideoFeedback/GenVideo 仍需要对应证据。
 3. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
 
 优先级 P1：

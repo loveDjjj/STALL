@@ -10,6 +10,7 @@ set -euo pipefail
 
 DATASET="${1:-comgenvid}"
 EXPERIMENT="${2:-bottomk}"
+SCORE_BATCH_SIZE="${SCORE_BATCH_SIZE:-16}"
 
 run_metric() {
   local score_csv="$1"
@@ -41,6 +42,7 @@ run_patch_eval() {
     --csv "cache/indexes/${dataset}.csv" \
     --patch-emb-cache "cache/patch_embeddings/${dataset}" \
     --compact \
+    --score-batch-size "${SCORE_BATCH_SIZE}" \
     --patch-params "${params}" \
     --patch-temp-mode same_grid_second_order \
     --patch-region-size "${region}" \
@@ -57,10 +59,13 @@ if [[ "${DATASET}" == "comgenvid" && "${EXPERIMENT}" == "bottomk" ]]; then
     ["0.10"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p10_v2.npz"
     ["0.15"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p15_v2.npz"
     ["0.20"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p20_v2.npz"
+    ["0.25"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p25_v2.npz"
     ["0.30"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p30_v2.npz"
+    ["0.35"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p35_v2.npz"
+    ["0.40"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p40_v2.npz"
     ["0.50"]="precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p50_v2.npz"
   )
-  for bottomk in 0.10 0.15 0.20 0.30 0.50; do
+  for bottomk in 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.50; do
     tag="${bottomk/./p}"
     score_csv="results/journal_experiments/bottomk_sensitivity/comgenvid_region3_bottomk${tag}_patch.csv"
     metrics_csv="results/journal_experiments/bottomk_sensitivity/comgenvid_region3_bottomk${tag}_metrics.csv"
