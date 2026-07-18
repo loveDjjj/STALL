@@ -9,7 +9,7 @@ DINO_V3_MODEL_NAME = "dinov3_vitl16"
 
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Default paths — override via DINO_V3_REPO_DIR / DINO_V3_WEIGHTS env vars
+# 默认路径；可通过 DINO_V3_REPO_DIR / DINO_V3_WEIGHTS 环境变量覆盖。
 DINO_V3_REPO_DIR = os.getenv(
     "DINO_V3_REPO_DIR", os.path.join(_REPO_ROOT, "dinov3")
 )
@@ -32,7 +32,7 @@ AGG_STR2FN = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 def create_dinov3_transform(resize_size: int = 224):
-    """Standard ImageNet eval transform for DINOv3 models pretrained on LVD-1689M."""
+    """DINOv3 LVD-1689M 预训练模型使用的标准 ImageNet eval transform。"""
     return transforms.Compose([
         transforms.ToTensor(),
         transforms.Resize((resize_size, resize_size), antialias=True),
@@ -44,14 +44,14 @@ def create_dinov3_transform(resize_size: int = 224):
 
 
 def load_dinov3_model(device: str, repo_dir: str = None, weights: str = None):
-    """Load DINOv3 ViT-L/16 model from a local clone of the dinov3 repo.
+    """从本地 dinov3 repo clone 加载 DINOv3 ViT-L/16 模型。
 
     Args:
-        device:    Target device string ("cuda" / "cpu").
-        repo_dir:  Path to local dinov3 repo clone. Falls back to DINO_V3_REPO_DIR.
-        weights:   Path to .pth weights file. Falls back to DINO_V3_WEIGHTS.
+        device:    目标设备字符串（"cuda" / "cpu"）。
+        repo_dir:  本地 dinov3 repo clone 路径；默认使用 DINO_V3_REPO_DIR。
+        weights:   .pth 权重路径；默认使用 DINO_V3_WEIGHTS。
 
-    Returns:
+    返回：
         (model, transform)
     """
     repo_dir = repo_dir or DINO_V3_REPO_DIR
@@ -59,20 +59,20 @@ def load_dinov3_model(device: str, repo_dir: str = None, weights: str = None):
 
     if not os.path.exists(repo_dir):
         raise ValueError(
-            f"DINOv3 repo not found at '{repo_dir}'.\n"
-            f"Clone it from {DINOV3_GITHUB_URL} and place the weights in weights/.\n"
-            f"Override the path via --dino-repo or the DINO_V3_REPO_DIR env var."
+            f"未在 '{repo_dir}' 找到 DINOv3 repo。\n"
+            f"请从 {DINOV3_GITHUB_URL} clone，并把权重放到 weights/。\n"
+            f"可通过 --dino-repo 或 DINO_V3_REPO_DIR 环境变量覆盖路径。"
         )
     if not os.path.exists(weights):
         raise ValueError(
-            f"DINOv3 weights not found at '{weights}'.\n"
-            f"Download dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth from {DINOV3_GITHUB_URL}.\n"
-            f"Override the path via --dino-weights or the DINO_V3_WEIGHTS env var."
+            f"未在 '{weights}' 找到 DINOv3 权重。\n"
+            f"请从 {DINOV3_GITHUB_URL} 下载 dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth。\n"
+            f"可通过 --dino-weights 或 DINO_V3_WEIGHTS 环境变量覆盖路径。"
         )
 
-    # Import the backbone directly instead of via torch.hub.load, which would
-    # import hubconf.py and drag in detectors/segmentors that require
-    # torchvision.transforms.v2 (torchvision >= 0.15).
+    # 直接导入 backbone，而不通过 torch.hub.load；后者会导入 hubconf.py，
+    # 并带入依赖 torchvision.transforms.v2（torchvision >= 0.15）的
+    # detectors/segmentors。
     import sys
     sys.path.insert(0, repo_dir)
     try:
@@ -86,24 +86,24 @@ def load_dinov3_model(device: str, repo_dir: str = None, weights: str = None):
         model = torch.nn.DataParallel(model)
     transform = create_dinov3_transform()
     if device == "cuda":
-        print(f"DINOv3 model loaded on {device} ({torch.cuda.device_count()} visible GPU(s))")
+        print(f"DINOv3 模型已加载到 {device} ({torch.cuda.device_count()} 个可见 GPU)")
     else:
-        print(f"DINOv3 model loaded on {device}")
+        print(f"DINOv3 模型已加载到 {device}")
     return model, transform
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Math utilities
+# 数学工具
 # ─────────────────────────────────────────────────────────────────────────────
 
 def log_likelihood(array):
-    """Gaussian log-likelihood under N(0,I). Input shape: [N, T, D]. Returns [N, T]."""
+    """N(0,I) 下的高斯 log-likelihood。输入 [N, T, D]，返回 [N, T]。"""
     D = array.shape[-1]
     return -0.5 * (D * np.log(2.0 * np.pi) + (array ** 2).sum(axis=-1))
 
 
 def whitening_transform(emb, mu, W):
-    """Apply pre-fitted whitening: (emb - mu) @ W."""
+    """应用预拟合白化：(emb - mu) @ W。"""
     return np.matmul(emb - mu, W)
 
 
@@ -114,7 +114,7 @@ def raw_emb_to_log_likelihoods(raw_emb, mu, W, preprocess_fn=None):
 
 
 def diff_vec(arr):
-    """Consecutive frame differences. [N, T, D] → [N, T-1, D]."""
+    """连续帧差分。[N, T, D] → [N, T-1, D]。"""
     return arr[:, 1:, :] - arr[:, :-1, :]
 
 
@@ -126,7 +126,7 @@ def l2_normalize(arr):
 
 
 def diff_normalized_embeddings(arr):
-    """L2-normalized consecutive frame embedding differences. [N,T,D] → [N,T-1,D]."""
+    """L2-normalized 连续帧 embedding 差分。[N,T,D] → [N,T-1,D]。"""
     return l2_normalize(diff_vec(arr))
 
 
@@ -148,11 +148,11 @@ def load_video_frames(video_path, frame_indices=None):
         frame_indices: Optional list of 0-based frame indices to load.
                        If None, all frames are loaded sequentially.
 
-    Returns:
+    返回：
         np.ndarray of shape [T, H, W, C] in BGR order.
     """
-    # Some OpenCV builds mis-handle percent-encoded filenames with the default
-    # backend, while others refuse explicit FFMPEG capture-by-name. Try both.
+    # 部分 OpenCV build 使用默认 backend 时会错误处理 percent-encoded 文件名；
+    # 另一些 build 又拒绝显式 FFMPEG capture-by-name。这里两种都尝试。
     cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
     if not cap.isOpened():
         cap.release()
@@ -181,25 +181,25 @@ def load_video_frames(video_path, frame_indices=None):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STALL detector
+# STALL 检测器
 # ─────────────────────────────────────────────────────────────────────────────
 
 class STALL:
-    """Spatial-Temporal Anomaly Log-Likelihood detector for AI-generated videos.
+    """用于 AI 生成视频检测的 Spatial-Temporal Anomaly Log-Likelihood 检测器。
 
-    Higher ``final_score`` → more likely real (score direction: HIGHER_IS_REAL).
+    ``final_score`` 越高，视频越接近真实视频（score direction: HIGHER_IS_REAL）。
 
     Args:
-        device:     Torch device string.
-        data_dict:  Dict / npz with keys W_spat, mu_spat, W_temp, mu_temp,
+        device:     Torch 设备字符串。
+        data_dict:  Dict / npz，包含 W_spat, mu_spat, W_temp, mu_temp,
                     calib_ll_spat, calib_ll_temp.
-        spat_agg:   Aggregation over frames for the spatial branch ("max").
-        temp_agg:   Aggregation over frame-pairs for the temporal branch ("min").
-        dino_repo:  Optional override for DINOv3 repo path.
-        dino_weights: Optional override for DINOv3 weights path.
+        spat_agg:   空间分支跨帧聚合方式（"max"）。
+        temp_agg:   时序分支跨 frame-pair 聚合方式（"min"）。
+        dino_repo:  可选 DINOv3 repo 路径覆盖。
+        dino_weights: 可选 DINOv3 权重路径覆盖。
     """
 
-    # Class-level cache so multiple STALL instances share one loaded model.
+    # 类级 cache，使多个 STALL 实例共享同一个已加载模型。
     _shared_model = None
     _shared_transform = None
 
@@ -262,7 +262,7 @@ class STALL:
             video_arrays: List of np.ndarray, each [T, H, W, C] BGR.
             batch_size:   Frames per GPU batch.
 
-        Returns:
+        返回：
             np.ndarray of shape [N, T, D].
         """
         lengths = [len(v) for v in video_arrays]
@@ -278,29 +278,28 @@ class STALL:
     # ── Branch log-likelihoods ────────────────────────────────────────────────
 
     def spatial_log_likelihood(self, embs):
-        """Spatial LL: whitened raw embeddings → N(0,I). Shape [N, T]."""
+        """空间 LL：白化 raw embeddings → N(0,I)。形状 [N, T]。"""
         return raw_emb_to_log_likelihoods(embs, mu=self.mu_spat, W=self.w_spat)
 
     def temporal_log_likelihood(self, embs):
-        """Temporal LL: whitened L2-normalized frame diffs → N(0,I). Shape [N, T-1]."""
+        """时序 LL：白化 L2-normalized frame diff → N(0,I)。形状 [N, T-1]。"""
         zero_mask = (np.linalg.norm(diff_vec(embs), axis=-1) == 0)  # [N, T-1]
         ll = raw_emb_to_log_likelihoods(
             embs, mu=self.mu_temp, W=self.w_temp, preprocess_fn=diff_normalized_embeddings
         )
-        # Identical consecutive frames produce a zero diff with no temporal information.
-        # Setting their LL to +inf excludes them from the min aggregation -- they never
-        # win. NOTE: if you change temp_agg from "min" to "mean" or "max", revisit
-        # this -- +inf would corrupt those aggregations and you would need a different
-        # strategy.
+        # 完全相同的连续帧会产生零差分，没有时序信息。
+        # 将其 LL 设为 +inf，可在 min 聚合中排除它们，使其不会被选中。
+        # 注意：如果把 temp_agg 从 "min" 改成 "mean" 或 "max"，必须重审这里；
+        # +inf 会污染这些聚合，需要换策略。
         ll[zero_mask] = np.inf
         return ll
 
-    # ── Shared scoring logic ──────────────────────────────────────────────────
+    # ── 共享打分逻辑 ─────────────────────────────────────────────────────────
 
     def _scores_from_embs(self, embs):
-        """Compute all STALL scores from a [1, T, D] embedding array.
+        """从 [1, T, D] embedding 数组计算所有 STALL 分数。
 
-        Returns the same dict structure as inference().
+        返回与 inference() 相同结构的 dict。
         """
         spat_ll = self.spatial_log_likelihood(embs)
         temp_ll = self.temporal_log_likelihood(embs)
@@ -322,58 +321,54 @@ class STALL:
             "final_score": 0.5 * (spat_pct + temp_pct),
         }
 
-    # ── Single-video inference ────────────────────────────────────────────────
+    # ── 单视频推理 ───────────────────────────────────────────────────────────
 
     def inference(self, video_path, frame_indices=None):
-        """Run STALL on a single video file.
+        """在单个视频文件上运行 STALL。
 
-        Returns a dict with keys:
+        返回包含以下 key 的 dict：
             embs, spat_ll, temp_ll,
             spat_ll_agg, temp_ll_agg,
             spat_percentile, temp_percentile,
-            final_score   (0-1, higher = more likely real, HIGHER_IS_REAL)
+            final_score   (0-1，越高越接近真实视频，HIGHER_IS_REAL)
         """
         frames = load_video_frames(video_path, frame_indices)
         embs = self.frames_to_embeddings([frames])
         return self._scores_from_embs(embs)
 
-    # ── Batch inference ───────────────────────────────────────────────────────
+    # ── 批量推理 ─────────────────────────────────────────────────────────────
 
     def batch_inference(self, video_paths, frame_indices_list=None, batch_size=32):
-        """Run STALL on multiple videos in one efficient pass.
+        """高效地一次处理多个视频。
 
-        All frames from all videos are flattened into a single sequence and
-        processed through DINOv3 together (``batch_size`` frames per forward
-        pass), then split back into per-video embeddings. Scores are computed
-        independently per video, so results are numerically identical to calling
-        ``inference()`` on each video separately.
+        所有视频帧会被展平成一个序列，并一起送入 DINOv3（每次 forward 处理
+        ``batch_size`` 帧），之后再拆回逐视频 embedding。分数逐视频独立计算，
+        因此数值上等价于对每个视频单独调用 ``inference()``。
 
         Args:
-            video_paths:        List of paths to .mp4 files.
-            frame_indices_list: Optional list of frame-index lists, one per
-                                video. ``None`` entries (or omitting the arg
-                                entirely) load all frames for that video.
-            batch_size:         Frames per DINOv3 forward pass.
+            video_paths:        .mp4 文件路径列表。
+            frame_indices_list: 可选帧索引列表，每个视频一个列表。``None`` 或省略时
+                                加载该视频全部帧。
+            batch_size:         每次 DINOv3 forward 的帧数。
 
-        Returns:
-            List of result dicts in the same format as ``inference()``,
-            one per input video, in the same order.
+        返回：
+            与 ``inference()`` 格式相同的 result dict 列表，顺序与输入视频一致。
         """
         if frame_indices_list is None:
             frame_indices_list = [None] * len(video_paths)
 
-        # 1. Load all frames ──────────────────────────────────────────────────
+        # 1. 加载所有帧 ───────────────────────────────────────────────────────
         all_frames = [
             load_video_frames(path, fidx)
             for path, fidx in zip(video_paths, frame_indices_list)
         ]
-        lengths = [len(f) for f in all_frames]          # frames per video
+        lengths = [len(f) for f in all_frames]          # 每个视频的帧数
         flat_frames = [frame for vid in all_frames for frame in vid]
 
-        # 2. Single batched DINOv3 pass over all frames ───────────────────────
+        # 2. 对所有帧执行一次 batched DINOv3 处理 ─────────────────────────────
         flat_embs = self._embed_flat_frames(flat_frames, batch_size)  # [total_frames, D]
 
-        # 3. Split embeddings back per video and score ────────────────────────
+        # 3. 将 embeddings 拆回逐视频并打分 ───────────────────────────────────
         results = []
         cursor = 0
         for length in lengths:
@@ -382,16 +377,16 @@ class STALL:
             results.append(self._scores_from_embs(embs))
         return results
 
-    # ── Debug output ──────────────────────────────────────────────────────────
+    # ── Debug 输出 ───────────────────────────────────────────────────────────
 
     def print_score_debug(self, result: dict):
-        """Print intermediate scoring values from an inference result dict.
+        """打印 inference result dict 中的中间打分值。
 
-        Pass the dict returned by inference() or _scores_from_embs() to verify:
-          - Log-likelihoods are negative (as expected for Gaussian LL)
-          - Whitened embeddings have unit variance per dimension
-          - Aggregated LL position relative to calibration range
-          - Percentile scores (real should be above ~0.5, fake below)
+        传入 inference() 或 _scores_from_embs() 返回的 dict，用于检查：
+          - Log-likelihood 是否为负（符合 Gaussian LL 预期）
+          - 白化 embedding 每维方差是否接近 1
+          - 聚合 LL 在校准范围中的位置
+          - 百分位分数（真实通常应高于约 0.5，生成通常更低）
         """
         embs    = result["embs"]
         spat_ll = result["spat_ll"]

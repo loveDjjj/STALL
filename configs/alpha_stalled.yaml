@@ -1,0 +1,92 @@
+# Alpha-STALLED reproducibility configuration.
+#
+# This file records the paper-line method described in
+# results/alpha_stalled_project_manuscript_zh.md. It is intentionally limited
+# to the leakage-free detector:
+#   original global STALL + same-grid second-order patch STALL + fixed alpha.
+
+method:
+  name: Alpha-STALLED
+  score_direction: higher_is_real
+  global_branch: original_stall
+  patch_branch: same_grid_second_order
+  fusion:
+    formula: final_score = alpha * global_score + (1 - alpha) * patch_score
+    alpha: 0.60
+    alpha_selection: frozen_before_test
+  forbidden_at_inference:
+    - test_batch_rank
+    - subset_label
+    - fake_source_model_gate
+    - source_specific_routing
+
+features:
+  backbone: dinov3_vitl16
+  frame_rate: 8
+  default_duration_sec: 2
+  short_duration_sec: 1
+  image_size: 224
+  patch_grid: [14, 14]
+  feature_dim: 1024
+
+global_stall:
+  params: precomputed/stall_params_vatex_dino_v3.npz
+  spatial_aggregation: max
+  temporal_feature: l2_normalized_lag1_delta
+  temporal_aggregation: min
+
+patch_stall:
+  patch_score_formula: patch_score = beta * patch_spatial + (1 - beta) * patch_temporal
+  beta: 0.10
+  temporal_feature: same_grid_second_order
+  temporal_feature_version: l2_normalized_delta_v1
+  params_by_dataset:
+    comgenvid:
+      params: precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p20_v2.npz
+      score_csv: results/paper_scores/comgenvid_patch_second_order.csv
+      duration_sec: 2
+      patch_region_size: 3
+      aggregation: bottomk_mean
+      bottomk_ratio: 0.20
+    videofeedback:
+      params: precomputed/patch_params_videofeedback_real_same_grid_second_order_region1_mean_v2.npz
+      score_csv: results/paper_scores/videofeedback_patch_second_order.csv
+      duration_sec: 2
+      patch_region_size: 1
+      aggregation: mean
+      bottomk_ratio: null
+      short_sources:
+        Hotshot-XL:
+          duration_sec: 1
+    genvideo:
+      params: precomputed/patch_params_genvideo_real_same_grid_second_order_region2_mean_v2.npz
+      score_csv: results/paper_scores/genvideo_patch_second_order.csv
+      duration_sec: 2
+      patch_region_size: 2
+      aggregation: mean
+      bottomk_ratio: null
+      excluded_patch_sources:
+        - HotShot-XL
+        - MoonValley
+
+evaluation:
+  metrics: [ROC-AUC, AP]
+  score_column: final_score
+  protocol: pairwise_balanced_by_generator
+  implementation: src/metrics.py
+  seed: 42
+  global_score_csvs:
+    comgenvid: results/paper_scores/comgenvid_global.csv
+    videofeedback: results/paper_scores/videofeedback_global.csv
+    genvideo: results/paper_scores/genvideo_global.csv
+  alpha_sweeps:
+    summary: results/paper_sweeps/alpha_sweep_summary.md
+    comgenvid: results/paper_sweeps/comgenvid_alpha/comgenvid_same_grid_second_order_summary.csv
+    videofeedback: results/paper_sweeps/videofeedback_alpha/videofeedback_same_grid_second_order_summary.csv
+    genvideo: results/paper_sweeps/genvideo_alpha/genvideo_same_grid_second_order_summary.csv
+
+paper_assets:
+  manuscript: results/alpha_stalled_project_manuscript_zh.md
+  main_flow_svg: results/alpha_stalled_full_pipeline_flow_zh.svg
+  tables_dir: results/alpha_stalled_manuscript_tables
+  patch_coverage_gaps: results/paper_tables/patch_coverage_gaps.md

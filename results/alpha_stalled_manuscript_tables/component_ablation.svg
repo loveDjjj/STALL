@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="596" viewBox="0 0 1300 596" role="img" aria-label="Global and patch component ablation">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<line x1="14" y1="14" x2="1286" y2="14" stroke="#222222" stroke-width="2.5"/>
+<text x="26" y="58" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Benchmark</text>
+<text x="206" y="58" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Method</text>
+<text x="426" y="58" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Controlled Component</text>
+<text x="826" y="36" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Performance</text>
+<rect x="736" y="60" width="88" height="40" fill="#f2f2f2"/>
+<text x="780" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AUC</text>
+<text x="872" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AP</text>
+<text x="1010" y="36" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Delta vs. STALL</text>
+<rect x="920" y="60" width="88" height="40" fill="#f2f2f2"/>
+<text x="964" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AUC</text>
+<text x="1056" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AP</text>
+<text x="1194" y="36" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="18" font-weight="600" fill="#111111">Delta vs. Full Method</text>
+<rect x="1104" y="60" width="88" height="40" fill="#f2f2f2"/>
+<text x="1148" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AUC</text>
+<text x="1240" y="80" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="600" fill="#111111">AP</text>
+<line x1="194" y1="21" x2="194" y2="582" stroke="#222222" stroke-width="0.9"/>
+<line x1="414" y1="21" x2="414" y2="582" stroke="#222222" stroke-width="0.9"/>
+<line x1="731" y1="21" x2="731" y2="582" stroke="#222222" stroke-width="0.9"/>
+<line x1="737" y1="21" x2="737" y2="582" stroke="#222222" stroke-width="0.9"/>
+<line x1="918" y1="58" x2="918" y2="582" stroke="#555555" stroke-width="0.7"/>
+<line x1="1102" y1="58" x2="1102" y2="582" stroke="#555555" stroke-width="0.7"/>
+<line x1="14" y1="99" x2="1286" y2="99" stroke="#222222" stroke-width="1.1"/>
+<line x1="14" y1="104" x2="1286" y2="104" stroke="#222222" stroke-width="1.1"/>
+<line x1="14" y1="102" x2="1286" y2="102" stroke="#222222" stroke-width="1.1"/>
+<text x="26" y="182" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="500" fill="#111111">ComGenVid</text>
+<text x="206" y="122" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">STALL</text>
+<text x="426" y="122" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Original baseline</text>
+<rect x="736" y="104" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.850</text>
+<text x="872" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.860</text>
+<rect x="920" y="104" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1056" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<rect x="1104" y="104" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.072</text>
+<text x="1240" y="122" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.063</text>
+<text x="206" y="162" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Patch</text>
+<text x="426" y="162" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global branch only</text>
+<rect x="736" y="144" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.853</text>
+<text x="872" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.855</text>
+<rect x="920" y="144" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.003</text>
+<text x="1056" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.005</text>
+<rect x="1104" y="144" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.069</text>
+<text x="1240" y="162" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.068</text>
+<text x="206" y="202" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Global</text>
+<text x="426" y="202" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Patch second-order only</text>
+<rect x="736" y="184" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.931</text>
+<text x="872" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.933</text>
+<rect x="920" y="184" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.081</text>
+<text x="1056" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.073</text>
+<rect x="1104" y="184" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.009</text>
+<text x="1240" y="202" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.010</text>
+<text x="206" y="242" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="650" fill="#111111">Alpha-STALLED</text>
+<text x="426" y="242" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global 0.60 + Patch 0.40</text>
+<rect x="736" y="224" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.922</text>
+<line x1="761.2" y1="249.68" x2="798.8" y2="249.68" stroke="#111111" stroke-width="1.05"/>
+<text x="872" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.923</text>
+<line x1="853.2" y1="249.68" x2="890.8" y2="249.68" stroke="#111111" stroke-width="1.05"/>
+<rect x="920" y="224" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.072</text>
+<text x="1056" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.063</text>
+<rect x="1104" y="224" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1240" y="242" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<line x1="14" y1="262" x2="1286" y2="262" stroke="#222222" stroke-width="1.1"/>
+<text x="26" y="342" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="500" fill="#111111">VideoFeedback</text>
+<text x="206" y="282" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">STALL</text>
+<text x="426" y="282" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Original baseline</text>
+<rect x="736" y="264" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.830</text>
+<text x="872" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.850</text>
+<rect x="920" y="264" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1056" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<rect x="1104" y="264" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.028</text>
+<text x="1240" y="282" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.021</text>
+<text x="206" y="322" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Patch</text>
+<text x="426" y="322" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global branch only</text>
+<rect x="736" y="304" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.844</text>
+<line x1="761.2" y1="329.68" x2="798.8" y2="329.68" stroke="#111111" stroke-width="1.05"/>
+<text x="872" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.857</text>
+<line x1="853.2" y1="329.68" x2="890.8" y2="329.68" stroke="#111111" stroke-width="1.05"/>
+<rect x="920" y="304" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.014</text>
+<text x="1056" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.007</text>
+<rect x="1104" y="304" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.014</text>
+<text x="1240" y="322" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.014</text>
+<text x="206" y="362" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Global</text>
+<text x="426" y="362" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Patch second-order only</text>
+<rect x="736" y="344" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.817</text>
+<text x="872" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.826</text>
+<rect x="920" y="344" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.013</text>
+<text x="1056" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.024</text>
+<rect x="1104" y="344" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.041</text>
+<text x="1240" y="362" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.045</text>
+<text x="206" y="402" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="650" fill="#111111">Alpha-STALLED</text>
+<text x="426" y="402" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global 0.60 + Patch 0.40</text>
+<rect x="736" y="384" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.858</text>
+<text x="872" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.871</text>
+<rect x="920" y="384" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.028</text>
+<text x="1056" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.021</text>
+<rect x="1104" y="384" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1240" y="402" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<line x1="14" y1="422" x2="1286" y2="422" stroke="#222222" stroke-width="1.1"/>
+<text x="26" y="502" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="500" fill="#111111">GenVideo</text>
+<text x="206" y="442" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">STALL</text>
+<text x="426" y="442" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Original baseline</text>
+<rect x="736" y="424" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.800</text>
+<text x="872" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.800</text>
+<rect x="920" y="424" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1056" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<rect x="1104" y="424" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.037</text>
+<text x="1240" y="442" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.028</text>
+<text x="206" y="482" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Patch</text>
+<text x="426" y="482" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global branch only</text>
+<rect x="736" y="464" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.796</text>
+<text x="872" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.790</text>
+<rect x="920" y="464" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.004</text>
+<text x="1056" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.010</text>
+<rect x="1104" y="464" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.041</text>
+<text x="1240" y="482" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.038</text>
+<text x="206" y="522" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="400" fill="#111111">w/o Global</text>
+<text x="426" y="522" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Patch second-order only</text>
+<rect x="736" y="504" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.807</text>
+<line x1="761.2" y1="529.68" x2="798.8" y2="529.68" stroke="#111111" stroke-width="1.05"/>
+<text x="872" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0.809</text>
+<line x1="853.2" y1="529.68" x2="890.8" y2="529.68" stroke="#111111" stroke-width="1.05"/>
+<rect x="920" y="504" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.007</text>
+<text x="1056" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.009</text>
+<rect x="1104" y="504" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.030</text>
+<text x="1240" y="522" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">-0.019</text>
+<text x="206" y="562" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="17" font-weight="650" fill="#111111">Alpha-STALLED</text>
+<text x="426" y="562" text-anchor="start" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="15" font-weight="400" fill="#111111">Global 0.60 + Patch 0.40</text>
+<rect x="736" y="544" width="88" height="36" fill="#f2f2f2"/>
+<text x="780" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.837</text>
+<text x="872" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="750" fill="#111111">0.828</text>
+<rect x="920" y="544" width="88" height="36" fill="#f2f2f2"/>
+<text x="964" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.037</text>
+<text x="1056" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">+0.028</text>
+<rect x="1104" y="544" width="88" height="36" fill="#f2f2f2"/>
+<text x="1148" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<text x="1240" y="562" text-anchor="middle" dominant-baseline="middle" font-family="Times New Roman, Noto Serif CJK SC, serif" font-size="16" font-weight="400" fill="#111111">0</text>
+<line x1="14" y1="582" x2="1286" y2="582" stroke="#222222" stroke-width="2.5"/>
+</svg>

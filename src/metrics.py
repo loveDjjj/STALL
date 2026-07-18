@@ -1,12 +1,12 @@
 """
-Standalone metrics utilities for STALL evaluation.
+STALL 评测使用的独立指标工具。
 
-Extracted from the private videoDetection repo and made self-contained:
+从私有 videoDetection repo 中抽出并整理为自包含实现：
   - ScoreDirection enum
   - Score dataclass
   - predictor_scalar2metrics
-  - build_results_table  (per-generator AUC/AP with pairwise balanced comparisons)
-  - print_results        (formatted table output)
+  - build_results_table  (逐生成器 AUC/AP，使用 pairwise balanced 比较)
+  - print_results        (格式化表格输出)
 """
 
 from __future__ import annotations
@@ -31,40 +31,40 @@ def _to_numpy(x) -> np.ndarray:
     import torch
     if isinstance(x, torch.Tensor):
         return x.cpu().numpy()
-    raise TypeError(f"Cannot convert {type(x)} to numpy array")
+    raise TypeError(f"无法将 {type(x)} 转换为 numpy array")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Score direction
+# 分数方向
 # ─────────────────────────────────────────────────────────────────────────────
 
 class ScoreDirection(Enum):
-    """Whether a higher score means the video is more likely real or fake."""
+    """分数越高表示视频更像真实还是更像生成。"""
     HIGHER_IS_REAL = 1
     HIGHER_IS_FAKE = 0
 
 
 @dataclass
 class Score:
-    """A score array paired with its direction."""
+    """分数数组及其方向。"""
     value: np.ndarray
     direction: ScoreDirection = ScoreDirection.HIGHER_IS_REAL
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Core metric computation
+# 核心指标计算
 # ─────────────────────────────────────────────────────────────────────────────
 
 def predictor_scalar2metrics(predictor_scalar, labels, threshold=None):
-    """Compute AUC and AP (and optionally F1 / Accuracy) from scores and binary labels.
+    """从分数和二分类标签计算 AUC/AP，并可选计算 F1/Accuracy。
 
     Args:
-        predictor_scalar: 1-D array of detector scores.
-        labels:           1-D binary array — 1 for real, 0 for annotated (fake).
-        threshold:        If provided, also compute F1 and Accuracy.
+        predictor_scalar: 一维检测器分数数组。
+        labels:           一维二分类数组；1 表示真实，0 表示 annotated/fake。
+        threshold:        若提供，同时计算 F1 和 Accuracy。
 
-    Returns:
-        dict with keys "AUC", "AP", and optionally "F1_score", "Accuracy".
+    返回：
+        包含 "AUC"、"AP" 的 dict，并可选包含 "F1_score"、"Accuracy"。
     """
     from sklearn.metrics import (
         roc_auc_score,
@@ -79,7 +79,7 @@ def predictor_scalar2metrics(predictor_scalar, labels, threshold=None):
     assert predictor_scalar.ndim == 1
     assert labels.ndim == 1
     assert predictor_scalar.shape == labels.shape
-    assert np.all(np.isin(labels, [0, 1])), "Labels must be binary (0 or 1)"
+    assert np.all(np.isin(labels, [0, 1])), "Labels 必须为二值（0 或 1）"
 
     metrics = {
         "AUC": roc_auc_score(labels, predictor_scalar),
@@ -94,7 +94,7 @@ def predictor_scalar2metrics(predictor_scalar, labels, threshold=None):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Dataset balancing helpers
+# 数据集平衡辅助函数
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _sample_proportional(df: pd.DataFrame, target_size: int, group_key: str, seed: int) -> pd.DataFrame:
@@ -124,8 +124,8 @@ def _balance_datasets(real_df: pd.DataFrame, annotated_df: pd.DataFrame, seed: i
 
 
 def _sample_balanced_real(real_df: pd.DataFrame, n: int, seed: int) -> pd.DataFrame:
-    # Sample evenly from each real source: equal quota per source_model (n // num_sources each).
-    # Integer division ensures the total is always <= n, so the final .sample() only shuffles.
+    # 从每个真实来源均匀采样：每个 source_model 使用相同 quota（n // num_sources）。
+    # 整数除法保证总数始终 <= n，因此最后的 .sample() 只负责打乱。
     sources = real_df["source_model"].unique()
     n_per = max(1, n // len(sources))
     parts = [
@@ -137,7 +137,7 @@ def _sample_balanced_real(real_df: pd.DataFrame, n: int, seed: int) -> pd.DataFr
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Metric computation per group
+# 分组指标计算
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _compute_metrics(data: pd.DataFrame, score_names: list, score_directions: dict) -> dict:
@@ -216,26 +216,26 @@ def build_results_table(
     skip_global_compare: bool = False,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """Build a per-generator AUC/AP results table.
+    """构建逐生成器 AUC/AP 结果表。
 
     Args:
-        df:                   DataFrame with columns: subset, source_model, <score columns>.
-                              ``subset`` must be "real" or "annotated".
-        score_directions:     Dict mapping score column name → ScoreDirection.
-        seed:                 Random seed for balanced sampling.
-        skip_global_compare:  Skip the "All" global comparison row.
-        verbose:              Print per-model sample counts.
+        df:                   包含 subset、source_model 和若干分数列的 DataFrame。
+                              ``subset`` 必须为 "real" 或 "annotated"。
+        score_directions:     分数列名到 ScoreDirection 的映射。
+        seed:                 平衡采样随机种子。
+        skip_global_compare:  跳过 "All" 全局比较行。
+        verbose:              打印逐模型样本数。
 
-    Returns:
-        DataFrame with rows per generative model + "Average", columns include
-        "<score> AUC", "<score> AP", n_real, n_annotated, n_total.
+    返回：
+        DataFrame；行包含各生成模型和 "Average"，列包含
+        "<score> AUC"、"<score> AP"、n_real、n_annotated、n_total。
     """
     score_names = list(score_directions.keys())
     real_count = len(df[df["subset"] == "real"])
     annotated_count = len(df[df["subset"] == "annotated"])
 
     if real_count == 0 or annotated_count == 0:
-        raise ValueError("Dataset must contain both 'real' and 'annotated' rows.")
+        raise ValueError("数据集必须同时包含 'real' 和 'annotated' 行。")
 
     results: dict = {}
 
@@ -261,14 +261,14 @@ def build_results_table(
 
 
 def get_results_df(inf_df, scores_d: Dict[str, Score]) -> pd.DataFrame:
-    """Convenience wrapper used by eval scripts.
+    """eval 脚本使用的便捷包装。
 
     Args:
-        inf_df:   DataFrame (or HuggingFace Dataset) with columns subset, source_model.
-        scores_d: Dict of score name → Score(value, direction).
+        inf_df:   包含 subset、source_model 列的 DataFrame（或 HuggingFace Dataset）。
+        scores_d: 分数名到 Score(value, direction) 的映射。
 
-    Returns:
-        Results DataFrame from build_results_table.
+    返回：
+        build_results_table 返回的结果 DataFrame。
     """
     try:
         import datasets
@@ -285,12 +285,12 @@ def get_results_df(inf_df, scores_d: Dict[str, Score]) -> pd.DataFrame:
 
 
 def print_results(df: pd.DataFrame, include_counts: bool = True, auc_only: bool = False):
-    """Print a formatted results table to stdout.
+    """向 stdout 打印格式化结果表。
 
     Args:
-        df:             Output of build_results_table / get_results_df.
-        include_counts: Include n_real / n_annotated columns (n_total excluded).
-        auc_only:       Show only AUC columns (hide AP).
+        df:             build_results_table / get_results_df 的输出。
+        include_counts: 包含 n_real / n_annotated 列（不包含 n_total）。
+        auc_only:       只显示 AUC 列（隐藏 AP）。
     """
     count_cols = ["n_real", "n_annotated", "n_total"]
     display_count_cols = ["n_real", "n_annotated"]

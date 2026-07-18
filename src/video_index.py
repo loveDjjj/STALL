@@ -1,12 +1,12 @@
-"""Build an enriched index CSV for raw video directories (e.g. GenVideo).
+"""为原始视频目录构建 enriched index CSV（例如 GenVideo）。
 
-Standalone script + importable module.
+既可作为独立脚本使用，也可作为模块导入。
 
-Usage:
+用法：
     python video_index.py --real-dir /data/GenVideo/real --fake-dir /data/GenVideo/fake --output genvideo.csv
     python video_index.py --real-dir /data/GenVideo/real --fake-dir /data/GenVideo/fake --output genvideo.csv --debug-n 5
 
-Directory layout expected:
+期望目录结构：
     <real-dir>/<model>/*.mp4   → subset="real"
     <fake-dir>/<model>/*.mp4   → subset="annotated"
 """
@@ -26,21 +26,21 @@ import pandas as pd
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Core helpers
+# 核心辅助函数
 # ─────────────────────────────────────────────────────────────────────────────
 
 def downsample_frames(num_frames: int, current_fps: float, target_fps: float = 8) -> list[int]:
-    """Return frame indices for downsampling from current_fps to target_fps.
+    """返回从 current_fps 降采样到 target_fps 的帧索引。
 
-    Exact paper snippet — simple ratio-based selection.
+    与论文一致的简单 ratio-based 选择。
 
-    Raises:
-        ValueError: if target_fps > current_fps.
+    抛出：
+        ValueError: 当 target_fps > current_fps。
     """
     if target_fps > current_fps:
         raise ValueError(
             f"target_fps ({target_fps}) > current_fps ({current_fps}). "
-            "Cannot upsample; skip this video."
+            "无法上采样；跳过该视频。"
         )
     ratio = current_fps / target_fps
     indices = []
@@ -55,9 +55,9 @@ def downsample_frames(num_frames: int, current_fps: float, target_fps: float = 8
 
 
 def get_video_metadata(path: str) -> Optional[dict]:
-    """Return fps, duration_seconds, num_frames via ffprobe.
+    """通过 ffprobe 返回 fps、duration_seconds、num_frames。
 
-    Returns None values on failure (caller should skip the video).
+    失败时返回 None 值，调用方应跳过该视频。
     """
     cmd = [
         "ffprobe", "-v", "quiet",
@@ -71,7 +71,7 @@ def get_video_metadata(path: str) -> Optional[dict]:
         data = json.loads(result.stdout)
         stream = data.get("streams", [{}])[0]
 
-        # avg_frame_rate is a fraction string like "30000/1001"
+        # avg_frame_rate 是类似 "30000/1001" 的分数字符串。
         rate_str = stream.get("avg_frame_rate", "0/1")
         num, den = rate_str.split("/")
         fps = float(num) / float(den) if float(den) != 0 else 0.0
@@ -81,7 +81,7 @@ def get_video_metadata(path: str) -> Optional[dict]:
 
         return {"fps": fps, "duration_seconds": duration, "num_frames": num_frames}
     except Exception as exc:
-        warnings.warn(f"ffprobe failed for {path}: {exc}")
+        warnings.warn(f"ffprobe 处理 {path} 失败: {exc}")
         return {"fps": None, "duration_seconds": None, "num_frames": None}
 
 
@@ -90,15 +90,15 @@ def compute_windows(
     target_fps: float = 8,
     seed: int = 42,
 ) -> dict:
-    """Pick random contiguous windows at 1/2/3/4-second durations.
+    """为 1/2/3/4 秒时长随机选择连续窗口。
 
-    For each available duration (8/16/24/32 frames at 8 fps), picks a random
-    contiguous window from `downsample_idxs` using a fixed RNG seed.
+    对每个可用时长（8 fps 下为 8/16/24/32 帧），使用固定 RNG seed 从
+    `downsample_idxs` 中选择一个连续窗口。
 
-    Returns:
+    返回：
         {"1_sec_idxs": list|None, "2_sec_idxs": list|None,
          "3_sec_idxs": list|None, "4_sec_idxs": list|None}
-        Missing durations (video too short) → None.
+        不可用时长（视频过短）→ None。
     """
     rng = np.random.RandomState(seed)
     n_total = len(downsample_idxs)
@@ -116,7 +116,7 @@ def compute_windows(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CSV builder
+# CSV 构建器
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _collect_paths_from_dirs(real_dir: Optional[Path], fake_dir: Optional[Path]) -> list[dict]:
@@ -156,25 +156,24 @@ def build_video_csv(
     n_workers: int = 8,
     debug_n: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Scan video directories, probe with ffprobe, compute frame indices, write CSV.
+    """扫描视频目录，使用 ffprobe 读取元信息，计算帧索引，并写出 CSV。
 
     Args:
-        output_csv: Destination CSV path.
-        root_dir:   Root containing real/ and fake/ subdirs (legacy; use real_dir/fake_dir instead).
-        real_dir:   Directory of real videos: <model>/*.mp4 subdirs.
-        fake_dir:   Directory of fake videos: <model>/*.mp4 subdirs.
-        target_fps: Target frame rate for downsampling (default 8).
-        n_workers:  Thread pool size for ffprobe calls.
-        debug_n:    If set, keep at most this many paths per (subset, source_model)
-                    before probing (fast end-to-end test).
+        output_csv: 目标 CSV 路径。
+        root_dir:   包含 real/ 和 fake/ 子目录的根目录（旧接口；建议使用 real_dir/fake_dir）。
+        real_dir:   真实视频目录：<model>/*.mp4 子目录。
+        fake_dir:   生成视频目录：<model>/*.mp4 子目录。
+        target_fps: 降采样目标帧率（默认 8）。
+        n_workers:  ffprobe 调用的线程池大小。
+        debug_n:    若设置，probe 前每个 (subset, source_model) 最多保留这么多路径。
 
-    Returns:
-        DataFrame written to output_csv.
+    返回：
+        写入 output_csv 的 DataFrame。
     """
     if root_dir is not None:
         root = Path(root_dir)
         if not root.exists():
-            raise ValueError(f"Directory not found: {root_dir}")
+            raise ValueError(f"目录不存在: {root_dir}")
         records = _collect_paths(root)
         label = str(root_dir)
     else:
@@ -288,36 +287,36 @@ def build_video_csv(
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "Build an enriched index CSV for a raw video directory. "
-            "Requires ffprobe (from ffmpeg) on PATH."
+            "为原始视频目录构建 enriched index CSV。"
+            "要求 PATH 中可用 ffprobe（来自 ffmpeg）。"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--real-dir", required=True, metavar="DIR",
-        help="Directory of real videos: <model>/*.mp4 subdirs",
+        help="真实视频目录：<model>/*.mp4 子目录",
     )
     parser.add_argument(
         "--fake-dir", required=True, metavar="DIR",
-        help="Directory of fake videos: <model>/*.mp4 subdirs",
+        help="生成视频目录：<model>/*.mp4 子目录",
     )
     parser.add_argument(
         "--output", required=True, metavar="CSV",
-        help="Output CSV path",
+        help="输出 CSV 路径",
     )
     parser.add_argument(
         "--target-fps", type=float, default=8.0, metavar="FPS",
-        help="Target frame rate for downsampling (default: 8)",
+        help="降采样目标帧率（默认: 8）",
     )
     parser.add_argument(
         "--workers", type=int, default=8, metavar="N",
-        help="Number of parallel ffprobe workers (default: 8)",
+        help="并行 ffprobe worker 数量（默认: 8）",
     )
     parser.add_argument(
         "--debug", nargs="?", const=True, default=None, metavar="N",
         help=(
-            "Fast end-to-end test for this script: keep at most N videos per "
-            "(subset, source_model) before probing. Pass --debug N, e.g. --debug 5."
+            "本脚本的快速端到端测试：probe 前每个 (subset, source_model) 最多保留 N 个视频。"
+            "传入 --debug N，例如 --debug 5。"
         ),
     )
     args = parser.parse_args()

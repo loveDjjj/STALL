@@ -1,10 +1,10 @@
-"""Dataset loading utilities for STALL evaluation.
+"""STALL 评测的数据加载工具。
 
-Four loading modes:
-  load_hf_dataset        — HuggingFace Hub (pre-computed embeddings, no DINOv3 needed)
-  load_local_dir         — directory convention: root/real/<model>/*.mp4, root/fake/<model>/*.mp4
-  load_csv               — explicit CSV with columns: video_path, subset, source_model
-  load_csv_with_emb_cache — enriched CSV from video_index.py + on-disk embedding cache
+四种加载模式：
+  load_hf_dataset        — HuggingFace Hub（预计算 embedding，无需 DINOv3）
+  load_local_dir         — 目录约定：root/real/<model>/*.mp4, root/fake/<model>/*.mp4
+  load_csv               — 显式 CSV，包含 video_path、subset、source_model
+  load_csv_with_emb_cache — video_index.py 生成的 enriched CSV + 磁盘 embedding cache
 """
 
 from __future__ import annotations
@@ -23,67 +23,67 @@ SUBSET_TO_FOLDER = {"real": "real", "annotated": "fake"}
 
 
 def _is_missing_window(val) -> bool:
-    """Return True if a window-index value is absent (None or NaN from pandas)."""
+    """当窗口索引值缺失时返回 True（None 或 pandas NaN）。"""
     return val is None or (isinstance(val, float) and np.isnan(val))
 
 
 def _get_cache_path(cache_root: Path, subset: str, source_model: str, stem: str, duration_sec: int, compact: bool) -> Path:
-    """Return the .pt cache file path for a video."""
+    """返回某个视频对应的 .pt cache 文件路径。"""
     if compact:
         return cache_root / subset / source_model / f"{stem}_{duration_sec}s.pt"
     return cache_root / subset / source_model / f"{stem}.pt"
 
 
 def _slice_window(full_emb, downsample_idxs, window_idxs, video_path):
-    """Slice full_emb to the window using the downsample index map.
+    """使用 downsample 索引映射从 full_emb 中切出目标窗口。
 
-    Returns the sliced array, or None if any window index is missing (caller should skip).
+    返回切片数组；如果任一窗口索引缺失则返回 None，调用方应跳过。
     """
     idx_to_pos = {native: pos for pos, native in enumerate(downsample_idxs)}
     positions = [idx_to_pos[i] for i in window_idxs if i in idx_to_pos]
     if len(positions) != len(window_idxs):
         warnings.warn(
             f"{video_path}: {len(window_idxs) - len(positions)} window indices "
-            "not found in downsample_idxs — skipping video."
+            "未在 downsample_idxs 中找到，跳过该视频。"
         )
         return None
     return full_emb[positions]
 
 
 def load_hf_dataset(repo_id: str, split: str = "train", duration: int = 2, verbose: bool = False) -> list[dict]:
-    """Load from HuggingFace Hub using pre-computed embeddings.parquet.
+    """使用预计算 embeddings.parquet 从 HuggingFace Hub 加载。
 
-    No DINOv3 required — scores are computed directly from stored embeddings.
+    不需要 DINOv3；分数直接由已存储 embedding 计算。
 
-    Returns a list of dicts (all loading happens before returning):
+    返回 dict 列表（返回前完成全部加载）：
         {"embs": np.ndarray [1, T, D], "subset": str, "source_model": str, "filename": str}
 
     Args:
-        duration: Which second-window to use (1/2/3/4). Selects the corresponding
-                  ``<duration>_sec_idxs`` column. Default: 2.
-        verbose:  If True, print metadata for videos missing the requested index column.
+        duration: 使用几秒窗口（1/2/3/4），选择对应 ``<duration>_sec_idxs`` 列。
+                  默认 2。
+        verbose:  若为 True，打印缺失目标索引列的视频元信息。
 
     Dependencies: huggingface_hub, datasets, pandas, pyarrow
     """
     from huggingface_hub import hf_hub_download
     import datasets as hf_datasets
 
-    # Download embeddings.parquet once (cached in HF cache dir)
-    print("Downloading embeddings.parquet…", flush=True)
+    # 只下载一次 embeddings.parquet（缓存在 HF cache 目录）
+    print("下载 embeddings.parquet…", flush=True)
     parquet_path = hf_hub_download(
         repo_id=repo_id, filename="embeddings.parquet", repo_type="dataset"
     )
-    print("Loading embeddings into memory…", flush=True)
+    print("加载 embeddings 到内存…", flush=True)
     emb_df = pd.read_parquet(parquet_path)
-    # Each "dino_embedding" cell is a numpy object array of shape (T,) where
-    # each element is a 1-D float array of length D. np.stack converts it to (T, D).
+    # 每个 "dino_embedding" 单元格是形状为 (T,) 的 numpy object array，
+    # 其中每个元素是一维 D 长度 float array。np.stack 将其转换为 (T, D)。
     emb_lookup: dict[str, np.ndarray] = {
         row["file_name"]: np.stack(row["dino_embedding"]).astype(np.float32)
         for _, row in emb_df.iterrows()
     }
 
     ds = hf_datasets.load_dataset(repo_id, split=split, streaming=True)
-    # Disable video decoding so the raw .mp4 files are not downloaded
+    # 禁用视频解码，避免下载原始 .mp4 文件。
     if "video" in ds.features:
         ds = ds.cast_column("video", hf_datasets.Video(decode=False))
 
@@ -98,15 +98,15 @@ def load_hf_dataset(repo_id: str, split: str = "train", duration: int = 2, verbo
         if emb is None:
             continue
 
-        # Select the requested duration window at 8 FPS.
-        # Videos too short for the requested window (primary key is None) are skipped.
+        # 在 8 FPS 下选择目标时长窗口。
+        # 如果视频短于目标窗口（primary key 为 None），则跳过。
         _PRIMARY_KEY = f"{duration}_sec_idxs"
         frame_idxs = sample.get(_PRIMARY_KEY)
         if frame_idxs is not None:
             idxs = np.array(frame_idxs, dtype=int)
             emb = emb[idxs]  # (T_native, D) → (duration*8, D)
         else:
-            # Video is too short for the requested duration window — skip it.
+            # 视频短于目标窗口，跳过。
             n_missing_idxs += 1
             missing_idxs_meta.append({k: v for k, v in sample.items() if k != "video"})
             continue
@@ -120,27 +120,27 @@ def load_hf_dataset(repo_id: str, split: str = "train", duration: int = 2, verbo
 
     if n_missing_idxs:
         print(
-            f"  Warning: {n_missing_idxs} videos missing '{duration}_sec_idxs' "
-            f"(too short for the requested window, skipped). Pass --debug for details.",
+            f"  警告：{n_missing_idxs} 个视频缺少 '{duration}_sec_idxs' "
+            f"（短于目标窗口，已跳过）。传入 --debug 可查看细节。",
             flush=True,
         )
         if verbose:
             for meta in missing_idxs_meta:
                 meta_str = ", ".join(f"{k}={v!r}" for k, v in meta.items())
                 print(f"    {meta_str}", flush=True)
-    print(f"Loaded {len(samples)} videos. Starting scoring…", flush=True)
+    print(f"已加载 {len(samples)} 个视频，开始打分…", flush=True)
     return samples
 
 
 def load_local_dir(root_dir: str) -> Iterator[dict]:
-    """Walk root_dir/real/<model>/*.mp4 and root_dir/fake/<model>/*.mp4.
+    """遍历 root_dir/real/<model>/*.mp4 和 root_dir/fake/<model>/*.mp4。
 
-    subset is derived from the top-level folder:
+    subset 由顶层文件夹推断：
         real/  → "real"
         fake/  → "annotated"
-    source_model is the immediate subdirectory name.
+    source_model 是直接子目录名。
 
-    Yields dicts:
+    产出 dict：
         {"video_path": str, "subset": str, "source_model": str}
     """
     root = Path(root_dir)
@@ -160,20 +160,20 @@ def load_local_dir(root_dir: str) -> Iterator[dict]:
 
 
 def load_csv(csv_path: str) -> pd.DataFrame:
-    """Load a CSV requiring columns: video_path, subset, source_model.
+    """加载必须包含 video_path、subset、source_model 列的 CSV。
 
-    Returns a pandas DataFrame directly.
+    直接返回 pandas DataFrame。
 
-    Raises:
-        ValueError: if any required column is missing.
+    抛出：
+        ValueError: 若缺少任一必需列。
     """
     df = pd.read_csv(csv_path)
     required = {"video_path", "subset", "source_model"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(
-            f"CSV '{csv_path}' is missing required columns: {sorted(missing)}\n"
-            f"Required: video_path, subset ('real'/'annotated'), source_model"
+            f"CSV '{csv_path}' 缺少必需列: {sorted(missing)}\n"
+            f"必需列: video_path, subset ('real'/'annotated'), source_model"
         )
     return df
 
@@ -222,28 +222,27 @@ def prefill_emb_cache(
     num_workers: int = 4,
     video_batch: int = 8,
 ):
-    """Phase 1: extract and cache DINOv3 embeddings for all cache-miss videos.
+    """Phase 1：为所有 cache-miss 视频提取并缓存 DINOv3 embeddings。
 
-    Cache hits are yielded immediately. Cache misses are processed in parallel
-    video-batches: ``num_workers`` threads decode videos simultaneously, then a
-    single GPU pass runs over all flattened frames from the batch (cross-video
-    batching for higher GPU utilization), and results are saved atomically.
+    cache 命中会直接产出。cache miss 会按 video-batch 并行处理：``num_workers``
+    个线程同时解码视频，然后一次 GPU pass 处理 batch 中展平后的全部帧
+    （跨视频 batching 可提高 GPU 利用率），最后原子写入结果。
 
     Args:
-        csv_path:      Path to CSV produced by video_index.py.
-        emb_cache_dir: Root directory for per-video .pt embedding files.
-        model:         STALL instance used for cache-miss extraction.
-        batch_size:    Frames per DINOv3 forward pass.
-        duration_sec:  Used only to validate that the window column exists.
-        debug_n:       If set, process at most this many rows per (subset, source_model).
-        compact:       If True, extract only the --duration-second window frames instead
-                       of the full downsampled video. Saves a compact cache named
+        csv_path:      video_index.py 生成的 CSV 路径。
+        emb_cache_dir: 逐视频 .pt embedding 文件根目录。
+        model:         用于 cache-miss 提取的 STALL 实例。
+        batch_size:    每次 DINOv3 forward 的帧数。
+        duration_sec:  只用于验证窗口列是否存在。
+        debug_n:       若设置，每个 (subset, source_model) 最多处理这么多行。
+        compact:       若为 True，只抽取 --duration 秒窗口帧，而不是完整降采样视频。
+                       保存为 compact cache：
                        ``{stem}_{duration_sec}s.pt``.
-        num_workers:   Number of parallel CPU threads for video decoding (default: 4).
-        video_batch:   Number of videos to batch together for a single GPU pass (default: 8).
+        num_workers:   并行视频解码 CPU 线程数（默认 4）。
+        video_batch:   单次 GPU pass 合并处理的视频数（默认 8）。
 
     Yields:
-        video_path (str) for each row processed.
+        每个已处理行对应的 video_path (str)。
     """
     import torch
     from stall import load_video_frames
@@ -255,8 +254,8 @@ def prefill_emb_cache(
     missing_cols = [c for c in (idx_col, window_col) if c not in df.columns]
     if missing_cols:
         raise ValueError(
-            f"CSV '{csv_path}' is missing columns: {missing_cols}\n"
-            f"Re-run video_index.py to generate an enriched CSV with frame indices."
+            f"CSV '{csv_path}' 缺少列: {missing_cols}\n"
+            f"请重新运行 video_index.py，生成包含帧索引的 enriched CSV。"
         )
 
     if debug_n is not None:
@@ -268,8 +267,8 @@ def prefill_emb_cache(
 
     cache_root = Path(emb_cache_dir)
 
-    # Pass 1: classify rows as cache hits or misses without doing any I/O.
-    misses = []  # (video_path, frame_idxs, cache_path) tuples to decode+embed
+    # 第 1 遍：不做 I/O，只判断每行是 cache hit 还是 miss。
+    misses = []  # 需要 decode+embed 的 (video_path, frame_idxs, cache_path) 元组
 
     for _, row in df.iterrows():
         video_path = row["video_path"]
@@ -292,7 +291,7 @@ def prefill_emb_cache(
     if not misses:
         return
 
-    # Pass 2: process cache misses in parallel video-batches.
+    # 第 2 遍：按并行 video-batch 处理 cache miss。
     def _decode(job):
         path, frame_idxs, _ = job
         return load_video_frames(path, frame_idxs)
@@ -300,12 +299,11 @@ def prefill_emb_cache(
     for chunk_start in range(0, len(misses), video_batch):
         chunk = misses[chunk_start : chunk_start + video_batch]
 
-        # Decode all videos in the chunk in parallel.
+        # 并行解码当前 chunk 中的所有视频。
         with ThreadPoolExecutor(max_workers=min(num_workers, len(chunk))) as executor:
             chunk_frames = list(executor.map(_decode, chunk))
 
-        # Drop videos that failed to yield any frames so one bad decode does not
-        # abort the whole extraction pass.
+        # 丢弃没有解码出任何帧的视频，避免单个坏视频中断整个提取流程。
         valid_items = [
             (frames, job)
             for frames, job in zip(chunk_frames, chunk)
@@ -314,14 +312,14 @@ def prefill_emb_cache(
         if not valid_items:
             continue
 
-        # Flatten all frames into one sequence, track per-video lengths.
+        # 将所有帧展平为一个序列，并记录逐视频长度。
         lengths = [len(frames) for frames, _ in valid_items]
         flat_frames = [fr for frames, _ in valid_items for fr in frames]
 
-        # Single GPU pass over all flattened frames.
+        # 对所有展平帧执行一次 GPU pass。
         flat_embs = model._embed_flat_frames(flat_frames, batch_size)
 
-        # Split embeddings back per video and save atomically.
+        # 将 embeddings 拆回逐视频，并原子保存。
         cursor = 0
         for emb_len, (_, (video_path, _, cache_path)) in zip(lengths, valid_items):
             emb = flat_embs[cursor : cursor + emb_len]
@@ -342,30 +340,29 @@ def load_csv_with_emb_cache(
     debug_n: Optional[int] = None,
     compact: bool = False,
 ):
-    """Load enriched CSV (from video_index.py) and yield samples with embedding cache.
+    """加载 video_index.py 生成的 enriched CSV，并通过 embedding cache 产出样本。
 
-    For each video row:
-      - Cache miss: loads frames, extracts DINOv3 embeddings, saves to disk.
-      - Cache hit: loads embeddings from disk.
-    Then slices to the requested duration window.
+    对每个视频行：
+      - cache miss：加载帧、提取 DINOv3 embeddings、保存到磁盘。
+      - cache hit：从磁盘加载 embeddings。
+    随后切到目标时长窗口。
 
     Args:
-        csv_path:      Path to CSV produced by video_index.py.
-        emb_cache_dir: Root directory for per-video .pt embedding files.
-        model:         STALL instance (used for cache-miss extraction).
-        batch_size:    Frames per DINOv3 forward pass on cache miss.
-        duration_sec:  Which window to use: 1, 2, 3, or 4.
-        debug_n:       If set, yield at most this many rows per (subset, source_model).
-        compact:       If True, look for a compact cache (``{stem}_{duration_sec}s.pt``)
-                       written by ``prefill_emb_cache`` with the same flag. When found,
-                       the cache already contains exactly the window frames so no
-                       re-indexing is needed.
+        csv_path:      video_index.py 生成的 CSV 路径。
+        emb_cache_dir: 逐视频 .pt embedding 文件根目录。
+        model:         STALL 实例（用于 cache-miss 提取）。
+        batch_size:    cache miss 时每次 DINOv3 forward 的帧数。
+        duration_sec:  使用哪个窗口：1、2、3 或 4。
+        debug_n:       若设置，每个 (subset, source_model) 最多产出这么多行。
+        compact:       若为 True，查找由相同 flag 写出的 compact cache
+                       （``{stem}_{duration_sec}s.pt``）。命中时 cache 已经只包含
+                       目标窗口帧，不需要重新索引。
 
     Yields:
         {"embs": np.ndarray [1, T, D], "subset": str, "source_model": str, "filename": str}
 
-    Raises:
-        ValueError: if required index columns are absent (re-run video_index.py).
+    抛出：
+        ValueError: 若必需索引列不存在（需要重新运行 video_index.py）。
     """
     import torch
     from stall import load_video_frames
@@ -377,8 +374,8 @@ def load_csv_with_emb_cache(
     missing_cols = [c for c in (idx_col, window_col) if c not in df.columns]
     if missing_cols:
         raise ValueError(
-            f"CSV '{csv_path}' is missing columns: {missing_cols}\n"
-            f"Re-run video_index.py to generate an enriched CSV with frame indices."
+            f"CSV '{csv_path}' 缺少列: {missing_cols}\n"
+            f"请重新运行 video_index.py，生成包含帧索引的 enriched CSV。"
         )
 
     if debug_n is not None:

@@ -1,25 +1,25 @@
-"""Phase 4 eval CLI for STALL.
+"""STALL 的 Phase 4 eval CLI。
 
-Usage:
-    # HuggingFace dataset — uses pre-computed embeddings, no DINOv3 needed
+用法：
+    # HuggingFace dataset：使用预计算 embeddings，无需 DINOv3
     python eval.py --hf-dataset OmerXYZ/comgenvid
 
-    # CSV with columns: video_path, subset, source_model
+    # 包含 video_path、subset、source_model 列的 CSV
     python eval.py --csv my_benchmark.csv
 
-    # Enriched CSV from video_index.py — uses embedding cache
+    # video_index.py 生成的 enriched CSV：使用 embedding cache
     python src/eval.py --csv cache/indexes/genvideo.csv --emb-cache cache/embeddings/genvideo/ --output-csv results.csv
 
-    # Two directories containing <model>/*.mp4 subdirs
+    # 两个包含 <model>/*.mp4 子目录的视频目录
     python src/eval.py --real-dir datasets/demo_dataset/real/ --fake-dir datasets/demo_dataset/fake/
 
-    # Save per-video scores to CSV
+    # 保存逐视频分数到 CSV
     python src/eval.py --hf-dataset OmerXYZ/comgenvid --output-csv results.csv
 
-    # Override DINOv3 paths (only needed for CSV/dir modes)
+    # 覆盖 DINOv3 路径（仅 CSV/dir 模式需要）
     python src/eval.py --csv bench.csv --dino-repo ~/dinov3 --dino-weights ~/dinov3/weights/...pth
 
-    # Debug: 5 videos per source
+    # Debug：每个来源 5 个视频
     python src/eval.py --csv cache/indexes/genvideo.csv --emb-cache cache/embeddings/genvideo/ --debug-n 5 --output-csv dbg.csv
 """
 
@@ -63,12 +63,12 @@ def _make_stall(args, load_dino: bool) -> STALL:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _print_debug_pair(model, samples: dict):
-    """Print per-step debug output for one real and one fake sample."""
+    """为一个真实样本和一个生成样本打印逐步 debug 输出。"""
     SEP = "=" * 60
     for label, subset_key in [("REAL", "real"), ("FAKE", "annotated")]:
         sample = samples.get(subset_key)
         if sample is None:
-            print(f"\n{SEP}\n  {label}: (no sample found)\n{SEP}")
+            print(f"\n{SEP}\n  {label}: (未找到样本)\n{SEP}")
             continue
         print(f"\n{SEP}")
         print(f"  {label}: {sample.get('filename', '?')}  [{sample.get('source_model', '?')}]")
@@ -76,7 +76,7 @@ def _print_debug_pair(model, samples: dict):
         result = model._scores_from_embs(sample["embs"])
         model.print_score_debug(result)
     print(f"\n{SEP}")
-    print("  Expected for correct HIGHER_IS_REAL behavior:")
+    print("  正确 HIGHER_IS_REAL 行为的预期：")
     print("    real final_score  >  fake final_score")
     print(f"{SEP}\n")
 
@@ -85,7 +85,7 @@ def run_hf(args) -> pd.DataFrame:
     from dataset_utils import load_hf_dataset
     from tqdm import tqdm
 
-    print(f"Loading HuggingFace dataset: {args.hf_dataset}")
+    print(f"加载 HuggingFace dataset: {args.hf_dataset}")
     model = _make_stall(args, load_dino=False)
 
     debug = getattr(args, "debug", False)
@@ -224,7 +224,7 @@ def run_dirs(args) -> pd.DataFrame:
     for dir_path, subset_val in [(args.real_dir, "real"), (args.fake_dir, "annotated")]:
         root = Path(dir_path)
         if not root.exists():
-            raise ValueError(f"Directory not found: {dir_path}")
+            raise ValueError(f"目录不存在: {dir_path}")
         for model_dir in sorted(root.iterdir()):
             if not model_dir.is_dir():
                 continue
@@ -236,12 +236,12 @@ def run_dirs(args) -> pd.DataFrame:
                 })
 
     if not records:
-        raise ValueError("No .mp4 files found in the specified directories.")
+        raise ValueError("指定目录中未找到 .mp4 文件。")
 
     df = pd.DataFrame(records)
     n_real = (df["subset"] == "real").sum()
     n_fake = (df["subset"] == "annotated").sum()
-    print(f"Found {len(df)} videos: {n_real} real, {n_fake} fake")
+    print(f"找到 {len(df)} 个视频: {n_real} real, {n_fake} fake")
 
     model = _make_stall(args, load_dino=True)
     results = model.batch_inference(df["video_path"].tolist())
@@ -255,100 +255,99 @@ def run_dirs(args) -> pd.DataFrame:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run STALL detector and print per-generator AUC/AP results.",
+        description="运行 STALL 检测器并打印逐生成器 AUC/AP 结果。",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     src = parser.add_mutually_exclusive_group(required=True)
     src.add_argument(
         "--hf-dataset", metavar="REPO_ID",
-        help="HuggingFace repo ID (uses pre-computed embeddings — no DINOv3 needed)",
+        help="HuggingFace repo ID（使用预计算 embedding，无需 DINOv3）",
     )
     src.add_argument(
         "--csv", metavar="CSV_PATH",
-        help="CSV with columns: video_path, subset ('real'/'annotated'), source_model",
+        help="CSV，包含列：video_path, subset ('real'/'annotated'), source_model",
     )
     src.add_argument(
         "--real-dir", metavar="DIR",
-        help="Directory of real videos: <model>/*.mp4 subdirs (pair with --fake-dir)",
+        help="真实视频目录：<model>/*.mp4 子目录（与 --fake-dir 配合）",
     )
 
     parser.add_argument(
         "--fake-dir", metavar="DIR",
-        help="Directory of fake videos: <model>/*.mp4 subdirs (pair with --real-dir)",
+        help="生成视频目录：<model>/*.mp4 子目录（与 --real-dir 配合）",
     )
     parser.add_argument(
         "--dino-repo", metavar="PATH", default=None,
-        help="Override path to local DINOv3 repo clone (CSV/dir modes only)",
+        help="覆盖本地 DINOv3 repo clone 路径（仅 CSV/dir 模式）",
     )
     parser.add_argument(
         "--dino-weights", metavar="PATH", default=None,
-        help="Override path to DINOv3 .pth weights file (CSV/dir modes only)",
+        help="覆盖 DINOv3 .pth 权重路径（仅 CSV/dir 模式）",
     )
     parser.add_argument(
         "--params", default=STALL_PARAMS_DEFAULT,
-        help=f"STALL params .npz (default: {STALL_PARAMS_DEFAULT})",
+        help=f"STALL params .npz（默认: {STALL_PARAMS_DEFAULT}）",
     )
     parser.add_argument(
         "--output-csv", metavar="PATH", default=None,
-        help="Save per-video scores (subset, source_model, final_score, …) to CSV",
+        help="保存逐视频分数（subset, source_model, final_score, …）到 CSV",
     )
     parser.add_argument(
         "--split", default="train",
-        help="HuggingFace dataset split (default: train)",
+        help="HuggingFace dataset split（默认: train）",
     )
     parser.add_argument(
         "--debug", nargs="?", const=True, default=None, metavar="N",
         help=(
-            "Enable debug output: print per-step scores for one real and one fake sample. "
-            "Optionally pass N to also limit scoring to N videos per (subset, source_model), "
-            "e.g. --debug 5."
+            "启用 debug 输出：打印一个真实样本和一个生成样本的逐步分数。"
+            "可选传入 N，将每个 (subset, source_model) 的打分限制为 N 个视频，"
+            "例如 --debug 5。"
         ),
     )
     parser.add_argument(
         "--emb-cache", metavar="PATH", default=None,
         help=(
-            "Directory for DINOv3 embedding cache (.pt files per video). "
-            "If omitted, compute embeddings on-the-fly without caching. "
-            "Used with enriched CSVs produced by video_index.py."
+            "DINOv3 embedding cache 目录（每个视频一个 .pt 文件）。"
+            "省略时即时计算 embedding 且不缓存。"
+            "与 video_index.py 生成的 enriched CSV 配合使用。"
         ),
     )
     parser.add_argument(
         "--duration", type=int, default=2, choices=[1, 2, 3, 4],
-        help="Which second-window to use for scoring (default: 2). Requires enriched CSV.",
+        help="使用几秒窗口打分（默认: 2）。需要 enriched CSV。",
     )
     parser.add_argument(
         "--compact", action="store_true", default=False,
         help=(
-            "Extract only the --duration-second window frames instead of the full "
-            "video at 8 fps. Cached as {stem}_{duration}s.pt. Greatly speeds up "
-            "extraction for long videos. To re-score with a different --duration "
-            "later, re-run without --compact to build a full cache. "
-            "(CSV + --emb-cache mode only)"
+            "只抽取 --duration 秒窗口帧，而不是 8 fps 下的完整视频。"
+            "cache 文件名为 {stem}_{duration}s.pt。对长视频可显著加速。"
+            "若后续要用不同 --duration 重新打分，请不带 --compact 重新构建完整 cache。"
+            "（仅 CSV + --emb-cache 模式）"
         ),
     )
     parser.add_argument(
         "--workers", type=int, default=4, metavar="N",
-        help="CPU decode threads for parallel video loading in Phase 1 (default: 4)",
+        help="Phase 1 并行视频加载的 CPU decode 线程数（默认: 4）",
     )
     parser.add_argument(
         "--video-batch", type=int, default=8, metavar="N",
-        help="Videos batched together for a single GPU pass in Phase 1 (default: 8)",
+        help="Phase 1 单次 GPU pass 合并处理的视频数（默认: 8）",
     )
 
     args = parser.parse_args()
 
-    # Unpack --debug [N] into separate bool and int for use throughout
+    # 将 --debug [N] 拆成独立 bool 和 int，供后续使用。
     _debug_raw = args.debug
     args.debug = _debug_raw is not None
     args.debug_n = int(_debug_raw) if isinstance(_debug_raw, str) else None
 
     if args.real_dir and not args.fake_dir:
-        parser.error("--real-dir requires --fake-dir")
+        parser.error("--real-dir 需要同时提供 --fake-dir")
     if args.fake_dir and not args.real_dir:
-        parser.error("--fake-dir requires --real-dir")
+        parser.error("--fake-dir 需要同时提供 --real-dir")
 
-    # Run appropriate loader
+    # 运行对应 loader。
     if args.hf_dataset:
         df = run_hf(args)
     elif args.csv:
@@ -361,7 +360,7 @@ def main():
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
         df.to_csv(args.output_csv, index=False)
-        print(f"Saved per-video scores → {args.output_csv}")
+        print(f"已保存逐视频分数 → {args.output_csv}")
 
     scores_d = {
         "final_score": Score(

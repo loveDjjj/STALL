@@ -1,14 +1,14 @@
-"""Create STALL calibration params (.npz) from a set of real videos.
+"""从一组真实视频创建 STALL 校准参数（.npz）。
 
-The output .npz is a drop-in replacement for stall_params_vatex_dino_v3.npz
-and can be passed to eval.py via --params.
+输出 .npz 可直接替换 stall_params_vatex_dino_v3.npz，并可通过 --params 传给
+eval.py。
 
-Usage (HuggingFace, no DINOv3 needed):
+用法（HuggingFace，无需 DINOv3）：
     python src/create_params.py \\
         --hf-dataset OmerXYZ/comgenvid \\
         --output precomputed/my_params.npz
 
-Usage (local directory of real .mp4 files, requires DINOv3):
+用法（本地真实 .mp4 目录，需要 DINOv3）：
     python src/create_params.py \\
         --real-dir /path/to/real/videos/ \\
         --output precomputed/my_params.npz
@@ -36,53 +36,53 @@ from dataset_utils import load_hf_dataset
 from video_index import downsample_frames, compute_windows
 
 
-# ── Whitening helpers ─────────────────────────────────────────────────────────
+# ── 白化辅助函数 ─────────────────────────────────────────────────────────────
 
 def _fit_whitening(flat_mat: np.ndarray) -> WhiteningTransform:
-    """Fit WhiteningTransform on a 2-D array [N, D]."""
+    """在二维数组 [N, D] 上拟合 WhiteningTransform。"""
     return WhiteningTransform(data=flat_mat)
 
 
 def _get_mu_W(wt: WhiteningTransform):
-    """Return (mu, W) as numpy float32 arrays."""
+    """以 numpy float32 数组返回 (mu, W)。"""
     return wt.mean_.cpu().numpy(), wt.whitening_matrix_.cpu().numpy()
 
 
 def _one_frame_per_video(embs: np.ndarray, seed: int = 42) -> np.ndarray:
-    """Pick 1 random frame per video. [N, T, D] -> [N, D]."""
+    """每个视频随机选 1 帧。[N, T, D] -> [N, D]。"""
     rng = np.random.RandomState(seed)
     N, T, _ = embs.shape
     idxs = rng.randint(0, T, size=N)
     return embs[np.arange(N), idxs]
 
 
-# ── Core calibration ──────────────────────────────────────────────────────────
+# ── 核心校准 ─────────────────────────────────────────────────────────────────
 
 def build_params(embs: np.ndarray) -> dict:
-    """Compute STALL params from calibration embeddings [N, T, D].
+    """从校准 embeddings [N, T, D] 计算 STALL 参数。
 
-    Spatial branch:
-      - Fit WhiteningTransform on 1 random frame per video -> [N, D].
-      - Compute calib_ll_spat over all frames -> [N, T].
+    空间分支：
+      - 在每个视频随机 1 帧上拟合 WhiteningTransform -> [N, D]。
+      - 对所有帧计算 calib_ll_spat -> [N, T]。
 
-    Temporal branch:
-      - Compute L2-normalised consecutive frame diffs -> [N, T-1, D].
-      - Fit WhiteningTransform on all diffs (reshaped to [(T-1)*N, D]).
-      - Compute calib_ll_temp over all frame-pairs -> [N, T-1].
+    时序分支：
+      - 计算 L2-normalized 连续帧差分 -> [N, T-1, D]。
+      - 在所有 diff 上拟合 WhiteningTransform（reshape 为 [(T-1)*N, D]）。
+      - 对所有 frame-pair 计算 calib_ll_temp -> [N, T-1]。
     """
     N, T, D = embs.shape
-    print(f"Calibration set: {N} videos x {T} frames x D={D}", flush=True)
+    print(f"校准集: {N} videos x {T} frames x D={D}", flush=True)
 
-    # Spatial
-    print("Spatial: fitting on 1 random frame per video…", flush=True)
+    # 空间分支
+    print("空间分支：每个视频随机 1 帧用于拟合…", flush=True)
     single_frames = _one_frame_per_video(embs)         # [N, D]
     wt_spat = _fit_whitening(single_frames)
     mu_spat, W_spat = _get_mu_W(wt_spat)
     calib_ll_spat = log_likelihood(apply_whitening(embs, mu_spat, W_spat))  # [N, T]
     print(f"  W_spat {W_spat.shape}  calib_ll_spat {calib_ll_spat.shape}", flush=True)
 
-    # Temporal
-    print("Temporal: fitting on all diff-normalised frames…", flush=True)
+    # 时序分支
+    print("时序分支：使用所有 diff-normalized frame 拟合…", flush=True)
     diffs = diff_normalized_embeddings(embs)           # [N, T-1, D]
     flat_diffs = diffs.reshape((T - 1) * N, D)        # [(T-1)*N, D]
     wt_temp = _fit_whitening(flat_diffs)
@@ -202,7 +202,7 @@ def load_embs_from_dir(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Create STALL calibration params (.npz) from real videos.",
+        description="从真实视频创建 STALL 校准参数（.npz）。",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -210,23 +210,23 @@ def main():
     src = parser.add_mutually_exclusive_group(required=True)
     src.add_argument(
         "--hf-dataset", metavar="REPO_ID",
-        help="HuggingFace dataset repo ID with pre-computed embeddings (no DINOv3 needed).",
+        help="带预计算 embedding 的 HuggingFace dataset repo ID（无需 DINOv3）。",
     )
     src.add_argument(
         "--real-dir", metavar="DIR",
-        help="Directory of real .mp4 files (recursively searched). Requires DINOv3.",
+        help="真实 .mp4 文件目录（递归搜索）。需要 DINOv3。",
     )
 
     parser.add_argument("--output", required=True, metavar="PATH",
-                        help="Output .npz path.")
+                        help="输出 .npz 路径。")
     parser.add_argument("--split", default="train",
-                        help="HuggingFace dataset split (default: train).")
+                        help="HuggingFace dataset split（默认: train）。")
     parser.add_argument("--duration", type=int, default=2, choices=[1, 2, 3, 4],
-                        help="Second-window duration for frame selection (default: 2).")
+                        help="帧选择使用的秒级窗口时长（默认: 2）。")
     parser.add_argument("--dino-repo", default=None, metavar="PATH",
-                        help="Path to local DINOv3 repo clone (--real-dir mode only).")
+                        help="本地 DINOv3 repo clone 路径（仅 --real-dir 模式）。")
     parser.add_argument("--dino-weights", default=None, metavar="PATH",
-                        help="Path to DINOv3 .pth weights file (--real-dir mode only).")
+                        help="DINOv3 .pth 权重路径（仅 --real-dir 模式）。")
 
     args = parser.parse_args()
 
@@ -246,7 +246,7 @@ def main():
     out_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez(out_path, **params)
 
-    print(f"\nSaved: '{out_path}'")
+    print(f"\n已保存: '{out_path}'")
     for k, v in params.items():
         print(f"  {k}: {v.shape} {v.dtype}")
 
