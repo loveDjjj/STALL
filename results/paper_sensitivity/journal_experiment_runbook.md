@@ -20,6 +20,8 @@
   bottom-k ratio = 0.20/0.50 均低于 mean baseline，支持 GenVideo 主线使用 mean aggregation。
 - VideoFeedback / region=1 / same-grid second-order 的 aggregation 对照：
   bottom-k ratio = 0.20/0.50 均低于 mean baseline，支持 VideoFeedback 主线使用 mean aggregation。
+- VideoFeedback 代表性 patch anomaly case visualization：
+  已从 failure candidates 中选取 6 个案例，并基于已有 patch cache 生成空间 anomaly map 和时序 anomaly 曲线。
 
 ## P0：patch region size 敏感性
 
@@ -123,7 +125,7 @@ results/journal_experiments/aggregation_sensitivity/aggregation_sensitivity_summ
 
 ## P0：可解释案例图
 
-为什么要做：已有指标说明 patch 分支总体有帮助，但 VideoFeedback 存在负迁移。期刊稿需要说明边界，而不是只展示平均数。
+为什么要做：已有指标说明 patch 分支总体有帮助，但 VideoFeedback 存在负迁移。期刊稿需要说明边界，而不是只展示平均数。当前已完成 patch-cache 级 anomaly map；若需要更强直观性，可在同一图中再叠加原视频关键帧。
 
 输入候选：
 
@@ -144,6 +146,8 @@ results/paper_sensitivity/failure_case_candidates_summary.md
 ```text
 results/journal_experiments/case_visualizations/patch_anomaly_cases.svg
 results/journal_experiments/case_visualizations/patch_anomaly_cases.png
+results/journal_experiments/case_visualizations/selected_patch_cases.csv
+results/journal_experiments/case_visualizations/patch_anomaly_case_summary.md
 ```
 
 图中建议包含：原视频关键帧、patch anomaly heatmap、global/patch/Alpha-STALLED 三个分数，以及一句失败/成功机制说明。
@@ -183,6 +187,6 @@ duration ∈ {1, 2, 3, 4}
 
 ## 推荐执行顺序
 
-1. 从 failure candidates 选 4-6 个案例，做 patch anomaly map，优先解释 VideoFeedback 的负迁移边界。
-2. 根据版面决定是否补 duration/window 敏感性。
-3. 若需要更强泛化论证，再补 cross-dataset frozen hyperparameter 和 runtime。
+1. 根据版面决定是否补 duration/window 敏感性。
+2. 若需要更强泛化论证，再补 cross-dataset frozen hyperparameter。
+3. 最后补 runtime 和存储开销，作为方法代价说明。

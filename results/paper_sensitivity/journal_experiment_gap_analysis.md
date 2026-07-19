@@ -102,7 +102,9 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
 - `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_aggregation_sensitivity.svg`：GenVideo mean 与 bottom-k aggregation 敏感性曲线；
-- `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback mean 与 bottom-k aggregation 敏感性曲线。
+- `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback mean 与 bottom-k aggregation 敏感性曲线；
+- `results/journal_experiments/case_visualizations/patch_anomaly_cases.svg`：VideoFeedback 代表案例的 patch anomaly map；
+- `results/journal_experiments/case_visualizations/selected_patch_cases.csv`：案例图使用的固定样本清单。
 
 ## 已完成的实跑补充实验
 
@@ -202,6 +204,12 @@ VideoFeedback 的两个 bottom-k 点同样低于 mean baseline，且 bottom-k=0.
 更大、生成器更复杂的数据集上，保留完整局部网格的平均证据更稳健；而 ComGenVid
 上 bottom-k 更优，提示 aggregation 反映的是局部异常证据在数据集中的分布形态。
 
+最后补充了 VideoFeedback 代表性 patch anomaly case visualization。案例覆盖
+paired bootstrap 显示稳定负迁移的 Text2Video-Zero 与 VideoCrafter2，也包含
+LaVie-base/AnimateDiff 的 patch-global conflict 和 Panda70M 真实误伤样本。
+该图不重新提取 DINOv3 特征，而是从已有 patch cache 和真实视频校准参数还原
+同网格二阶时序 anomaly map，用于解释 patch 分支在负迁移和真实误伤边界上的行为。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
@@ -212,7 +220,7 @@ VideoFeedback 的两个 bottom-k 点同样低于 mean baseline，且 bottom-k=0.
    GenVideo 已完成 region=2 下 bottom-k ratio = 0.20/0.50，结果支持 mean
    aggregation；VideoFeedback 已完成 region=1 下 bottom-k ratio = 0.20/0.50，
    结果同样支持 mean aggregation。aggregation 敏感性的 P0 指标证据已补齐。
-2. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
+2. **patch 可解释案例图**：已基于 `failure_case_candidates.csv` 选取 6 个 VideoFeedback 代表案例，并从 patch cache 绘制 anomaly map。若版面允许，可进一步补原视频关键帧。
 
 优先级 P1：
 

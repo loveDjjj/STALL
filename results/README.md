@@ -119,6 +119,10 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `region_sensitivity/region_sensitivity_summary.md` | 已完成 region 点的可读汇总 |
 | `aggregation_sensitivity/` | mean 与 bottom-k aggregation 敏感性实跑结果 |
 | `aggregation_sensitivity/aggregation_sensitivity_summary.md` | 已完成 aggregation 对照点的可读汇总 |
+| `case_visualizations/` | VideoFeedback 代表案例的 patch anomaly map 和案例清单 |
+| `case_visualizations/patch_anomaly_cases.*` | 代表案例分数条、空间 anomaly map 和时序 anomaly 曲线 |
+| `case_visualizations/selected_patch_cases.csv` | 案例图使用的固定样本清单 |
+| `case_visualizations/patch_anomaly_case_summary.md` | 案例选择依据和图中 anomaly 计算口径 |
 
 ## `alpha_stalled_manuscript_tables/`
 
