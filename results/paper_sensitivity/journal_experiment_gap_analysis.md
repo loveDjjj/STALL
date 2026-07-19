@@ -98,7 +98,8 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
 - `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间；
 - `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线；
-- `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线。
+- `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
+- `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线。
 
 ## 已完成的实跑补充实验
 
@@ -135,12 +136,31 @@ region size 敏感性实跑：
 +0.0097；相对 region=3，平均 AUC 提升 +0.0179。该曲线说明过大的局部邻域
 会稀释二阶时序差异，而过小邻域又可能缺少足够空间上下文。
 
+进一步完成了 VideoFeedback / mean aggregation / same-grid second-order 的
+region size 敏感性实跑：
+
+| 数据集 | region | aggregation | 平均 AUC / AP | 状态 |
+|---|---:|---|---:|---|
+| VideoFeedback | 1 | mean | 0.8228 / 0.8302 | journal_full_eval |
+| VideoFeedback | 2 | mean | 0.7941 / 0.7946 | journal_full_eval |
+| VideoFeedback | 3 | mean | 0.7533 / 0.7551 | journal_full_eval |
+
+VideoFeedback 的最优点出现在 region=1，且随着局部邻域扩大，平均 AUC/AP
+持续下降。该结果与 GenVideo 上 region=2 最优的结论不同，说明 region size
+反映的是数据集局部时序证据的空间尺度，而不是一个可凭经验全局固定的装饰性参数。
+论文中应将 region size sweep 表述为方法边界和鲁棒性分析：Alpha-STALLED 的
+创新点在于将全局 STALL 校准与 patch-level 二阶时序证据结合；region size
+决定局部证据的空间支持域，过大的区域可能平滑掉小范围运动不一致，过小的区域则可能
+缺少足够上下文。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
 
-1. **patch region size 敏感性**：GenVideo 已完成 region=1/2/3，并支持
-   主线 region=2；ComGenVid 和 VideoFeedback 仍建议补齐同类证据。
+1. **patch region size 敏感性**：GenVideo 与 VideoFeedback 已完成
+   region=1/2/3。GenVideo 支持 region=2，VideoFeedback 支持 region=1；
+   ComGenVid 仍建议补齐同类证据，尤其需要区分 mean aggregation 与当前主线
+   bottom-k aggregation 下的 region 选择是否一致。
 2. **aggregation 敏感性**：mean vs bottom-k mean。ComGenVid 已完成
    bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
    VideoFeedback/GenVideo 仍需要对应证据。
