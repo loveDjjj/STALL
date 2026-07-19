@@ -203,10 +203,111 @@ def summarize_region(root: Path) -> pd.DataFrame:
     return df
 
 
+def summarize_aggregation(root: Path) -> pd.DataFrame:
+    out_dir = root / "results/journal_experiments/aggregation_sensitivity"
+    rows: list[dict] = []
+    bottomk_pattern = re.compile(
+        r"(?P<dataset>.+)_region(?P<region>\d+)_bottomk(?P<tag>\d+p\d+)_metrics\.csv"
+    )
+
+    for path in sorted(out_dir.glob("*_metrics.csv")):
+        match = bottomk_pattern.fullmatch(path.name)
+        if not match:
+            continue
+        auc, ap = _avg_from_metrics(path)
+        bottomk = float(match.group("tag").replace("p", "."))
+        score_csv = path.with_name(path.name.replace("_metrics.csv", "_patch.csv"))
+        rows.append(
+            {
+                "dataset": match.group("dataset"),
+                "patch_region_size": int(match.group("region")),
+                "aggregation": "bottomk_mean",
+                "bottomk_ratio": bottomk,
+                "score_csv": _rel(score_csv, root),
+                "metrics_csv": _rel(path, root),
+                "avg_auc": auc,
+                "avg_ap": ap,
+                "status": "journal_full_eval",
+            }
+        )
+
+    region_dir = root / "results/journal_experiments/region_sensitivity"
+    for dataset, region in {"videofeedback": 1, "genvideo": 2}.items():
+        mean_metrics = region_dir / f"{dataset}_region{region}_mean_metrics.csv"
+        if not mean_metrics.exists():
+            continue
+        auc, ap = _avg_from_metrics(mean_metrics)
+        rows.append(
+            {
+                "dataset": dataset,
+                "patch_region_size": region,
+                "aggregation": "mean",
+                "bottomk_ratio": 1.00,
+                "score_csv": _rel(region_dir / f"{dataset}_region{region}_mean_patch.csv", root),
+                "metrics_csv": _rel(mean_metrics, root),
+                "avg_auc": auc,
+                "avg_ap": ap,
+                "status": "region_mean_baseline",
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df = (
+        df.drop_duplicates(["dataset", "patch_region_size", "aggregation", "bottomk_ratio"], keep="first")
+        .sort_values(["dataset", "patch_region_size", "aggregation", "bottomk_ratio"])
+        .reset_index(drop=True)
+    )
+    out_dir.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_dir / "aggregation_sensitivity_summary.csv", index=False)
+
+    for dataset, group in df.groupby("dataset"):
+        plot_df = group.copy()
+        plot_df["aggregation_point"] = plot_df.apply(
+            lambda row: 1.0 if row["aggregation"] == "mean" else float(row["bottomk_ratio"]),
+            axis=1,
+        )
+        _save_metric_curve(
+            plot_df,
+            x_col="aggregation_point",
+            title=f"{dataset} aggregation sensitivity",
+            xlabel="Bottom-k ratio (mean shown at 1.00)",
+            output_stem=root / f"results/paper_figures/{dataset}_aggregation_sensitivity",
+            group_col="aggregation",
+        )
+
+    lines = [
+        "# Aggregation / bottom-k 敏感性实跑进展",
+        "",
+        "mean aggregation 作为对应数据集主线 region 的基线；bottom-k 点只汇总已经完成的全量 patch eval。",
+        "",
+        "| dataset | region | aggregation | bottom-k | 平均 AUC | 平均 AP | 状态 |",
+        "|---|---:|---|---:|---:|---:|---|",
+    ]
+    for row in df.itertuples(index=False):
+        lines.append(
+            f"| {row.dataset} | {row.patch_region_size} | {row.aggregation} | "
+            f"{row.bottomk_ratio:.2f} | {row.avg_auc:.4f} | {row.avg_ap:.4f} | {row.status} |"
+        )
+    lines.append("")
+    for dataset, group in df.groupby("dataset"):
+        best_auc = group.loc[group["avg_auc"].idxmax()]
+        best_ap = group.loc[group["avg_ap"].idxmax()]
+        lines.append(
+            f"{dataset}: 当前已完成点中，AUC 最优为 {best_auc['aggregation']} "
+            f"(bottomk={best_auc['bottomk_ratio']:.2f}, AUC={best_auc['avg_auc']:.4f})；"
+            f"AP 最优为 {best_ap['aggregation']} "
+            f"(bottomk={best_ap['bottomk_ratio']:.2f}, AP={best_ap['avg_ap']:.4f})。"
+        )
+    (out_dir / "aggregation_sensitivity_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return df
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument("--kind", choices=["all", "bottomk", "region"], default="all")
+    parser.add_argument("--kind", choices=["all", "bottomk", "region", "aggregation"], default="all")
     args = parser.parse_args()
     root = args.root.resolve()
     if args.kind in {"all", "bottomk"}:
@@ -215,6 +316,9 @@ def main() -> None:
     if args.kind in {"all", "region"}:
         region = summarize_region(root)
         print(f"region rows: {len(region)}")
+    if args.kind in {"all", "aggregation"}:
+        aggregation = summarize_aggregation(root)
+        print(f"aggregation rows: {len(aggregation)}")
 
 
 if __name__ == "__main__":

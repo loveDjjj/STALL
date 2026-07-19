@@ -16,6 +16,8 @@
   全量 patch eval 和敏感性曲线，当前 region=2 最优，支持主线 region 选择。
 - VideoFeedback / same-grid second-order / mean aggregation 的 region=1/2/3
   全量 patch eval 和敏感性曲线，当前 region=1 最优，说明该数据集对更小局部空间支持域更敏感。
+- GenVideo / region=2 / same-grid second-order 的 aggregation 对照：
+  bottom-k ratio = 0.20/0.50 均低于 mean baseline，支持 GenVideo 主线使用 mean aggregation。
 
 ## P0：patch region size 敏感性
 
@@ -70,7 +72,8 @@ results/journal_experiments/region_sensitivity/region_sensitivity_summary.md
 ## P0：aggregation / bottom-k 敏感性
 
 为什么要做：ComGenVid 上 bottom-k 有明显作用，且已完成加密网格；
-VideoFeedback/GenVideo 当前主线使用 mean，仍需要证明 aggregation 选择不是偶然。
+GenVideo 已完成 bottom-k 对照且支持 mean，VideoFeedback 当前主线使用 mean，
+仍需要证明 aggregation 选择不是偶然。
 ComGenVid 的 region=3 mean 已接近 bottom-k 主线，但 bottom-k=0.50 仍略高，
 说明 region size 与 aggregation 都应作为独立边界分析报告。
 
@@ -179,6 +182,6 @@ duration ∈ {1, 2, 3, 4}
 
 ## 推荐执行顺序
 
-1. 优先跑 VideoFeedback/GenVideo 的 aggregation/bottom-k 敏感性，判断 mean aggregation 是否为稳定选择。
+1. 优先跑 VideoFeedback 的 aggregation/bottom-k 敏感性，判断 mean aggregation 是否为稳定选择。
 2. 同时从 failure candidates 选 4-6 个案例，做 patch anomaly map。
 3. 根据版面决定是否补 duration、cross-dataset frozen hyperparameter 和 runtime。

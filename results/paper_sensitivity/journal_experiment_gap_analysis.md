@@ -100,7 +100,9 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线；
 - `results/paper_figures/comgenvid_region_sensitivity.svg`：ComGenVid patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
-- `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线。
+- `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线；
+- `results/paper_figures/genvideo_aggregation_sensitivity.svg`：GenVideo mean 与 bottom-k aggregation 敏感性曲线；
+- `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback aggregation 基线点，待补 bottom-k 对照。
 
 ## 已完成的实跑补充实验
 
@@ -171,6 +173,21 @@ VideoFeedback 的最优点出现在 region=1，且随着局部邻域扩大，平
 决定局部证据的空间支持域，过大的区域可能平滑掉小范围运动不一致，过小的区域则可能
 缺少足够上下文。
 
+此外完成了 GenVideo / region=2 / same-grid second-order 下的
+aggregation 敏感性实跑。该实验将 mean aggregation 作为 region=2 主线基线，
+并补充两个 bottom-k ratio 对照点：
+
+| 数据集 | region | aggregation | bottom-k | 平均 AUC / AP | 状态 |
+|---|---:|---|---:|---:|---|
+| GenVideo | 2 | bottomk_mean | 0.20 | 0.7652 / 0.7571 | journal_full_eval |
+| GenVideo | 2 | bottomk_mean | 0.50 | 0.7795 / 0.7746 | journal_full_eval |
+| GenVideo | 2 | mean | 1.00 | 0.8072 / 0.8092 | region_mean_baseline |
+
+结果显示两个 bottom-k 点均低于 mean baseline，说明 GenVideo 上局部二阶时序证据
+更适合以整体局部网格分布的均值形式进入 patch 分支，而不是只聚焦最低分局部区域。
+这与 ComGenVid 上 bottom-k=0.50 略优的趋势不同，支持将 aggregation 写作
+数据集局部证据结构的边界分析，而不是把 bottom-k 作为普适默认。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
@@ -178,7 +195,8 @@ VideoFeedback 的最优点出现在 region=1，且随着局部邻域扩大，平
 1. **aggregation 敏感性**：三数据集 region=1/2/3 mean 已补齐。
    ComGenVid 已完成 region=3 下 bottom-k ratio =
    0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
-   VideoFeedback/GenVideo 仍需要 bottom-k 或 aggregation 对照，以证明 mean
+   GenVideo 已完成 region=2 下 bottom-k ratio = 0.20/0.50，结果支持 mean
+   aggregation；VideoFeedback 仍需要 bottom-k 或 aggregation 对照，以证明 mean
    aggregation 选择不是偶然。
 2. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
 

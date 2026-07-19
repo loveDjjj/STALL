@@ -80,6 +80,38 @@ run_patch_eval() {
     --output-csv "${output_csv}"
 }
 
+bottomk_tag() {
+  local bottomk="$1"
+  echo "${bottomk/./p}"
+}
+
+legacy_bottomk_tag() {
+  local bottomk="$1"
+  local tag
+  tag="$(bottomk_tag "${bottomk}")"
+  echo "${tag%0}"
+}
+
+resolve_bottomk_params() {
+  local dataset="$1"
+  local region="$2"
+  local bottomk="$3"
+  local tag
+  local legacy_tag
+  tag="$(bottomk_tag "${bottomk}")"
+  legacy_tag="$(legacy_bottomk_tag "${bottomk}")"
+
+  local params="precomputed/patch_params_${dataset}_real_same_grid_second_order_region${region}_bottomk${tag}_v2.npz"
+  local legacy_params="precomputed/patch_params_${dataset}_real_same_grid_second_order_region${region}_bottomk${legacy_tag}_v2.npz"
+  if [[ -f "${params}" ]]; then
+    echo "${params}"
+  elif [[ -f "${legacy_params}" ]]; then
+    echo "${legacy_params}"
+  else
+    echo "${params}"
+  fi
+}
+
 if [[ "${DATASET}" == "comgenvid" && "${EXPERIMENT}" == "bottomk" ]]; then
   mkdir -p results/journal_experiments/bottomk_sensitivity
   declare -A PARAMS=(
@@ -119,6 +151,35 @@ if [[ "${EXPERIMENT}" == "region_mean" ]]; then
   exit 0
 fi
 
+if [[ "${EXPERIMENT}" == "aggregation" ]]; then
+  mkdir -p results/journal_experiments/aggregation_sensitivity
+  case "${DATASET}" in
+    videofeedback)
+      main_region=1
+      ;;
+    genvideo)
+      main_region=2
+      ;;
+    *)
+      echo "aggregation sensitivity 当前支持 videofeedback/genvideo，实际为 ${DATASET}" >&2
+      exit 2
+      ;;
+  esac
+
+  for bottomk in 0.20 0.50; do
+    tag="$(bottomk_tag "${bottomk}")"
+    params="$(resolve_bottomk_params "${DATASET}" "${main_region}" "${bottomk}")"
+    score_csv="results/journal_experiments/aggregation_sensitivity/${DATASET}_region${main_region}_bottomk${tag}_patch.csv"
+    metrics_csv="results/journal_experiments/aggregation_sensitivity/${DATASET}_region${main_region}_bottomk${tag}_metrics.csv"
+    ensure_patch_params "${DATASET}" "${params}" "bottomk_mean" "${bottomk}" "${main_region}"
+    run_patch_eval "${DATASET}" "${params}" "${score_csv}" "bottomk_mean" "${bottomk}" "${main_region}"
+    run_metric "${score_csv}" "${metrics_csv}"
+  done
+  conda run --no-capture-output -n stall python tools/summarize_journal_experiments.py --kind aggregation
+  echo "完成 ${DATASET} aggregation sensitivity。"
+  exit 0
+fi
+
 cat >&2 <<EOF
 未知组合: DATASET=${DATASET}, EXPERIMENT=${EXPERIMENT}
 
@@ -126,5 +187,7 @@ cat >&2 <<EOF
   bash scripts/experiments/run_journal_patch_sensitivity.sh comgenvid bottomk
   bash scripts/experiments/run_journal_patch_sensitivity.sh videofeedback region_mean
   bash scripts/experiments/run_journal_patch_sensitivity.sh genvideo region_mean
+  bash scripts/experiments/run_journal_patch_sensitivity.sh videofeedback aggregation
+  bash scripts/experiments/run_journal_patch_sensitivity.sh genvideo aggregation
 EOF
 exit 2

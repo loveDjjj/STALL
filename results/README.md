@@ -103,6 +103,8 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `comgenvid_region_sensitivity.*` | ComGenVid patch region size 敏感性曲线 |
 | `genvideo_region_sensitivity.*` | GenVideo patch region size 敏感性曲线 |
 | `videofeedback_region_sensitivity.*` | VideoFeedback patch region size 敏感性曲线 |
+| `genvideo_aggregation_sensitivity.*` | GenVideo mean 与 bottom-k aggregation 敏感性曲线 |
+| `videofeedback_aggregation_sensitivity.*` | VideoFeedback aggregation 基线点；bottom-k 对照待补 |
 
 ## `journal_experiments/`
 
@@ -115,6 +117,8 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `bottomk_sensitivity/bottomk_sensitivity_summary.md` | 已完成 bottom-k 点的可读汇总 |
 | `region_sensitivity/` | patch region size 敏感性实跑结果 |
 | `region_sensitivity/region_sensitivity_summary.md` | 已完成 region 点的可读汇总 |
+| `aggregation_sensitivity/` | mean 与 bottom-k aggregation 敏感性实跑结果 |
+| `aggregation_sensitivity/aggregation_sensitivity_summary.md` | 已完成 aggregation 对照点的可读汇总 |
 
 ## `alpha_stalled_manuscript_tables/`
 
