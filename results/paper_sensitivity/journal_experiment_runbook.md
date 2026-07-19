@@ -156,6 +156,8 @@ results/journal_experiments/case_visualizations/patch_anomaly_case_summary.md
 
 为什么要做：VideoFeedback 和 GenVideo 有短视频来源，当前主线报告 2 秒覆盖，短视频来源作为 coverage gap 单独说明。若投期刊，最好补充 1s/2s/3s/4s 的边界。
 
+当前状态：已完成 `results/journal_experiments/duration_window_feasibility/` 审计。三数据集只有 2s compact patch cache 可直接完整评测；VideoFeedback 的 1s cache 只覆盖 Hotshot-XL 生成视频，缺真实 1s cache，不能做真实视频校准；3s/4s 基本需要重新 prefill patch cache。
+
 建议网格：
 
 ```text
@@ -164,6 +166,14 @@ duration ∈ {1, 2, 3, 4}
 ```
 
 风险：该实验可能需要重建 index 和 cache，耗时高于 CSV 级分析。
+
+建议执行前置步骤：
+
+```bash
+conda run --no-capture-output -n stall python tools/analyze_duration_window_feasibility.py
+```
+
+若决定实跑，优先选择一个代表数据集补 1s/2s 对照，不建议直接铺开三数据集 1s/3s/4s 全网格。
 
 ## P1：cross-dataset frozen hyperparameter
 
@@ -187,6 +197,6 @@ duration ∈ {1, 2, 3, 4}
 
 ## 推荐执行顺序
 
-1. 根据版面决定是否补 duration/window 敏感性。
+1. 根据版面决定是否投入 patch cache prefill 来补 duration/window 实跑；当前已完成可行性审计。
 2. 若需要更强泛化论证，再补 cross-dataset frozen hyperparameter。
 3. 最后补 runtime 和存储开销，作为方法代价说明。

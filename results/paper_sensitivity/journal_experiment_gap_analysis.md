@@ -210,6 +210,13 @@ LaVie-base/AnimateDiff 的 patch-global conflict 和 Panda70M 真实误伤样本
 该图不重新提取 DINOv3 特征，而是从已有 patch cache 和真实视频校准参数还原
 同网格二阶时序 anomaly map，用于解释 patch 分支在负迁移和真实误伤边界上的行为。
 
+针对 duration/window 敏感性，已完成现有 index 与 compact patch cache 的可行性审计。
+结果显示三数据集当前只有 2s compact patch cache 同时覆盖真实视频校准和生成视频评测；
+VideoFeedback 虽有 1s index 全覆盖，但已有 1s patch cache 只覆盖 Hotshot-XL 生成视频，
+缺少真实视频 1s cache，不能进行真实视频校准。GenVideo 与 ComGenVid 的 index 支持
+1s/3s/4s 窗口，但缺对应 compact patch cache。因此，duration sweep 的下一步不是直接评测，
+而是先决定是否投入大规模 cache prefill。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
@@ -224,7 +231,7 @@ LaVie-base/AnimateDiff 的 patch-global conflict 和 Panda70M 真实误伤样本
 
 优先级 P1：
 
-3. **duration/window 敏感性**：1s/2s/3s/4s，尤其解释 HotShot/MoonValley/Hotshot-XL 的短视频边界。
+3. **duration/window 敏感性**：已完成可行性审计，见 `results/journal_experiments/duration_window_feasibility/`。若继续实跑，应先补一个代表数据集的 1s/2s 对照 cache，再考虑 3s/4s。
 4. **cross-dataset frozen hyperparameter**：用一个数据集选出的 alpha/beta/region，在其他数据集冻结评测，区分 oracle sweep 和可泛化配置。
 5. **runtime 和存储开销**：global-only、patch cache prefill、patch-only eval、fusion 的时间和 cache 规模。
 

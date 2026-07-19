@@ -123,6 +123,9 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `case_visualizations/patch_anomaly_cases.*` | 代表案例分数条、空间 anomaly map 和时序 anomaly 曲线 |
 | `case_visualizations/selected_patch_cases.csv` | 案例图使用的固定样本清单 |
 | `case_visualizations/patch_anomaly_case_summary.md` | 案例选择依据和图中 anomaly 计算口径 |
+| `duration_window_feasibility/` | 1s/2s/3s/4s duration/window 敏感性实跑前的 index/cache 覆盖审计 |
+| `duration_window_feasibility/duration_window_feasibility.md` | duration/window 是否可直接 patch eval 的可读结论 |
+| `duration_window_feasibility/duration_window_summary.csv` | 数据集级 duration/window index 与 compact patch cache 覆盖汇总 |
 
 ## `alpha_stalled_manuscript_tables/`
 
