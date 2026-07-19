@@ -98,6 +98,7 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
 - `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间；
 - `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线；
+- `results/paper_figures/comgenvid_region_sensitivity.svg`：ComGenVid patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
 - `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线。
 
@@ -122,6 +123,23 @@ patch 分支的低分局部证据聚合比例，用于说明主配置附近的�
 该结果说明 ComGenVid 上的 patch 分支并非只依赖极少数最低分局部片段；
 扩大低分区域聚合范围仍能保留检测收益。论文表述中应将其作为敏感性证据，
 而不是事后重选主配置。
+
+同时完成了 ComGenVid / mean aggregation / same-grid second-order 的
+region size 敏感性实跑：
+
+| 数据集 | region | aggregation | 平均 AUC / AP | 状态 |
+|---|---:|---|---:|---|
+| ComGenVid | 1 | mean | 0.9088 / 0.9075 | journal_full_eval |
+| ComGenVid | 2 | mean | 0.9230 / 0.9227 | journal_full_eval |
+| ComGenVid | 3 | mean | 0.9299 / 0.9288 | journal_full_eval |
+
+该结果支持 ComGenVid 使用更大的局部空间支持域。region=3 相对 region=1
+平均 AUC 提升 +0.0211，相对 region=2 提升 +0.0069。与 bottom-k
+sweep 对照后可以看到，region=3 mean 已接近 bottom-k 主线附近性能，但
+bottom-k=0.50 仍取得更高平均 AUC/AP（0.9312 / 0.9334）。因此，
+ComGenVid 的增益不是单独来自更大 region，也不是单独来自 bottom-k；
+更合理的解释是，大 region 提供稳定的局部二阶时序支持域，而 bottom-k
+进一步突出生成视频中更异常的低似然局部证据。
 
 本轮还完成了 GenVideo / mean aggregation / same-grid second-order 的
 region size 敏感性实跑：
@@ -157,25 +175,23 @@ VideoFeedback 的最优点出现在 region=1，且随着局部邻域扩大，平
 
 优先级 P0：
 
-1. **patch region size 敏感性**：GenVideo 与 VideoFeedback 已完成
-   region=1/2/3。GenVideo 支持 region=2，VideoFeedback 支持 region=1；
-   ComGenVid 仍建议补齐同类证据，尤其需要区分 mean aggregation 与当前主线
-   bottom-k aggregation 下的 region 选择是否一致。
-2. **aggregation 敏感性**：mean vs bottom-k mean。ComGenVid 已完成
-   bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
-   VideoFeedback/GenVideo 仍需要对应证据。
-3. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
+1. **aggregation 敏感性**：三数据集 region=1/2/3 mean 已补齐。
+   ComGenVid 已完成 region=3 下 bottom-k ratio =
+   0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
+   VideoFeedback/GenVideo 仍需要 bottom-k 或 aggregation 对照，以证明 mean
+   aggregation 选择不是偶然。
+2. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
 
 优先级 P1：
 
-4. **duration/window 敏感性**：1s/2s/3s/4s，尤其解释 HotShot/MoonValley/Hotshot-XL 的短视频边界。
-5. **cross-dataset frozen hyperparameter**：用一个数据集选出的 alpha/beta/region，在其他数据集冻结评测，区分 oracle sweep 和可泛化配置。
-6. **runtime 和存储开销**：global-only、patch cache prefill、patch-only eval、fusion 的时间和 cache 规模。
+3. **duration/window 敏感性**：1s/2s/3s/4s，尤其解释 HotShot/MoonValley/Hotshot-XL 的短视频边界。
+4. **cross-dataset frozen hyperparameter**：用一个数据集选出的 alpha/beta/region，在其他数据集冻结评测，区分 oracle sweep 和可泛化配置。
+5. **runtime 和存储开销**：global-only、patch cache prefill、patch-only eval、fusion 的时间和 cache 规模。
 
 优先级 P2：
 
-7. **paired bootstrap 扩展到生成器平均指标**：当前已输出逐生成器 paired ΔAUC/ΔAP；如果手稿需要一个总体显著性结论，可进一步对生成器平均指标做 paired bootstrap。
-8. **失败样本人工审计**：从候选表检查是否来自低运动、短时长、压缩伪影或真实视频域偏移。
+6. **paired bootstrap 扩展到生成器平均指标**：当前已输出逐生成器 paired ΔAUC/ΔAP；如果手稿需要一个总体显著性结论，可进一步对生成器平均指标做 paired bootstrap。
+7. **失败样本人工审计**：从候选表检查是否来自低运动、短时长、压缩伪影或真实视频域偏移。
 
 ## 图表规范
 

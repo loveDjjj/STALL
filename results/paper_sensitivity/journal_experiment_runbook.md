@@ -10,6 +10,8 @@
 - 基于现有 CSV 的 beta sweep、逐生成器 delta heatmap、分数分布、bootstrap CI、paired ΔAUC/ΔAP CI、失败样本候选。
 - ComGenVid / region=3 / bottom-k ratio = 0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50
   的全量 patch eval 和敏感性曲线。
+- ComGenVid / same-grid second-order / mean aggregation 的 region=1/2/3
+  全量 patch eval 和敏感性曲线，当前 region=3 最优，支持 ComGenVid 主线使用更大局部空间支持域。
 - GenVideo / same-grid second-order / mean aggregation 的 region=1/2/3
   全量 patch eval 和敏感性曲线，当前 region=2 最优，支持主线 region 选择。
 - VideoFeedback / same-grid second-order / mean aggregation 的 region=1/2/3
@@ -17,7 +19,7 @@
 
 ## P0：patch region size 敏感性
 
-为什么要做：当前主线配置对不同数据集使用不同 patch region size。期刊审稿可能质疑是否存在数据集特异调参。GenVideo 已完成 region=1/2/3，并支持 region=2；VideoFeedback 已完成 region=1/2/3，并支持 region=1。ComGenVid 仍建议补齐同类证据，特别是区分 mean aggregation 与当前主线 bottom-k aggregation 下的 region 选择是否一致。
+为什么要做：当前主线配置对不同数据集使用不同 patch region size。期刊审稿可能质疑是否存在数据集特异调参。ComGenVid、GenVideo 与 VideoFeedback 均已完成 region=1/2/3 mean aggregation。结果分别支持 ComGenVid 使用 region=3、GenVideo 使用 region=2、VideoFeedback 使用 region=1，说明 region size 对应局部时序证据的空间尺度，而不是一个固定装饰性参数。
 
 建议网格：
 
@@ -69,6 +71,8 @@ results/journal_experiments/region_sensitivity/region_sensitivity_summary.md
 
 为什么要做：ComGenVid 上 bottom-k 有明显作用，且已完成加密网格；
 VideoFeedback/GenVideo 当前主线使用 mean，仍需要证明 aggregation 选择不是偶然。
+ComGenVid 的 region=3 mean 已接近 bottom-k 主线，但 bottom-k=0.50 仍略高，
+说明 region size 与 aggregation 都应作为独立边界分析报告。
 
 建议网格：
 
@@ -175,7 +179,6 @@ duration ∈ {1, 2, 3, 4}
 
 ## 推荐执行顺序
 
-1. 先补齐 ComGenVid 的 region size 敏感性，优先确认 region 与 bottom-k aggregation 是否耦合。
-2. 再跑 VideoFeedback/GenVideo 的 aggregation/bottom-k 敏感性，判断 mean aggregation 是否为稳定选择。
-3. 同时从 failure candidates 选 4-6 个案例，做 patch anomaly map。
-4. 最后根据版面决定是否补 duration、cross-dataset frozen hyperparameter 和 runtime。
+1. 优先跑 VideoFeedback/GenVideo 的 aggregation/bottom-k 敏感性，判断 mean aggregation 是否为稳定选择。
+2. 同时从 failure candidates 选 4-6 个案例，做 patch anomaly map。
+3. 根据版面决定是否补 duration、cross-dataset frozen hyperparameter 和 runtime。

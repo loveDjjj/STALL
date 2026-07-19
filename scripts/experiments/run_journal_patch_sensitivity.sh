@@ -11,6 +11,32 @@ set -euo pipefail
 DATASET="${1:-comgenvid}"
 EXPERIMENT="${2:-bottomk}"
 SCORE_BATCH_SIZE="${SCORE_BATCH_SIZE:-16}"
+SCORE_DEVICE="${SCORE_DEVICE:-cuda}"
+
+ensure_patch_params() {
+  local dataset="$1"
+  local params="$2"
+  local aggregation="$3"
+  local bottomk="$4"
+  local region="$5"
+
+  if [[ -f "${params}" ]]; then
+    echo "[skip] ${params}"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "${params}")"
+  conda run --no-capture-output -n stall python src/create_patch_params.py \
+    --csv "cache/indexes/${dataset}.csv" \
+    --patch-emb-cache "cache/patch_embeddings/${dataset}" \
+    --compact \
+    --real-only \
+    --patch-temp-mode same_grid_second_order \
+    --patch-region-size "${region}" \
+    --aggregation "${aggregation}" \
+    --bottomk-ratio "${bottomk}" \
+    --output "${params}"
+}
 
 run_metric() {
   local score_csv="$1"
@@ -43,6 +69,7 @@ run_patch_eval() {
     --patch-emb-cache "cache/patch_embeddings/${dataset}" \
     --compact \
     --score-batch-size "${SCORE_BATCH_SIZE}" \
+    --score-device "${SCORE_DEVICE}" \
     --patch-params "${params}" \
     --patch-temp-mode same_grid_second_order \
     --patch-region-size "${region}" \
@@ -83,6 +110,7 @@ if [[ "${EXPERIMENT}" == "region_mean" ]]; then
     params="precomputed/patch_params_${DATASET}_real_same_grid_second_order_region${region}_mean_v2.npz"
     score_csv="results/journal_experiments/region_sensitivity/${DATASET}_region${region}_mean_patch.csv"
     metrics_csv="results/journal_experiments/region_sensitivity/${DATASET}_region${region}_mean_metrics.csv"
+    ensure_patch_params "${DATASET}" "${params}" "mean" 0.50 "${region}"
     run_patch_eval "${DATASET}" "${params}" "${score_csv}" "mean" 0.50 "${region}"
     run_metric "${score_csv}" "${metrics_csv}"
   done
