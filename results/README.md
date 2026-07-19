@@ -104,7 +104,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `genvideo_region_sensitivity.*` | GenVideo patch region size 敏感性曲线 |
 | `videofeedback_region_sensitivity.*` | VideoFeedback patch region size 敏感性曲线 |
 | `genvideo_aggregation_sensitivity.*` | GenVideo mean 与 bottom-k aggregation 敏感性曲线 |
-| `videofeedback_aggregation_sensitivity.*` | VideoFeedback aggregation 基线点；bottom-k 对照待补 |
+| `videofeedback_aggregation_sensitivity.*` | VideoFeedback mean 与 bottom-k aggregation 敏感性曲线 |
 
 ## `journal_experiments/`
 

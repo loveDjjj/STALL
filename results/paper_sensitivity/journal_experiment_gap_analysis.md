@@ -102,7 +102,7 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
 - `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_aggregation_sensitivity.svg`：GenVideo mean 与 bottom-k aggregation 敏感性曲线；
-- `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback aggregation 基线点，待补 bottom-k 对照。
+- `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback mean 与 bottom-k aggregation 敏感性曲线。
 
 ## 已完成的实跑补充实验
 
@@ -188,6 +188,20 @@ aggregation 敏感性实跑。该实验将 mean aggregation 作为 region=2 主�
 这与 ComGenVid 上 bottom-k=0.50 略优的趋势不同，支持将 aggregation 写作
 数据集局部证据结构的边界分析，而不是把 bottom-k 作为普适默认。
 
+进一步完成了 VideoFeedback / region=1 / same-grid second-order 下的
+aggregation 敏感性实跑：
+
+| 数据集 | region | aggregation | bottom-k | 平均 AUC / AP | 状态 |
+|---|---:|---|---:|---:|---|
+| VideoFeedback | 1 | bottomk_mean | 0.20 | 0.7935 / 0.8067 | journal_full_eval |
+| VideoFeedback | 1 | bottomk_mean | 0.50 | 0.8052 / 0.8172 | journal_full_eval |
+| VideoFeedback | 1 | mean | 1.00 | 0.8228 / 0.8302 | region_mean_baseline |
+
+VideoFeedback 的两个 bottom-k 点同样低于 mean baseline，且 bottom-k=0.50
+虽优于 bottom-k=0.20，但仍未超过 mean。该结果与 GenVideo 一致，说明在这两个
+更大、生成器更复杂的数据集上，保留完整局部网格的平均证据更稳健；而 ComGenVid
+上 bottom-k 更优，提示 aggregation 反映的是局部异常证据在数据集中的分布形态。
+
 ## 仍建议补充的实跑实验
 
 优先级 P0：
@@ -196,8 +210,8 @@ aggregation 敏感性实跑。该实验将 mean aggregation 作为 region=2 主�
    ComGenVid 已完成 region=3 下 bottom-k ratio =
    0.10/0.15/0.20/0.25/0.30/0.35/0.40/0.50；
    GenVideo 已完成 region=2 下 bottom-k ratio = 0.20/0.50，结果支持 mean
-   aggregation；VideoFeedback 仍需要 bottom-k 或 aggregation 对照，以证明 mean
-   aggregation 选择不是偶然。
+   aggregation；VideoFeedback 已完成 region=1 下 bottom-k ratio = 0.20/0.50，
+   结果同样支持 mean aggregation。aggregation 敏感性的 P0 指标证据已补齐。
 2. **patch 可解释案例图**：基于 `failure_case_candidates.csv` 选取真实/生成代表视频，回到 patch cache 或原视频绘制 patch anomaly map。
 
 优先级 P1：
