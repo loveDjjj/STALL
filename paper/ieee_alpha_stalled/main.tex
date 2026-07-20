@@ -1,0 +1,56 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[UTF8,scheme=plain,fontset=fandol]{ctex}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{url}
+\usepackage{grffile}
+\usepackage{balance}
+
+\graphicspath{{figures/method/}{figures/results/}{figures/supplementary/}}
+\renewcommand{\refname}{参考文献}
+
+\newcommand{\method}{Alpha-STALLED}
+\newcommand{\stall}{STALL}
+\newcommand{\sreal}{S_{\mathrm{real}}}
+\newcommand{\sglobal}{S_{\mathrm{global}}}
+\newcommand{\slocal}{S_{\mathrm{local}}}
+
+\begin{document}
+
+\title{\method：基于全局--局部真实视频校准的免训练生成视频检测}
+
+\author{
+  \IEEEauthorblockN{作者姓名待定}
+  \IEEEauthorblockA{
+    单位待定\\
+    邮箱待定}
+}
+
+\maketitle
+\zihao{-5}
+\linespread{1.12}\selectfont
+
+\input{sections/00_abstract}
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_method}
+\input{sections/04_experiments}
+\input{sections/05_ablation_analysis}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+\input{sections/08_declarations}
+
+\section*{致谢}
+[AUTHOR\_INPUT\_NEEDED: 请补充基金、平台、数据提供者、计算资源和个人致谢。]
+
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,16 @@
+\section{讨论}
+\label{sec:discussion}
+
+\subsection{与 \stall 的关系}
+\method 应被理解为对 \stall 的局部化扩展，而不是完全替代。\stall 证明了真实视频校准的全局空间--时序似然可以在不使用生成样本训练的情况下检测生成视频。本文的新增部分是把这种真实视频典型性判断延伸到 patch 级局部轨迹，特别是同网格二阶时序统计。实验结果表明，当生成伪影以局部、短时和非语义形式出现时，patch 二阶分支能够补充全局帧特征；当生成器在局部运动统计上接近真实视频，或真实视频本身存在低质量/低运动/域偏移时，patch 分支也可能产生负迁移。
+
+\subsection{协议边界}
+当前论文写作必须区分三类结果。第一，主表和组件消融是已经在仓库中按统一脚本审计的 release baseline。第二，D3 协议审计说明了外部 baseline 公平重跑需要满足的条件，但不是外部 D3 重跑结果。第三，failure case、关键帧和 patch anomaly map 是事后解释，不参与模型选择。若把这三类证据混写，容易造成审稿风险。
+
+另一个边界是校准来源。全局 \stall 分支沿用 VATEX 等真实视频校准设定~\cite{wang2019vatex}；当前 patch release 资产使用真实视频构建局部分支统计，但不同 benchmark 的真实来源和覆盖情况需要在实验协议中明确标注。由于该方法不使用生成视频训练，仍符合生成器零样本检测的核心目标；但若投稿要求严格外部校准，应补充 calibration source ablation 或构建完全外部真实校准集。
+
+\subsection{与 D3 的公平比较}
+D3 使用二阶时序特征进行训练自由检测~\cite{zheng2025d3}，与本文的局部二阶时序动机相关。但直接引用外部 D3 数值作为主表 baseline 并不公平。根据 \stall 原文附录 A.4，D3 官方协议与 \stall 协议在类别比例、GenVideo 真实视频 FPS 处理和 encoder 选择上存在差异；AP 对类别不平衡敏感，3 FPS 真实视频通过帧复制补到 8 FPS 还可能影响时序差分检测器。因此，除非在同一视频索引、同一帧索引、同一 8 FPS/2 秒窗口和 pairwise balanced AUC/AP 下重跑，否则本文只报告 protocol audit。
+
+\subsection{局限性与后续工作}
+当前结果仍有若干限制。首先，尚未完成外部 baseline 的同协议重跑，因此本文当前最强证据是相对 \stall global-only 和内部 patch 消融的增益。其次，region size 和 aggregation 存在数据集依赖，说明局部证据的空间尺度仍需要更稳健的冻结策略。第三，当前没有系统完成 backbone、扰动鲁棒性、calibration set size 和 calibration source 的大规模补充实验，这些实验需要重新提取大量 DINOv3/patch cache，适合在审稿明确要求时执行。最后，关键帧解释仍是基于分数和局部 anomaly map 的诊断，若要声称具体视觉原因，需要人工复核原视频片段。

@@ -1,0 +1,43 @@
+\section{实验设置与主结果}
+\label{sec:experiments}
+
+\subsection{数据集与评测协议}
+本文使用三个生成视频检测 benchmark。ComGenVid 来自 \stall 原文，用于覆盖 Sora、Veo-3 等高保真生成器；VideoFeedback/VideoScore 提供多生成器视频生成质量数据~\cite{he2024videoscore}；GenVideo 是百万级生成视频检测 benchmark 的代表性子集~\cite{chen2024genvideo}。真实视频来源包括 MSVD、MSR-VTT、Panda70M 等公开视频集合~\cite{chen2011msvd,xu2016msrvtt,chen2024panda70m}。
+
+所有主表指标采用 pairwise balanced real-vs-generator AUC/AP，即每个生成器分别与等量真实视频比较，再对生成器取平均。AP 的正类为生成视频；仓库中原始分数方向为“越大越真实”，评测脚本在计算 AUC/AP 时统一处理方向。该协议避免类别不平衡对 AP 的影响，也与 \stall 原文附录 A.3 的公平比较原则一致。
+
+当前 release 的主线实验使用已冻结的全局分数、patch 分数和融合分数 CSV。全局分支复现 \stall 的 DINOv3 全局空间--时序似然；patch 分支使用真实视频校准的局部空间和同网格二阶时序似然。需要强调的是，本文当前未重跑外部 D3、AEROBLADE、RIGID、ZED、T2VE 或 AIGVDet；相关方法只用于文献定位和协议审计，不能写成直接主表对照。
+
+\subsection{实验资产总览}
+表~\ref{tab:experiment_inventory} 汇总当前已完成实验与审计资产。该表的目的不是把所有结果都压入主文，而是明确哪些证据支撑主张，哪些结果只适合作为协议或成本边界。当前已完成的主线证据包括三数据集主结果、global/patch/fusion 消融、局部时序定义消融、二阶/高阶导数对照、超参数敏感性、跨数据集冻结超参数、paired bootstrap、D3 protocol audit、duration/window 代表实验、runtime/storage audit 和关键帧解释。尚未完成的是同协议外部 baseline、严格外部校准源消融、backbone 消融和扰动鲁棒性实验。
+
+\input{tables/experiment_inventory}
+
+\subsection{主结果}
+表~\ref{tab:main_results} 给出 \method 在三个数据集上的 release baseline。ComGenVid 上平均 AUC/AP 为 0.9198/0.9211，VideoFeedback 上为 0.8628/0.8750，GenVideo 上为 0.8374/0.8283。三个数据集覆盖不同真实视频来源、生成器家族和视频长度约束，因此主结果更适合表述为跨 benchmark 的一致有效性，而不是单一数据集上的最优调参结果。
+
+\input{tables/main_results}
+
+与 global-only 相比，\method 在三个数据集上均获得提升。ComGenVid 的提升最大，说明局部二阶 patch 时序证据能够捕获全局帧向量遗漏的局部异常。VideoFeedback 的提升较小，但仍为正，这与其内部生成器差异更大、局部 patch 分支存在负迁移来源一致。GenVideo 上融合分支同时优于 global-only 和 patch-only，说明全局外观/运动证据与局部时序证据在该数据集上具有互补性。
+
+\subsection{统计稳定性}
+为避免只报告均值带来的误导，我们采用生成器宏平均 paired bootstrap：每次 bootstrap 在每个生成器内部进行 balanced real/fake 重采样，计算 AUC/AP 后先对生成器取宏平均，再报告方法差值的 95\% 置信区间。表~\ref{tab:bootstrap_delta} 显示，\method 相对 global-only 的 $\Delta$AUC 在 ComGenVid、VideoFeedback 和 GenVideo 上分别为 +0.0669、+0.0153 和 +0.0344，且三个 95\% CI 均完全大于 0。
+
+\input{tables/bootstrap_delta}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{macro_average_bootstrap_alpha_delta.pdf}
+  \caption{生成器宏平均 paired bootstrap 下，\method 相对 global-only 的 $\Delta$AUC/$\Delta$AP 区间。三个 benchmark 的宏平均 $\Delta$AUC 均为正。}
+  \label{fig:macro_bootstrap}
+\end{figure}
+
+\subsection{逐生成器差异}
+均值提升并不意味着所有生成器都得到同等改善。图~\ref{fig:generator_delta} 展示了逐生成器 AUC 变化。ComGenVid 和 GenVideo 中，\method 相对 global-only 没有出现稳定负迁移生成器；VideoFeedback 中存在 Text2Video-Zero、VideoCrafter2 等负迁移来源，说明局部二阶时序证据在某些生成器上会把生成视频推向更真实的分数区间。因此，论文讨论中必须保留失败模式，而不能把 patch 分支写成无条件增益。
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{per_generator_auc_delta_heatmap.pdf}
+  \caption{逐生成器 AUC 变化热图。正值表示 \method 相对 global-only 提升，负值表示 patch 证据对该生成器产生负迁移。}
+  \label{fig:generator_delta}
+\end{figure}

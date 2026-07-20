@@ -1,0 +1,49 @@
+\section{消融与机制分析}
+\label{sec:ablation}
+
+\subsection{全局分支与局部分支互补}
+表~\ref{tab:component_ablation} 给出 global-only、patch-only 和 \method 的组件消融。ComGenVid 上 patch-only 已超过 global-only，说明该数据集的主要可分性来自局部二阶时序证据；但融合分数略低于 patch-only，提示全局分支并非在所有数据集上都能增加均值上限。VideoFeedback 上 patch-only 低于 global-only，而融合后高于二者，说明全局分支在该数据集上提供必要约束。GenVideo 上 patch-only 与 global-only 接近，融合后取得最佳结果。总体上，局部分支不是替代全局 \stall，而是补充全局特征遗漏的局部动态证据。
+
+\input{tables/component_ablation}
+
+\subsection{局部二阶时序是否必要}
+ComGenVid 局部时序定义消融显示，同网格二阶分支明显优于 patch 空间、lag-1、多滞后和 motion-hard/soft 等替代方案。为进一步检验二阶选择是否任意，本文补充了三阶和四阶同网格 patch temporal derivative 对照。表~\ref{tab:temporal_order} 显示，在相同 region、bottom-$k$ 和真实视频校准条件下，二阶分支取得 0.9273/0.9309 的 AUC/AP，而三阶和四阶分别下降到 0.8853/0.8936 与 0.8866/0.8949。这说明更高阶差分会强调更高频局部变化，但在当前 16 帧窗口和 patch 统计下没有带来收益。
+
+\input{tables/temporal_order}
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{comgenvid_temporal_derivative_order.pdf}
+  \caption{ComGenVid 上同网格 patch temporal derivative order 对照。二阶分支优于三阶和四阶，是当前局部时序主线。}
+  \label{fig:temporal_order}
+\end{figure}
+
+\subsection{局部尺度与聚合边界}
+patch region size 和局部聚合方式决定局部证据的空间支持域。已有敏感性实验显示，ComGenVid 在更大局部区域上收益更明显，region=3 mean 相对 region=1 mean 平均 AUC 提升 +0.0211；GenVideo 的最优 mean 设置出现在 region=2；VideoFeedback 则在 region=1 上最好，扩大 region 会持续降低 AUC/AP。aggregation 也呈现数据集差异：GenVideo 和 VideoFeedback 上 mean 优于 bottom-$k$，而 ComGenVid 上扩大 bottom-$k$ 比例仍能提高 patch-only 性能。该结果表明，region 和 aggregation 不是装饰性参数，而是局部异常空间分布的边界条件。
+
+\subsection{跨数据集冻结超参数}
+为区分目标数据集 oracle sweep 和可迁移设置，我们复用现有敏感性结果做 leave-one-dataset-out frozen 分析。结果显示，patch 内部空间/时序权重和 aggregation 的跨数据集 gap 较小，而 region size 的 gap 更大。该现象与上一节一致：局部二阶时序证据本身较稳定，但局部空间支持域受视频分辨率、运动尺度和生成器类型影响更大。
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{cross_dataset_frozen_hyperparams.pdf}
+  \caption{Leave-one-dataset-out frozen hyperparameter 与目标数据集 oracle 的 AUC gap。region size 的迁移 gap 大于 patch 内部权重和 aggregation，说明局部空间支持域是主要边界。}
+  \label{fig:frozen_hyperparams}
+\end{figure}
+
+\subsection{时间窗口、覆盖缺口与计算代价}
+为对齐 \stall 原文附录中的 temporal setting 分析，本文补充了 ComGenVid 1 秒代表性窗口实验。该实验只评测 patch-only 分支，因为当前资产没有匹配的 1 秒 global score；在同网格二阶、region=3、bottom-$k=0.20$ 的设置下，1 秒窗口取得 0.9434/0.9456 的 AUC/AP，高于 2 秒 patch-only 主线的 0.9273/0.9309。该结果说明局部二阶时序证据不严格依赖较长窗口，但由于只在 ComGenVid 上实跑，本文将其作为代表性边界证据，而不是三数据集鲁棒性结论。
+
+当前 release 还记录了 patch 覆盖缺口：VideoFeedback 的 Hotshot-XL、GenVideo 的 HotShot-XL 和 MoonValley 未纳入主线 patch baseline，原因是短视频 duration mismatch 或缺少 patch score 资产。因此，VideoFeedback 主线覆盖 10 个 2 秒来源，GenVideo 主线覆盖 8 个来源。该边界应在投稿表格脚注或补充材料中保留，避免把主线均值误写为覆盖所有原始来源。
+
+计算代价方面，runtime/storage audit 显示 compact patch cache 是主要存储成本，三个数据集合计约 713.22 GiB，而全局 embedding cache 合计约 8.23 GiB。小样本 clean-cache video-stage benchmark 在 ComGenVid 2 秒设置下完成了三个阶段计时：global compact embedding and scoring 为 8.359 s，patch compact cache prefill 为 7.928 s，patch cached scoring 为 3.796 s。该结果只代表阶段成本，不应线性外推为全数据集端到端耗时。
+
+\subsection{关键帧解释与失败模式}
+图~\ref{fig:keyframes} 给出代表性关键帧解释案例。关键帧由局部二阶 patch anomaly 曲线自动选择，仅用于事后解释，不参与训练、推理或调参。主文保留残余难例和负迁移两个紧凑案例；完整 6 案例图保存在补充图资产中，包括 patch/global 分支冲突和真实视频误伤。该图的作用不是证明具体语义原因，而是展示分支分数与局部 anomaly map 如何帮助定位方法边界。
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{keyframe_patch_anomaly_cases_main.pdf}
+  \caption{关键帧解释案例。每个案例根据局部二阶时序异常曲线选择关键帧，展示全局分数、patch 分数和融合分数之间的关系。完整 6 案例版本保留在补充图资产中。}
+  \label{fig:keyframes}
+\end{figure*}

@@ -1,0 +1,23 @@
+\begin{table*}[!t]
+  \centering
+  \caption{当前实验与审计资产总览。“主文”表示可作为当前稿件核心证据；“边界”表示应写作限制或补充材料；“缺口”表示尚未完成但可按审稿需求补充。}
+  \label{tab:experiment_inventory}
+  \begin{tabular}{p{0.20\textwidth}p{0.31\textwidth}p{0.13\textwidth}p{0.25\textwidth}}
+    \toprule
+    实验/审计 & 当前证据 & 角色 & 写作边界 \\
+    \midrule
+    三数据集主结果 & ComGenVid、VideoFeedback、GenVideo 的 \method 平均 AUC/AP & 主文 & 只与 global-only、patch-only 和内部消融直接比较 \\
+    组件消融 & global-only、patch-only、fusion 三组分数 & 主文 & ComGenVid patch-only 高于 fusion，不能声称融合总是最高 \\
+    局部时序定义消融 & patch spatial、lag-1、multi-lag、motion-hard/soft、same-grid D=2 & 主文 & 主要在 ComGenVid 上支撑局部二阶设计 \\
+    高阶导数对照 & ComGenVid D=2/3/4，同设置下 D=2 最优 & 主文 & 代表性机制对照，不是三数据集完整 sweep \\
+    Region/aggregation/bottom-$k$ 敏感性 & 三数据集 region；GenVideo/VideoFeedback aggregation；ComGenVid bottom-$k$ & 主文/补充 & 说明局部空间尺度边界，不重选测试集最优默认 \\
+    Paired bootstrap & 生成器宏平均 $\Delta$AUC 95\% CI 三数据集均为正 & 主文 & 区分宏平均提升和 VideoFeedback 内部负迁移 \\
+    D3 protocol audit & 类别平衡、FPS 处理、encoder 和指标方向审计 & 边界 & 不是外部 D3 重跑结果 \\
+    Duration/window & ComGenVid 1 秒 patch-only 代表性实跑 & 边界 & 不报告 1 秒 fusion，因为没有匹配 global score \\
+    Runtime/storage & cache 规模、小样本 video-stage benchmark、已有日志片段 & 边界 & 小样本阶段成本不能外推为全量端到端耗时 \\
+    关键帧解释 & patch anomaly map、关键帧和分支冲突案例 & 主文/补充 & 事后解释，不参与调参；语义原因需人工复核 \\
+    外部 baseline & 尚未同协议重跑 D3/AEROBLADE/RIGID/ZED/T2VE/AIGVDet & 缺口 & 需要单独环境和同索引、同帧、balanced 协议 \\
+    校准源/backbone/扰动 & 尚未系统完成 calibration source/size、backbone、image/temporal perturbation & 缺口 & 高成本 P2/P3，适合审稿明确要求时补充 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

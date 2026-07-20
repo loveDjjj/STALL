@@ -1,0 +1,125 @@
+\section{方法}
+\label{sec:method}
+
+\subsection{任务定义与总体流程}
+给定视频 $V=\{I_t\}_{t=1}^{T}$，目标是输出真实性分数 $S(V)\in[0,1]$，数值越大表示视频越符合真实视频统计规律，数值越小表示越可能为生成视频。检测器只允许使用预先指定的真实视频建立参考统计，不使用生成视频训练分类器，也不在推理时读取生成器来源、测试标签或测试批次真假组成。若投稿协议要求严格外部校准，真实校准集应与目标测试集完全隔离；当前 release 的具体校准来源在实验设置和讨论中单独标注。
+
+图~\ref{fig:pipeline} 展示了 \method 的两阶段流程。参考构建阶段，真实视频经过冻结 DINOv3 编码器，得到全局 token 与 patch token；随后分别估计全局空间、全局一阶时序、局部空间和局部二阶时序的白化参数，并保存真实视频分支统计用于百分位校准。推理阶段，对待测视频执行同一特征提取和似然计算，先得到原版 \stall 全局分数，再得到 patch 局部分数，最后按评测前冻结规则融合。
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{alpha_stalled_pipeline.pdf}
+  \caption{\method 的全局--局部真实视频校准流程。全局分支继承 \stall 的空间和时序似然；局部分支在 DINOv3 patch token 上建模局部空间似然和同网格二阶时序似然。局部证据先汇聚为统一局部分数，再与全局分数融合。}
+  \label{fig:pipeline}
+\end{figure*}
+
+\subsection{冻结 DINOv3 表征}
+所有分支共享同一个冻结 DINOv3 ViT-L/16 编码器~\cite{simeoni2025dinov3}。第 $t$ 帧输入后得到全局帧表征和 patch token 网格：
+\begin{equation}
+  g_t\in\mathbb{R}^{D},\qquad
+  P_t=\{p_{t,i}\}_{i=1}^{N}\in\mathbb{R}^{N\times D}.
+  \label{eq:dino_features}
+\end{equation}
+当前实现中 $D=1024$，$N=14\times14$。全局序列 $G=\{g_t\}_{t=1}^{T}$ 用于复现 \stall 的全局空间和全局时序分支；局部序列 $P=\{P_t\}_{t=1}^{T}$ 用于建立 patch 空间和 patch 二阶时序分支。由于两类证据来自同一次前向传播，局部扩展不需要额外训练新的 backbone。
+
+\subsection{白化高斯似然与百分位校准}
+对任一分支的特征向量 $x\in\mathbb{R}^{d}$，根据真实校准集估计均值 $\mu$ 和协方差 $\Sigma=U\Lambda U^\top$。保留正特征值对应子空间后，构造白化矩阵：
+\begin{equation}
+  W=U_r\operatorname{diag}\left((\lambda_1+\epsilon)^{-1/2},
+  \ldots,(\lambda_r+\epsilon)^{-1/2}\right),
+  \label{eq:whitening}
+\end{equation}
+其中 $\epsilon$ 是数值稳定项。白化特征及其标准高斯对数似然为
+\begin{align}
+  z(x)&=(x-\mu)W,\\
+  \ell(x)&=-\frac{1}{2}\left[r\log(2\pi)+\lVert z(x)\rVert_2^2\right].
+  \label{eq:gaussian_ll}
+\end{align}
+该分数不是监督分类边界，而是衡量样本是否落在真实视频参考分布的高密度区域。
+
+不同分支的原始对数似然尺度不同，因此本文沿用 \stall 的经验百分位校准。设分支 $b$ 的视频级统计为 $q_b(V)$，真实校准视频的对应统计集合为 $\mathcal{C}_b=\{c_{b,j}\}_{j=1}^{M}$，则
+\begin{equation}
+  s_b(V)=\widehat F_b(q_b(V))=
+  \frac{1}{M}\sum_{j=1}^{M}\mathbb{I}\left[c_{b,j}\leq q_b(V)\right].
+  \label{eq:percentile}
+\end{equation}
+校准后，$s_b(V)$ 越大表示该分支证据越接近真实视频。
+
+\subsection{全局 \stall 分支}
+全局空间分支对每帧 $g_t$ 计算空间似然，并以视频内最大空间似然作为统计：
+\begin{align}
+  \ell^{\mathrm{gs}}_t &= \ell_{\mathrm{gs}}(g_t),\\
+  q_{\mathrm{gs}}(V) &= \max_t \ell^{\mathrm{gs}}_t .
+  \label{eq:global_spatial}
+\end{align}
+全局时序分支对相邻全局帧特征差分进行 L2 归一化：
+\begin{equation}
+  d_t=\frac{g_{t+1}-g_t}{\lVert g_{t+1}-g_t\rVert_2},
+  \qquad t=1,\ldots,T-1,
+  \label{eq:global_delta}
+\end{equation}
+随后以最低转移似然作为视频级时序统计：
+\begin{align}
+  \ell^{\mathrm{gt}}_t &= \ell_{\mathrm{gt}}(d_t),\\
+  q_{\mathrm{gt}}(V) &= \min_t \ell^{\mathrm{gt}}_t .
+  \label{eq:global_temporal}
+\end{align}
+经百分位映射后，得到全局真实性分数
+\begin{equation}
+  \sglobal(V)=\Phi_{\mathrm{global}}\left(s_{\mathrm{gs}}(V),s_{\mathrm{gt}}(V)\right),
+  \label{eq:global_score}
+\end{equation}
+其中 $\Phi_{\mathrm{global}}$ 采用 \stall 的固定全局空间--时序融合规则。
+
+\subsection{局部 patch 分支}
+\subsubsection{局部空间似然}
+局部空间分支直接对 patch token $p_{t,i}$ 建模：
+\begin{equation}
+  \ell^{\mathrm{ps}}_{t,i}=\ell_{\mathrm{ps}}(p_{t,i}).
+  \label{eq:patch_spatial}
+\end{equation}
+该分支提供局部纹理、结构和边缘异常证据。实验表明，单帧局部外观在跨数据集上通常弱于局部时序证据，因此它被作为局部分数中的辅助证据。
+
+\subsubsection{同网格二阶时序似然}
+局部时序分支是 \method 的核心新增模块。为避免显式 patch 匹配带来的不稳定性，我们固定 DINOv3 patch 网格，在同一空间位置上计算连续三帧的二阶差分。若使用区域尺度 $r$，先在非重叠 $r\times r$ patch 区域中做平均池化：
+\begin{equation}
+  \bar p_{t,k}=\frac{1}{r^2}\sum_{i\in\mathcal{N}_r(k)}p_{t,i}.
+  \label{eq:region_pooling}
+\end{equation}
+随后计算并归一化局部二阶差分：
+\begin{align}
+  a_{t,k}&=\bar p_{t+2,k}-2\bar p_{t+1,k}+\bar p_{t,k},\\
+  \hat a_{t,k}&=\frac{a_{t,k}}{\lVert a_{t,k}\rVert_2},
+  \qquad t=1,\ldots,T-2 .
+  \label{eq:patch_acceleration}
+\end{align}
+该特征刻画局部表征轨迹的加速度。真实视频中的局部纹理和结构通常随时间连续变化，而生成视频中的闪烁、漂移和局部形变突变会使 $\hat a_{t,k}$ 偏离真实参考分布。局部时序似然为
+\begin{equation}
+  \ell^{\mathrm{pt}}_{t,k}=\ell_{\mathrm{pt}}(\hat a_{t,k}).
+  \label{eq:patch_temporal}
+\end{equation}
+
+\subsubsection{局部证据聚合}
+局部似然场需要压缩为视频级统计。本文使用均值聚合或 bottom-$k$ 聚合表示不同局部异常形态。设 $L_{(1)}\leq\cdots\leq L_{(m)}$ 为排序后的局部似然，$k=\max(1,\lceil\rho m\rceil)$，则
+\begin{align}
+  A_{\mathrm{mean}}(L)&=\frac{1}{m}\sum_{j=1}^{m}L_j,\\
+  A_{\mathrm{bottom}\text{-}\rho}(L)&=\frac{1}{k}\sum_{j=1}^{k}L_{(j)}.
+  \label{eq:patch_agg}
+\end{align}
+mean 更适合整体局部网格发生系统性偏移的场景；bottom-$k$ 更敏感于稀疏、短时的低似然局部区域。二者不是普适优劣关系，而是反映不同数据集中的局部异常分布。
+
+\subsection{局部分数与全局--局部融合}
+经百分位校准后，局部空间分数 $s_{\mathrm{ps}}(V)$ 和局部二阶时序分数 $s_{\mathrm{pt}}(V)$ 先组合为局部分数：
+\begin{equation}
+  \slocal(V)=
+  \Phi_{\mathrm{local}}\left(s_{\mathrm{ps}}(V),s_{\mathrm{pt}}(V);\theta_{\mathrm{local}}\right).
+  \label{eq:local_score}
+\end{equation}
+其中 $\theta_{\mathrm{local}}$ 包含局部空间与局部时序的相对权重、区域尺度和聚合方式。消融结果显示，局部二阶时序是 patch 分支的主要贡献，局部空间提供较弱但互补的静态异常线索。
+
+最终分数由全局分数和局部分数融合得到：
+\begin{equation}
+  S(V)=\alpha\,\sglobal(V)+(1-\alpha)\,\slocal(V),\qquad 0\leq\alpha\leq1 .
+  \label{eq:final_score}
+\end{equation}
+这里的 $\alpha$ 与 $\theta_{\mathrm{local}}$ 是评测前冻结的超参数，不由测试标签、生成器来源或测试批次统计决定。该两级设计明确保留 \stall 全局分支作为主干，并将 patch 分支限定为补充局部证据，而不是把全局分数、局部空间分数和局部时序分数写成无结构的并列三分支加权和。
