@@ -89,20 +89,30 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/paper_sensitivity/journal_experiment_runbook.md`：后续实跑补充实验命令模板；
 - `results/paper_sensitivity/bootstrap_ci_summary.csv`：逐生成器 AUC/AP bootstrap 置信区间；
 - `results/paper_sensitivity/paired_bootstrap_delta_summary.csv`：方法差异的 paired bootstrap ΔAUC/ΔAP 置信区间；
+- `results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv`：生成器宏平均 paired bootstrap ΔAUC/ΔAP 置信区间；
 - `results/paper_sensitivity/failure_case_candidates.csv`：后续案例可视化和失败样本审计候选；
 - `results/paper_sensitivity/failure_case_candidates_summary.md`：失败/边界案例候选摘要；
+- `results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.csv`：对照 `2603.15026v2` 主文/附录实验体系的覆盖矩阵；
+- `results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.md`：当前已完成、部分完成、需要重跑或不建议优先补充的参考实验清单；
+- `results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.csv`：CSV-stage 融合、metrics、alpha sweep 和审计脚本的固定命令计时；
+- `results/journal_experiments/runtime_benchmark/runtime_benchmark_environment.md`：runtime benchmark 的 CPU/GPU/conda/package 环境记录；
+- `results/journal_experiments/duration_window_representative/comgenvid_duration_window_representative.md`：ComGenVid 1s 代表性 duration/window 实跑与 2s 主实验 patch-only 对照；
+- `results/journal_experiments/duration_window_representative/comgenvid_duration_window_comparison.csv`：ComGenVid 1s vs 2s patch-only AUC/AP 对照表；
 - `results/paper_figures/alpha_sensitivity_curves.svg`：alpha 敏感性曲线；
 - `results/paper_figures/beta_sensitivity_patch_only.svg`：patch-only beta 敏感性；
 - `results/paper_figures/beta_sensitivity_fused_alpha0p60.svg`：固定 alpha 下 beta 敏感性；
 - `results/paper_figures/per_generator_auc_delta_heatmap.svg`：逐生成器 AUC delta heatmap；
 - `results/paper_figures/alpha_score_distribution_panel.svg`：真实/生成分数分布；
 - `results/paper_figures/bootstrap_alpha_minus_global_auc_ci.svg`：Alpha-STALLED 相对 global-only 的 paired bootstrap AUC 增益区间；
+- `results/paper_figures/macro_average_bootstrap_alpha_delta.svg`：生成器宏平均 paired bootstrap 下 Alpha-STALLED 相对 global-only 的 ΔAUC 区间；
+- `results/paper_figures/failure_case_audit_priority.svg`：失败/边界候选样本的 P0/P1/P2 审计优先级分布；
 - `results/paper_figures/comgenvid_bottomk_sensitivity.svg`：ComGenVid bottom-k 聚合比例敏感性曲线；
 - `results/paper_figures/comgenvid_region_sensitivity.svg`：ComGenVid patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_region_sensitivity.svg`：GenVideo patch region size 敏感性曲线；
 - `results/paper_figures/videofeedback_region_sensitivity.svg`：VideoFeedback patch region size 敏感性曲线；
 - `results/paper_figures/genvideo_aggregation_sensitivity.svg`：GenVideo mean 与 bottom-k aggregation 敏感性曲线；
 - `results/paper_figures/videofeedback_aggregation_sensitivity.svg`：VideoFeedback mean 与 bottom-k aggregation 敏感性曲线；
+- `results/paper_figures/cross_dataset_frozen_hyperparams.svg`：leave-one-dataset-out frozen hyperparameter 与目标 oracle 的 AUC gap；
 - `results/journal_experiments/case_visualizations/patch_anomaly_cases.svg`：VideoFeedback 代表案例的 patch anomaly map；
 - `results/journal_experiments/case_visualizations/selected_patch_cases.csv`：案例图使用的固定样本清单。
 
@@ -210,12 +220,71 @@ LaVie-base/AnimateDiff 的 patch-global conflict 和 Panda70M 真实误伤样本
 该图不重新提取 DINOv3 特征，而是从已有 patch cache 和真实视频校准参数还原
 同网格二阶时序 anomaly map，用于解释 patch 分支在负迁移和真实误伤边界上的行为。
 
+同时完成了 ComGenVid 1s 代表性 duration/window 实跑。该实验保持 ComGenVid
+主线 patch 分支设置不变，只将 compact window 从 2s 改为 1s，并重新 prefill
+1s patch cache、重建 real-only patch 校准参数和全量 patch-only 分数：
+
+| 数据集 | 分支 | duration | 平均 AUC / AP | 相对 2s ΔAUC / ΔAP | 状态 |
+|---|---|---:|---:|---:|---|
+| ComGenVid | patch-only | 1s | 0.9434 / 0.9456 | +0.0161 / +0.0147 | journal_full_eval |
+| ComGenVid | patch-only | 2s | 0.9273 / 0.9309 | 0.0000 / 0.0000 | main_release_baseline |
+
+该结果说明，在 ComGenVid 上局部二阶时序证据并不严格依赖 2s 窗口；1s
+短窗口仍能保持甚至略高于 2s 主实验 patch-only 指标。因此期刊稿中可将其作为
+短窗口可用性边界证据，而不需要直接铺开三数据集 1s/3s/4s 全网格。需要注意，
+该实验不报告 1s Alpha-STALLED 融合分数，因为当前 release 资产没有匹配的
+1s global score。
+
 针对 duration/window 敏感性，已完成现有 index 与 compact patch cache 的可行性审计。
 结果显示三数据集当前只有 2s compact patch cache 同时覆盖真实视频校准和生成视频评测；
 VideoFeedback 虽有 1s index 全覆盖，但已有 1s patch cache 只覆盖 Hotshot-XL 生成视频，
 缺少真实视频 1s cache，不能进行真实视频校准。GenVideo 与 ComGenVid 的 index 支持
 1s/3s/4s 窗口，但缺对应 compact patch cache。因此，duration sweep 的下一步不是直接评测，
 而是先决定是否投入大规模 cache prefill。
+
+进一步补充了 cross-dataset frozen hyperparameter 分析。该分析复用已有
+alpha、beta、region 和 aggregation 敏感性结果，不重新评测视频。leave-one-dataset-out
+协议显示：beta frozen 平均 |ΔAUC| 仅 0.0020，aggregation frozen 平均 |ΔAUC|
+为 0.0004，说明 patch 内部空间/二阶时序融合和主 region 下的 mean/bottom-k
+选择整体较稳定；alpha frozen 平均 |ΔAUC| 为 0.0119，其中 ComGenVid 的目标
+oracle gap 最大（-0.0224）；region frozen 平均 |ΔAUC| 为 0.0198，VideoFeedback
+目标 gap 最大（-0.0288）。因此论文中应把 region size 写成局部运动尺度相关的边界参数，
+而不是跨数据集固定的普适常数；同时把 beta 和 aggregation 作为相对稳健的辅助超参数。
+
+最后补充了 runtime/storage 代价审计。当前 compact patch cache 合计约 682.55 GiB，
+global embedding cache 合计约 8.23 GiB，说明 Alpha-STALLED 的主要工程成本来自
+patch cache prefill 和存储，而不是 CSV 级融合。已有补充实验日志中可解析到
+ComGenVid region mean patch eval 片段约 01:25，GenVideo aggregation 片段约 30:05，
+VideoFeedback aggregation / region mean 片段约 57 分钟量级。由于这些日志不是统一端到端
+benchmark，论文中应只把它们作为可追溯运行片段；若需要正式 runtime 表，还应在固定 GPU、
+batch size 和 cache 状态下单独实测 global scoring、patch prefill、patch eval 和 fusion。
+在此基础上，本轮新增了 CSV-stage runtime benchmark：在 RTX 5090 ×2 环境中，18 个
+轻量命令全部成功，总耗时 22.645 秒；三数据集主融合+metrics 合计 3.640 秒，9 个
+score metrics 合计 10.180 秒，三数据集 alpha sweep 合计 4.883 秒，审计脚本合计
+3.942 秒。该 benchmark 可直接作为“后处理和论文资产重建成本”报告；它不覆盖原始视频解码、
+DINOv3 embedding、patch prefill 或全量 patch eval。
+
+同时补充了与论文 Average 行一致的生成器宏平均 paired bootstrap。结果显示
+Alpha-STALLED 相对 global-only 的宏平均 ΔAUC 在三个数据集上均为正且 95% CI 不跨 0：
+ComGenVid +0.0669 [0.0618, 0.0714]，VideoFeedback +0.0153 [0.0127, 0.0179]，
+GenVideo +0.0344 [0.0266, 0.0433]。该结果比逐生成器 CI 更适合支持论文中的
+总体稳定性表述；逐生成器 CI 仍用于解释 VideoFeedback 内部的负迁移边界。
+
+最后新增 failure / boundary case 审计。该审计将 `failure_case_candidates.csv`
+与逐生成器 paired bootstrap、宏平均 bootstrap 和 index 元数据合并，输出 300 个候选样本的
+P0/P1/P2 优先级。全部候选都匹配到 `video_path`、duration、fps 和 frame count。
+审计结果显示 VideoFeedback 的 P0 案例最多，其中包括 Text2Video-Zero / VideoCrafter2
+稳定负迁移生成样本、patch-global conflict 样本和 Panda70M 真实误伤样本。论文中可以据此
+选择少量 P0 案例进入 failure-mode 图；若要进一步声称语义原因，则仍需人工观看关键帧。
+
+为避免盲目照搬 STALL 原文附录，本轮新增了 `2603.15026v2` 参考文献实验体系对齐审计。
+该审计将主文和附录中的 benchmark 对比、calibration source/size、backbone、组件消融、
+aggregation、temporal derivative、FPS/duration、扰动鲁棒性、normality test、D3 protocol、
+efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结论是：当前已完成或已有
+充分替代证据的项包括组件消融、patch aggregation/region 边界、统计稳定性、失败案例和大部分
+期刊补充图表；真正值得继续投入的 P1 仅剩两类：代表数据集 duration/window 实跑，以及固定环境
+端到端 runtime benchmark。Backbone、扰动鲁棒性、calibration size/source 等都需要重新提特征
+或重建大量 cache，当前不建议作为默认下一步。
 
 ## 仍建议补充的实跑实验
 
@@ -232,13 +301,14 @@ VideoFeedback 虽有 1s index 全覆盖，但已有 1s patch cache 只覆盖 Hot
 优先级 P1：
 
 3. **duration/window 敏感性**：已完成可行性审计，见 `results/journal_experiments/duration_window_feasibility/`。若继续实跑，应先补一个代表数据集的 1s/2s 对照 cache，再考虑 3s/4s。
-4. **cross-dataset frozen hyperparameter**：用一个数据集选出的 alpha/beta/region，在其他数据集冻结评测，区分 oracle sweep 和可泛化配置。
-5. **runtime 和存储开销**：global-only、patch cache prefill、patch-only eval、fusion 的时间和 cache 规模。
+4. **cross-dataset frozen hyperparameter**：已完成，见 `results/journal_experiments/cross_dataset_frozen_hyperparams/`。当前结论是 beta 与 aggregation 可迁移损失较小，region 和 alpha 应作为方法边界报告。
+5. **runtime 和存储开销**：已完成当前 storage footprint、已有日志审计和 CSV-stage benchmark，见 `results/journal_experiments/runtime_storage_audit/` 与 `results/journal_experiments/runtime_benchmark/`。若手稿需要完整端到端 runtime 表，还需固定环境重跑视频级 benchmark。
 
 优先级 P2：
 
-6. **paired bootstrap 扩展到生成器平均指标**：当前已输出逐生成器 paired ΔAUC/ΔAP；如果手稿需要一个总体显著性结论，可进一步对生成器平均指标做 paired bootstrap。
-7. **失败样本人工审计**：从候选表检查是否来自低运动、短时长、压缩伪影或真实视频域偏移。
+6. **paired bootstrap 扩展到生成器平均指标**：已完成，见 `results/journal_experiments/macro_average_bootstrap/`。三数据集 Alpha-STALLED 相对 global-only 的宏平均 ΔAUC 95% CI 均大于 0。
+7. **失败样本审计**：已完成可复现的候选样本元数据与统计审计，见 `results/journal_experiments/failure_case_audit/`。若需要解释具体语义原因，还需人工观看关键帧。
+8. **参考文献实验体系对齐审计**：已完成，见 `results/journal_experiments/reference_alignment_audit/`。该矩阵给出每个原文主文/附录实验在当前 Alpha-STALLED 中的覆盖状态、证据路径、缺口和下一步优先级。
 
 ## 图表规范
 

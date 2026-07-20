@@ -1,0 +1,2 @@
+csv,patch_emb_cache,duration,compact,debug_n,num_workers,video_batch,frame_batch,device,execute,status,misses_before,written
+STALL/cache/indexes/comgenvid.csv,STALL/cache/patch_embeddings/comgenvid,1,True,,8,4,32,cuda,True,EXECUTED,5094,5094

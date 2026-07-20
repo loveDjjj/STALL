@@ -1,0 +1,4 @@
+target_dataset,train_datasets,selected_param,train_mean_auc,target_frozen_auc,target_frozen_ap,target_oracle_param,target_oracle_auc,target_oracle_ap,auc_gap_vs_target_oracle,ap_gap_vs_target_oracle
+comgenvid,videofeedback+genvideo,mean,0.8150355575767698,0.9298728081675802,0.9287601716885026,bottomk_0.50,0.9312197471979092,0.9333527461328144,-0.0013469390303290085,-0.0045925744443118255
+videofeedback,comgenvid+genvideo,mean,0.8685567513982064,0.822830420524707,0.8302444893146411,mean,0.822830420524707,0.8302444893146411,0.0,0.0
+genvideo,comgenvid+videofeedback,mean,0.8763516143461436,0.8072406946288327,0.8092277800772452,mean,0.8072406946288327,0.8092277800772452,0.0,0.0

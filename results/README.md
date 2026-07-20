@@ -99,12 +99,15 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `per_generator_auc_delta_heatmap.*` | 逐生成器 AUC 增益/退化 heatmap |
 | `alpha_score_distribution_panel.*` | 真实/生成 Alpha-STALLED 分数分布 |
 | `bootstrap_alpha_minus_global_auc_ci.*` | Alpha-STALLED 相对 global-only 的 AUC 增益及 paired bootstrap 区间 |
+| `macro_average_bootstrap_alpha_delta.*` | 生成器宏平均 paired bootstrap 下 Alpha-STALLED 相对 global-only 的 ΔAUC 区间 |
+| `failure_case_audit_priority.*` | failure / boundary 候选样本的 P0/P1/P2 优先级分布 |
 | `comgenvid_bottomk_sensitivity.*` | ComGenVid bottom-k 聚合比例敏感性曲线 |
 | `comgenvid_region_sensitivity.*` | ComGenVid patch region size 敏感性曲线 |
 | `genvideo_region_sensitivity.*` | GenVideo patch region size 敏感性曲线 |
 | `videofeedback_region_sensitivity.*` | VideoFeedback patch region size 敏感性曲线 |
 | `genvideo_aggregation_sensitivity.*` | GenVideo mean 与 bottom-k aggregation 敏感性曲线 |
 | `videofeedback_aggregation_sensitivity.*` | VideoFeedback mean 与 bottom-k aggregation 敏感性曲线 |
+| `cross_dataset_frozen_hyperparams.*` | leave-one-dataset-out frozen hyperparameter 与目标 oracle 的 AUC 差距 |
 
 ## `journal_experiments/`
 
@@ -126,6 +129,33 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `duration_window_feasibility/` | 1s/2s/3s/4s duration/window 敏感性实跑前的 index/cache 覆盖审计 |
 | `duration_window_feasibility/duration_window_feasibility.md` | duration/window 是否可直接 patch eval 的可读结论 |
 | `duration_window_feasibility/duration_window_summary.csv` | 数据集级 duration/window index 与 compact patch cache 覆盖汇总 |
+| `duration_window_representative/` | ComGenVid 1s 代表性 duration/window patch-only 实跑结果 |
+| `duration_window_representative/comgenvid_duration_window_representative.md` | 1s 与 2s 主实验 patch-only AUC/AP 对照和解读 |
+| `duration_window_representative/comgenvid_duration_window_comparison.csv` | 1s vs 2s duration/window 对照表 |
+| `duration_window_representative/comgenvid_1s_patch_full.csv` | ComGenVid 1s patch-only 逐视频分数 |
+| `duration_window_representative/comgenvid_1s_metrics_full.csv` | ComGenVid 1s patch-only 逐生成器指标 |
+| `cross_dataset_frozen_hyperparams/` | 基于已有 sweep 的跨数据集冻结超参数 transfer / leave-one-dataset-out 分析 |
+| `cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md` | alpha、beta、region、aggregation 冻结配置与目标 oracle gap 的可读结论 |
+| `cross_dataset_frozen_hyperparams/*_leave_one_out.csv` | 每类超参数的 leave-one-dataset-out 选择结果 |
+| `cross_dataset_frozen_hyperparams/*_transfer_matrix.csv` | 每类超参数的 source-to-target transfer matrix |
+| `runtime_storage_audit/` | 当前 cache、结果资产体积和已有日志中可解析耗时的轻量审计 |
+| `runtime_storage_audit/runtime_storage_audit.md` | storage footprint、可追溯 runtime 片段与仍需端到端实测的项目 |
+| `runtime_storage_audit/storage_audit.csv` | cache、precomputed、results 等目录的文件数和体积 |
+| `runtime_storage_audit/runtime_log_audit.csv` | 已有补充实验日志中可解析的 tqdm elapsed time |
+| `runtime_benchmark/` | 不重提特征、不重建 cache 的 CSV-stage runtime benchmark |
+| `runtime_benchmark/csv_stage_runtime_benchmark.md` | 融合、metrics、alpha sweep 和审计脚本的固定命令计时报告 |
+| `runtime_benchmark/csv_stage_runtime_benchmark.csv` | 每个 timed command 的命令、return code、elapsed seconds 和输出尾部 |
+| `runtime_benchmark/runtime_benchmark_environment.md` | CPU/GPU/conda/package 环境记录 |
+| `macro_average_bootstrap/` | 与论文 Average 行一致的生成器宏平均 paired bootstrap 结果 |
+| `macro_average_bootstrap/macro_average_paired_bootstrap_delta.md` | Alpha-STALLED / patch / global 方法差值的宏平均 ΔAUC/ΔAP 置信区间 |
+| `macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv` | 宏平均 paired bootstrap 数值表 |
+| `failure_case_audit/` | 合并候选样本、逐生成器 CI、宏平均 CI 和 index 元数据的失败/边界案例审计 |
+| `failure_case_audit/failure_case_audit.md` | P0/P1/P2 案例优先级、推荐用途和论文写作建议 |
+| `failure_case_audit/failure_case_audit.csv` | 300 个候选样本的完整审计表，含 video_path、duration、分数冲突和生成器 CI |
+| `failure_case_audit/failure_case_audit_summary.csv` | 按数据集、风险类型和优先级汇总的案例数量 |
+| `reference_alignment_audit/` | 对照 `2603.15026v2` 主文和附录实验体系的覆盖矩阵 |
+| `reference_alignment_audit/reference_experiment_alignment.md` | 哪些参考文献实验已覆盖、哪些是 P1/P2/P3 缺口及下一步建议 |
+| `reference_alignment_audit/reference_experiment_alignment.csv` | reference section、实验项、当前证据路径、缺口和优先级的机器可读表 |
 
 ## `alpha_stalled_manuscript_tables/`
 

@@ -1,0 +1,15 @@
+name,path,exists,n_files,bytes,size_mib,size_gib
+index_csv,cache/indexes,True,6,26832447,25.589415550231934,0.024989663623273373
+global_embedding_cache_comgenvid,cache/embeddings/comgenvid,True,5098,343515523,327.60193157196045,0.3199237613007426
+global_embedding_cache_videofeedback,cache/embeddings/videofeedback,True,37661,2789348561,2660.130082130432,2.5977832833305
+global_embedding_cache_genvideo,cache/embeddings/genvideo,True,18188,5698779630,5434.779767990112,5.307402117177844
+compact_patch_cache_comgenvid,cache/patch_embeddings/comgenvid,True,5098,65829550794,62779.95185279846,61.3085467312485
+compact_patch_cache_videofeedback,cache/patch_embeddings/videofeedback,True,37661,465315449609,443759.39331912994,433.35878253821284
+compact_patch_cache_genvideo,cache/patch_embeddings/genvideo,True,15623,201733940075,192388.47739696503,187.87937245797366
+precomputed_calibration_params,precomputed,True,74,624149053,595.2349214553833,0.5812841029837728
+paper_scores,results/paper_scores,True,15,22496277,21.454121589660645,0.020951290614902973
+paper_tables,results/paper_tables,True,19,12199,0.011633872985839844,1.1361204087734222e-05
+paper_sensitivity,results/paper_sensitivity,True,10,242921,0.23166751861572266,0.00022623781114816666
+paper_sweeps,results/paper_sweeps,True,10,49751,0.047446250915527344,4.633422940969467e-05
+journal_experiments,results/journal_experiments,True,71,54767753,52.23059940338135,0.0510064447298646
+paper_figures,results/paper_figures,True,26,1920659,1.8316831588745117,0.0017887530848383904
