@@ -141,7 +141,7 @@ results/journal_experiments/aggregation_sensitivity/aggregation_sensitivity_summ
 
 ## P0：可解释案例图
 
-为什么要做：已有指标说明 patch 分支总体有帮助，但 VideoFeedback 存在负迁移。期刊稿需要说明边界，而不是只展示平均数。当前已完成 patch-cache 级 anomaly map；若需要更强直观性，可在同一图中再叠加原视频关键帧。
+为什么要做：已有指标说明 patch 分支总体有帮助，但 VideoFeedback 存在负迁移。期刊稿需要说明边界，而不是只展示平均数。当前已完成 patch-cache 级 anomaly map，并已补充原视频关键帧复合图。
 
 输入候选：
 
@@ -164,9 +164,11 @@ results/journal_experiments/case_visualizations/patch_anomaly_cases.svg
 results/journal_experiments/case_visualizations/patch_anomaly_cases.png
 results/journal_experiments/case_visualizations/selected_patch_cases.csv
 results/journal_experiments/case_visualizations/patch_anomaly_case_summary.md
+results/journal_experiments/keyframe_case_explanations/keyframe_patch_anomaly_cases.svg
+results/journal_experiments/keyframe_case_explanations/keyframe_case_explanations.md
 ```
 
-图中建议包含：原视频关键帧、patch anomaly heatmap、global/patch/Alpha-STALLED 三个分数，以及一句失败/成功机制说明。
+当前图已包含：原视频关键帧、patch anomaly heatmap、global/patch/Alpha-STALLED 三个分数，以及 failure/boundary 解释标签。
 
 ## P1：duration/window 敏感性
 
@@ -352,7 +354,8 @@ conda run --no-capture-output -n stall python tools/audit_reference_experiment_a
 
 - `done`：组件消融、patch aggregation/region 边界、统计稳定性已经足够，不建议重复。
 - 当前已无 P1 缺口；若继续投入，应只处理审稿明确要求的 P2/P3 项。
-- `P2`：外部 baseline/D3 protocol、原视频关键帧 qualitative examples、calibration source 只在投稿或审稿明确要求时做。
+- `done`：D3 protocol audit、原视频关键帧 qualitative examples、ComGenVid D=3/D=4 temporal derivative 代表性对照已经完成。
+- `P2`：外部 baseline、calibration source 代表性消融只在投稿或审稿明确要求时做。
 - `P3`：backbone、image/temporal perturbation、calibration size/source 大多需要重新提特征或重建大量 cache，当前不建议默认执行。
 
 ## 推荐执行顺序
@@ -360,4 +363,4 @@ conda run --no-capture-output -n stall python tools/audit_reference_experiment_a
 1. Duration/window 代表性实跑已完成；除非审稿要求，不建议铺开三数据集 × 多时长全网格。
 2. Cross-dataset frozen hyperparameter 已完成，可直接写入泛化/边界分析。
 3. Macro-average paired bootstrap 已完成，可用于总体显著性/稳定性表述。
-4. Reference alignment audit、CSV-stage runtime benchmark 和 video-stage runtime benchmark 都已完成。若继续补，只建议做审稿明确要求的工作，例如外部 baseline、D3 protocol 审计或失败样本关键帧人工语义解释。Backbone、扰动鲁棒性、calibration size/source 暂列 P3，不作为默认下一步。
+4. Reference alignment audit、D3 protocol audit、关键帧解释图、ComGenVid D=3/D=4 temporal derivative 对照、CSV-stage runtime benchmark 和 video-stage runtime benchmark 都已完成。若继续补，只建议做审稿明确要求的工作，例如外部 baseline 或 calibration source 代表性消融。Backbone、扰动鲁棒性、calibration size/source 暂列 P3，不作为默认下一步。

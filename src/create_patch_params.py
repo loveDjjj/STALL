@@ -481,6 +481,8 @@ def main():
             "same_grid_lag1",
             "same_grid_multilag",
             "same_grid_second_order",
+            "same_grid_third_order",
+            "same_grid_fourth_order",
             "same_grid_multilag_second_order",
             "motion_hard",
             "motion_soft",

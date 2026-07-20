@@ -279,14 +279,17 @@ GenVideo +0.0344 [0.0266, 0.0433]。该结果比逐生成器 CI 更适合支持�
 P0/P1/P2 优先级。全部候选都匹配到 `video_path`、duration、fps 和 frame count。
 审计结果显示 VideoFeedback 的 P0 案例最多，其中包括 Text2Video-Zero / VideoCrafter2
 稳定负迁移生成样本、patch-global conflict 样本和 Panda70M 真实误伤样本。论文中可以据此
-选择少量 P0 案例进入 failure-mode 图；若要进一步声称语义原因，则仍需人工观看关键帧。
+选择少量 P0 案例进入 failure-mode 图。本轮已进一步补充 6 个 VideoFeedback 案例的原视频关键帧、
+patch anomaly map 和解释表，见 `results/journal_experiments/keyframe_case_explanations/`；
+若主文声称更具体的语义原因，仍应由作者人工复核原视频。
 
 为避免盲目照搬 STALL 原文附录，本轮新增了 `2603.15026v2` 参考文献实验体系对齐审计。
 该审计将主文和附录中的 benchmark 对比、calibration source/size、backbone、组件消融、
 aggregation、temporal derivative、FPS/duration、扰动鲁棒性、normality test、D3 protocol、
 efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结论是：当前已完成或已有
 充分替代证据的项包括组件消融、patch aggregation/region 边界、统计稳定性、失败案例和大部分
-期刊补充图表；duration/window 代表性实跑和 video-stage runtime benchmark 也已补齐。
+期刊补充图表；duration/window 代表性实跑、video-stage runtime benchmark、D3 protocol audit、
+关键帧解释图和 ComGenVid D=3/D=4 temporal derivative 代表性对照也已补齐。
 当前 reference alignment 已无 P1 缺口。Backbone、扰动鲁棒性、calibration size/source
 等都需要重新提特征或重建大量 cache，当前不建议作为默认下一步。
 
@@ -300,7 +303,7 @@ efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结�
    GenVideo 已完成 region=2 下 bottom-k ratio = 0.20/0.50，结果支持 mean
    aggregation；VideoFeedback 已完成 region=1 下 bottom-k ratio = 0.20/0.50，
    结果同样支持 mean aggregation。aggregation 敏感性的 P0 指标证据已补齐。
-2. **patch 可解释案例图**：已基于 `failure_case_candidates.csv` 选取 6 个 VideoFeedback 代表案例，并从 patch cache 绘制 anomaly map。若版面允许，可进一步补原视频关键帧。
+2. **patch 可解释案例图**：已基于 `failure_case_candidates.csv` 选取 6 个 VideoFeedback 代表案例，完成 patch anomaly map，并进一步补充原视频关键帧复合图和解释表，见 `results/journal_experiments/case_visualizations/` 与 `results/journal_experiments/keyframe_case_explanations/`。
 
 已完成的 P1：
 
@@ -311,8 +314,8 @@ efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结�
 优先级 P2：
 
 6. **paired bootstrap 扩展到生成器平均指标**：已完成，见 `results/journal_experiments/macro_average_bootstrap/`。三数据集 Alpha-STALLED 相对 global-only 的宏平均 ΔAUC 95% CI 均大于 0。
-7. **失败样本审计**：已完成可复现的候选样本元数据与统计审计，见 `results/journal_experiments/failure_case_audit/`。若需要解释具体语义原因，还需人工观看关键帧。
-8. **参考文献实验体系对齐审计**：已完成，见 `results/journal_experiments/reference_alignment_audit/`。该矩阵给出每个原文主文/附录实验在当前 Alpha-STALLED 中的覆盖状态、证据路径、缺口和下一步优先级。
+7. **失败样本审计与关键帧解释**：已完成可复现的候选样本元数据、统计审计和 6 个 VideoFeedback 原视频关键帧解释图，见 `results/journal_experiments/failure_case_audit/` 与 `results/journal_experiments/keyframe_case_explanations/`。若需要解释具体语义原因，还需作者人工观看原视频。
+8. **参考文献实验体系对齐审计**：已完成，见 `results/journal_experiments/reference_alignment_audit/`。该矩阵给出每个原文主文/附录实验在当前 Alpha-STALLED 中的覆盖状态、证据路径、缺口和下一步优先级；D3 protocol audit 与 ComGenVid D=3/D=4 temporal derivative 对照已纳入 done 项。
 
 ## 图表规范
 

@@ -126,6 +126,15 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `case_visualizations/patch_anomaly_cases.*` | 代表案例分数条、空间 anomaly map 和时序 anomaly 曲线 |
 | `case_visualizations/selected_patch_cases.csv` | 案例图使用的固定样本清单 |
 | `case_visualizations/patch_anomaly_case_summary.md` | 案例选择依据和图中 anomaly 计算口径 |
+| `keyframe_case_explanations/` | VideoFeedback failure/boundary 案例的原视频关键帧、patch anomaly map 和解释表 |
+| `keyframe_case_explanations/keyframe_patch_anomaly_cases.*` | 关键帧 + 分数条 + patch anomaly map + 时序 anomaly 曲线复合图 |
+| `keyframe_case_explanations/keyframe_case_explanations.md` | 关键帧选择规则、案例解释和使用边界 |
+| `d3_protocol_audit/` | D3 baseline protocol 审计，不包含外部 D3 重跑分数 |
+| `d3_protocol_audit/d3_protocol_audit.md` | D3 采样、类别平衡、FPS 处理、encoder 和指标方向审计 |
+| `d3_protocol_audit/d3_protocol_dataset_summary.csv` | 三个 index 的 FPS、duration 和 2s window 覆盖摘要 |
+| `temporal_derivative_order/` | ComGenVid D=3/D=4 patch temporal derivative 代表性对照 |
+| `temporal_derivative_order/comgenvid_temporal_derivative_order.md` | D=2/D=3/D=4 平均 AUC/AP 对照和结论 |
+| `temporal_derivative_order/comgenvid_temporal_derivative_order.*` | temporal derivative order 对照图 |
 | `duration_window_feasibility/` | 1s/2s/3s/4s duration/window 敏感性实跑前的 index/cache 覆盖审计 |
 | `duration_window_feasibility/duration_window_feasibility.md` | duration/window 是否可直接 patch eval 的可读结论 |
 | `duration_window_feasibility/duration_window_summary.csv` | 数据集级 duration/window index 与 compact patch cache 覆盖汇总 |

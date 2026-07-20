@@ -76,6 +76,8 @@ class FastPatchScorer:
             "same_grid_lag1",
             "same_grid_multilag",
             "same_grid_second_order",
+            "same_grid_third_order",
+            "same_grid_fourth_order",
             "same_grid_multilag_second_order",
         }
         if patch_temp_mode not in supported:
@@ -146,6 +148,24 @@ class FastPatchScorer:
                 raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
             accel = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
             chunks.append(self._l2_normalize(accel))
+
+        if mode == "same_grid_third_order":
+            if patch.shape[1] < 4:
+                raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
+            jerk = patch[:, 3:] - 3.0 * patch[:, 2:-1] + 3.0 * patch[:, 1:-2] - patch[:, :-3]
+            chunks.append(self._l2_normalize(jerk))
+
+        if mode == "same_grid_fourth_order":
+            if patch.shape[1] < 5:
+                raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
+            snap = (
+                patch[:, 4:]
+                - 4.0 * patch[:, 3:-1]
+                + 6.0 * patch[:, 2:-2]
+                - 4.0 * patch[:, 1:-3]
+                + patch[:, :-4]
+            )
+            chunks.append(self._l2_normalize(snap))
 
         if not chunks:
             raise ValueError(f"不支持或无效的 temporal mode: {mode}")
@@ -499,6 +519,8 @@ def main():
             "same_grid_lag1",
             "same_grid_multilag",
             "same_grid_second_order",
+            "same_grid_third_order",
+            "same_grid_fourth_order",
             "same_grid_multilag_second_order",
         ],
         required=True,

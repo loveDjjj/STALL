@@ -19,7 +19,7 @@ if str(SRC_DIR) not in sys.path:
 from eval_alpha_stalled import compute_metrics, fuse_scores
 from eval_score_csv import evaluate_score_csv
 from patch_math import bottomk_mean, empirical_percentile
-from patch_matching import patch_temporal_delta, pool_patch_regions
+from patch_matching import patch_temporal_delta, pool_patch_regions, same_grid_finite_difference
 
 
 def _write_csv(path: Path, rows: list[dict]) -> None:
@@ -167,6 +167,28 @@ class AlphaStalledFusionTest(unittest.TestCase):
         self.assertEqual(tuple(features.shape), (2, 1, 2))
         expected = np.array([[[1.0, 0.0]], [[1.0, 0.0]]], dtype=np.float32)
         np.testing.assert_allclose(features, expected, atol=1e-6)
+
+    def test_same_grid_higher_order_temporal_features(self) -> None:
+        t = np.arange(6, dtype=np.float32)
+        # Cubic polynomial: third finite difference is constant and non-zero.
+        cubic = (t ** 3).reshape(-1, 1, 1)
+        third = patch_temporal_delta(
+            np.concatenate([cubic, np.zeros_like(cubic)], axis=2),
+            grid_size=(1, 1),
+            mode="same_grid_third_order",
+            region_size=1,
+        )
+        self.assertEqual(tuple(third.shape), (3, 1, 2))
+        np.testing.assert_allclose(third, np.tile([[[1.0, 0.0]]], (3, 1, 1)), atol=1e-6)
+
+        # Quartic polynomial: fourth finite difference is constant and non-zero.
+        quartic = (t ** 4).reshape(-1, 1, 1)
+        fourth = same_grid_finite_difference(
+            np.concatenate([quartic, np.zeros_like(quartic)], axis=2),
+            order=4,
+        )
+        self.assertEqual(tuple(fourth.shape), (2, 1, 2))
+        np.testing.assert_allclose(fourth, np.tile([[[1.0, 0.0]]], (2, 1, 1)), atol=1e-6)
 
     def test_pool_patch_regions_averages_non_overlapping_blocks(self) -> None:
         patch = np.arange(16, dtype=np.float32).reshape(1, 4, 4)

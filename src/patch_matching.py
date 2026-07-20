@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 
@@ -106,6 +108,32 @@ def pool_patch_regions(
     )
     pooled = arr.mean(axis=(2, 4)).reshape(patch_seq.shape[0], pooled_h * pooled_w, patch_seq.shape[-1])
     return pooled.astype(np.float32), (pooled_h, pooled_w)
+
+
+def same_grid_finite_difference(
+    patch_seq: np.ndarray,
+    order: int,
+) -> np.ndarray:
+    """计算同网格 patch token 的 order 阶前向有限差分。
+
+    order=1 对应相邻帧差分，order=2 对应当前 Alpha-STALLED 主线使用的
+    二阶时序差分。order=3/4 用于与 STALL 附录中的高阶 temporal derivative
+    分析对齐；输出仍按最后一维 L2 归一化，确保与现有 patch temporal
+    whitening 的特征尺度约定一致。
+    """
+    if order < 1:
+        raise ValueError(f"finite difference order 必须 >=1，实际为 {order}")
+    if len(patch_seq) <= order:
+        raise ValueError(f"视频帧数过少，无法使用 {order} 阶有限差分: T={len(patch_seq)}")
+
+    coeffs = np.array(
+        [((-1) ** (order - k)) * math.comb(order, k) for k in range(order + 1)],
+        dtype=np.float32,
+    )
+    diff = np.zeros_like(patch_seq[order:], dtype=np.float32)
+    for k, coeff in enumerate(coeffs):
+        diff += coeff * patch_seq[k : k + len(diff)]
+    return l2_normalize_last_dim(diff)
 
 
 def match_patches_local_window(
@@ -273,13 +301,15 @@ def patch_temporal_delta(
             "same_grid_lag1",
             "same_grid_multilag",
             "same_grid_second_order",
+            "same_grid_third_order",
+            "same_grid_fourth_order",
             "same_grid_multilag_second_order",
         }:
             raise ValueError("patch region pooling 只支持 same-grid 模式")
         patch_seq, grid_size = pool_patch_regions(patch_seq, grid_size, region_size)
 
     if mode in {"same_grid", "same_grid_lag1"}:
-        return l2_normalize_last_dim(patch_seq[1:] - patch_seq[:-1])
+        return same_grid_finite_difference(patch_seq, order=1)
 
     if mode == "same_grid_multilag":
         deltas = []
@@ -291,10 +321,13 @@ def patch_temporal_delta(
         return np.concatenate(deltas, axis=0).astype(np.float32)
 
     if mode == "same_grid_second_order":
-        if len(patch_seq) < 3:
-            raise ValueError(f"视频帧数过少，无法使用 {mode}: T={len(patch_seq)}")
-        accel = patch_seq[2:] - 2.0 * patch_seq[1:-1] + patch_seq[:-2]
-        return l2_normalize_last_dim(accel)
+        return same_grid_finite_difference(patch_seq, order=2)
+
+    if mode == "same_grid_third_order":
+        return same_grid_finite_difference(patch_seq, order=3)
+
+    if mode == "same_grid_fourth_order":
+        return same_grid_finite_difference(patch_seq, order=4)
 
     if mode == "same_grid_multilag_second_order":
         deltas = []
@@ -302,8 +335,7 @@ def patch_temporal_delta(
             if len(patch_seq) > lag:
                 deltas.append(l2_normalize_last_dim(patch_seq[lag:] - patch_seq[:-lag]))
         if len(patch_seq) >= 3:
-            accel = patch_seq[2:] - 2.0 * patch_seq[1:-1] + patch_seq[:-2]
-            deltas.append(l2_normalize_last_dim(accel))
+            deltas.append(same_grid_finite_difference(patch_seq, order=2))
         if not deltas:
             raise ValueError(f"视频帧数过少，无法使用 {mode}: T={len(patch_seq)}")
         return np.concatenate(deltas, axis=0).astype(np.float32)

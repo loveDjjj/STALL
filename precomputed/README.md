@@ -18,6 +18,10 @@
 
 - ComGenVid 的 spatial、lag-1、multi-lag、motion-hard、motion-soft，以及
   second-order region/bottom-k sweep；
+- ComGenVid 的 `same_grid_third_order` / `same_grid_fourth_order`
+  temporal derivative 对照参数。对应结果已汇总到
+  `results/journal_experiments/temporal_derivative_order/`，`.npz` 文件默认被
+  `.gitignore` 排除，可按该目录 markdown 中的命令重建；
 - VideoFeedback 和 GenVideo 的 lag-1/second-order region 与聚合方式 sweep。
 
 这些文件默认不进入 release commit。只有当对应 score CSV 可以通过公开命令

@@ -1,0 +1,7 @@
+dataset,subset,sources,videos,fps_min,fps_median,duration_min,duration_median,has_2s_window
+ComGenVid,annotated,2,3400,24.0,27.0,4.0,8.0,3400
+ComGenVid,real,1,1700,10.0,29.97002997002997,1.735067,8.022284,1698
+VideoFeedback,annotated,11,33581,8.0,8.0,1.0,2.0,30330
+VideoFeedback,real,2,4080,8.0,8.0,2.0,3.0,4080
+GenVideo,annotated,10,8204,8.0,10.0,1.0,2.0,5639
+GenVideo,real,1,9984,8.333,29.97002997002997,9.56,13.0,9984
