@@ -7,7 +7,6 @@
 
 | priority | status | count |
 |---|---|---:|
-| P1 | partial_csv_runtime_complete_end_to_end_pending | 1 |
 | P2 | complete_for_our_method | 1 |
 | P2 | complete_without_raw_keyframes | 1 |
 | P2 | partial | 1 |
@@ -22,6 +21,7 @@
 | done | complete_extra | 1 |
 | done | complete_for_patch_branch | 1 |
 | done | representative_run_complete | 1 |
+| done | representative_runtime_complete | 1 |
 
 ## 逐项对照
 
@@ -39,14 +39,14 @@
 | D.4 | temporal perturbation robustness | 当前无 reverse/shuffle/flash 扰动实验 | missing_requires_video_or_cache_rebuild | P3 | no_local_evidence_required_paths | 不建议当前补；可在未来用 400 个真实视频做小规模机制验证。 |
 | B | normality / Gaussian assumption tests | 当前没有针对 patch 二阶差分的 AD/DP 正态性检验 | missing_optional_theory | P3 | no_local_evidence_required_paths | 可作为低优先级理论补充；优先先写明继承 STALL 全局校准假设，patch 分支为经验增强。 |
 | A.4 | D3 baseline protocol audit | 当前已有 release 复现/结果说明，但未系统审计 D3 protocol | partial_dirty_file_needs_review | P2 | results/stall_repro_comparison.md | 提交前单独审查 `results/stall_repro_comparison.md` diff；不要混入当前补充实验提交。 |
-| E | inference time / memory analysis | runtime/storage audit + CSV-stage runtime benchmark | partial_csv_runtime_complete_end_to_end_pending | P1 | results/journal_experiments/runtime_storage_audit/runtime_storage_audit.md; results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.md | 若论文需要完整 runtime 表，固定 GPU/batch/cache 状态重跑视频级阶段；当前 CSV-stage benchmark 可直接报告为轻量后处理成本。 |
+| E | inference time / memory analysis | runtime/storage audit + CSV-stage + video-stage runtime benchmark | representative_runtime_complete | done | results/journal_experiments/runtime_storage_audit/runtime_storage_audit.md; results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.md; results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md | 当前足以报告代表性阶段成本；除非审稿要求，不建议清空三数据集 cache 后重跑全量端到端。 |
 | D.7 / Fig. 19-20 | qualitative examples | patch anomaly case visualization + failure case audit | complete_without_raw_keyframes | P2 | results/journal_experiments/case_visualizations/patch_anomaly_cases.svg; results/journal_experiments/failure_case_audit/failure_case_audit.md | 版面允许时补关键帧；当前统计和 patch map 已足够支撑 failure-mode 选择。 |
 | Statistical reporting | 显著性/稳定性分析 | 逐生成器 paired bootstrap + 宏平均 paired bootstrap | complete_extra | done | results/paper_sensitivity/paired_bootstrap_delta_summary.csv; results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md | 写作时区分宏平均总体提升与 VideoFeedback 内部负迁移。 |
 
 ## 当前建议
 
 - `done` 项已经足够支撑当前手稿，不建议重复。
-- `P1` 项是若继续投入最值得做的内容：当前主要剩视频级端到端 runtime benchmark。
+- 当前已无 P1 缺口；若继续投入，应只处理审稿明确要求的 P2/P3 项。
 - `P2` 项只在版面、审稿或对比需求明确时做：外部 baseline、关键帧可视化、D3 protocol 审查。
 - `P3` 项需要重新提特征或重建大量 cache，当前不建议作为下一步默认任务。
 
@@ -54,7 +54,6 @@
 
 | priority | reference experiment | gap | concrete next action |
 |---|---|---|---|
-| P1 | inference time / memory analysis | 已有 storage footprint、历史日志片段和可复现 CSV-stage 计时；仍缺原始视频解码、DINOv3 embedding、patch prefill、全量 patch eval 的固定环境端到端 benchmark。 | 若论文需要完整 runtime 表，固定 GPU/batch/cache 状态重跑视频级阶段；当前 CSV-stage benchmark 可直接报告为轻量后处理成本。 |
 | P2 | D3 baseline protocol audit | 该文件当前有未提交修改，且 D3 protocol audit 不是 Alpha-STALLED 主创新所必需。 | 提交前单独审查 `results/stall_repro_comparison.md` diff；不要混入当前补充实验提交。 |
 | P2 | qualitative examples | 已有 patch anomaly map；若要更直观，需要再叠加原视频关键帧。 | 版面允许时补关键帧；当前统计和 patch map 已足够支撑 failure-mode 选择。 |
 | P2 | temporal derivative order D=1/2/3/4 | 未完全复刻 D=1/2/3/4 有限差分；但已证明我们的同网格二阶 patch 证据优于多种局部时序替代。 | 不优先补；如需更像原文，可只在 ComGenVid 增加 D=3/4 patch temporal 对照。 |

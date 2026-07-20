@@ -102,11 +102,18 @@ def build_runtime_log_audit(root: Path) -> pd.DataFrame:
 
 
 def write_markdown(storage: pd.DataFrame, logs: pd.DataFrame, out_path: Path) -> None:
+    video_stage_csv = (
+        out_path.parent.parent
+        / "video_stage_runtime_benchmark"
+        / "video_stage_runtime_benchmark.csv"
+    )
+    video_stage_md = video_stage_csv.with_suffix(".md")
+    video_stage = pd.read_csv(video_stage_csv) if video_stage_csv.exists() else pd.DataFrame()
     lines = [
         "# Runtime / storage 代价审计",
         "",
-        "本审计只读取本地文件系统和已有日志，不重新运行 global scoring、patch prefill 或 patch eval。",
-        "因此，目录体积是当前状态的直接证据；运行时间只报告日志中可解析的补充实验片段，不能替代完整端到端 benchmark。",
+        "本审计读取本地文件系统、已有日志和已生成的固定 benchmark 结果。",
+        "目录体积是当前状态的直接证据；运行时间分为历史补充实验日志、CSV-stage benchmark 和小样本 clean-cache video-stage benchmark。",
         "",
         "## 存储规模",
         "",
@@ -132,6 +139,7 @@ def write_markdown(storage: pd.DataFrame, logs: pd.DataFrame, out_path: Path) ->
             "提交范围仍应以 `.gitignore` 与 `git status` 为准，优先提交 CSV/Markdown/SVG/必要 PNG。",
             "- cache、precomputed 参数和新增运行日志不应提交。",
             "- duration/window sweep 若扩展到 1s/3s/4s，主要新增成本会落在 compact patch cache prefill，而不是 CSV 级融合分析。",
+            "- video-stage runtime benchmark 已补充原始视频解码、DINOv3 embedding、patch prefill 和 patch cache scoring 的代表性小样本 clean-cache 计时。",
             "",
             "## 已有日志中可解析的运行片段",
             "",
@@ -149,14 +157,37 @@ def write_markdown(storage: pd.DataFrame, logs: pd.DataFrame, out_path: Path) ->
     lines.extend(
         [
             "",
-            "## 仍需实测的 runtime 项",
+            "## 固定 video-stage benchmark",
             "",
-            "- global-only scoring 的端到端时间；",
-            "- patch cache prefill 的端到端时间和 GPU 配置；",
-            "- patch-only eval 在三数据集主配置上的端到端时间；",
-            "- fusion / metrics / sensitivity CSV 级分析时间。",
+        ]
+    )
+    if video_stage.empty:
+        lines.append("当前尚未生成 `results/journal_experiments/video_stage_runtime_benchmark/`。")
+    else:
+        lines.extend(
+            [
+                f"结果文件：`{video_stage_md.relative_to(out_path.parents[2])}`。",
+                "",
+                "| stage | elapsed sec | cache files | cache MiB | score rows |",
+                "|---|---:|---:|---:|---:|",
+            ]
+        )
+        for row in video_stage.itertuples(index=False):
+            lines.append(
+                f"| `{row.stage}` | {row.elapsed_sec:.3f} | "
+                f"{row.cache_files_after_stage} | {row.cache_size_mib_after_stage:.3f} | "
+                f"{row.score_rows} |"
+            )
+
+    lines.extend(
+        [
             "",
-            "论文中目前可以稳妥报告 storage footprint 和已有补充实验片段耗时；完整 runtime 表应在固定 GPU、固定 batch size、清空/固定 cache 状态后单独重跑一次。",
+            "## 尚未覆盖的 runtime 边界",
+            "",
+            "- 尚未清空三数据集全部 cache 后重跑全量端到端总耗时；这会产生大量重复计算和 I/O，不建议作为默认补充任务。",
+            "- 当前可以报告 storage footprint、CSV-stage 后处理成本、代表性 video-stage clean-cache 阶段成本，以及已有全量补充实验日志片段。",
+            "",
+            "论文中应明确区分小样本阶段成本、已有全量实验片段耗时和全数据集总耗时，避免把小样本 clean-cache benchmark 线性外推为完整 benchmark。",
         ]
     )
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

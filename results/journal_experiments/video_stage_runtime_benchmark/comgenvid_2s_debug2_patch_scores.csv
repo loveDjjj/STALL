@@ -1,0 +1,7 @@
+subset,source_model,filename,fusion,global_weight,patch_spat_weight,patch_temp_weight,patch_temp_mode,match_radius,top_m,temperature,lambda_dist,aggregation,bottomk_ratio,temporal_run_length,patch_region_size,patch_spat_percentile,patch_temp_percentile,patch_final_score,final_score
+annotated,Sora,-ahmed-_776843120%2Fmd.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.02944640815258026,0.002944640815258026,0.005594817455857992,0.005594817455857992
+annotated,Sora,0065464654_4804233%2Fmd.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.1837455779314041,0.008244994096457958,0.02579505369067192,0.02579505369067192
+annotated,VEO3,0057fd09-280b-5730-94f1-401e647a3741.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.34334510564804077,0.03239104896783829,0.06348645687103271,0.06348645687103271
+annotated,VEO3,01d6550e-fd46-5397-870f-b01e343a02a3.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.5571260452270508,0.06537102162837982,0.1145465224981308,0.1145465224981308
+real,MSVD,-4wsuPCjDBc_5_15.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.1484098881483078,0.7214369773864746,0.6641342639923096,0.6641342639923096
+real,MSVD,-7KMZQEsJW4_205_208.mp4,patch_only,,0.1,0.9,same_grid_second_order,,,,,bottomk_mean,0.2,3,3,0.29858657717704773,0.349234402179718,0.34416961669921875,0.34416961669921875

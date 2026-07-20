@@ -96,6 +96,8 @@ Paired bootstrap 下，Alpha-STALLED 相对 global-only 的 ΔAUC 概况：
 - `results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.md`：当前已完成、部分完成、需要重跑或不建议优先补充的参考实验清单；
 - `results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.csv`：CSV-stage 融合、metrics、alpha sweep 和审计脚本的固定命令计时；
 - `results/journal_experiments/runtime_benchmark/runtime_benchmark_environment.md`：runtime benchmark 的 CPU/GPU/conda/package 环境记录；
+- `results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.csv`：小样本 clean-cache video-stage runtime benchmark；
+- `results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md`：原始视频解码、DINOv3 embedding、patch prefill 和 patch cached scoring 的代表性阶段成本报告；
 - `results/journal_experiments/duration_window_representative/comgenvid_duration_window_representative.md`：ComGenVid 1s 代表性 duration/window 实跑与 2s 主实验 patch-only 对照；
 - `results/journal_experiments/duration_window_representative/comgenvid_duration_window_comparison.csv`：ComGenVid 1s vs 2s patch-only AUC/AP 对照表；
 - `results/paper_figures/alpha_sensitivity_curves.svg`：alpha 敏感性曲线；
@@ -251,18 +253,20 @@ oracle gap 最大（-0.0224）；region frozen 平均 |ΔAUC| 为 0.0198，Video
 目标 gap 最大（-0.0288）。因此论文中应把 region size 写成局部运动尺度相关的边界参数，
 而不是跨数据集固定的普适常数；同时把 beta 和 aggregation 作为相对稳健的辅助超参数。
 
-最后补充了 runtime/storage 代价审计。当前 compact patch cache 合计约 682.55 GiB，
+最后补充了 runtime/storage 代价审计。当前 compact patch cache 合计约 713.22 GiB，
 global embedding cache 合计约 8.23 GiB，说明 Alpha-STALLED 的主要工程成本来自
 patch cache prefill 和存储，而不是 CSV 级融合。已有补充实验日志中可解析到
 ComGenVid region mean patch eval 片段约 01:25，GenVideo aggregation 片段约 30:05，
 VideoFeedback aggregation / region mean 片段约 57 分钟量级。由于这些日志不是统一端到端
-benchmark，论文中应只把它们作为可追溯运行片段；若需要正式 runtime 表，还应在固定 GPU、
-batch size 和 cache 状态下单独实测 global scoring、patch prefill、patch eval 和 fusion。
-在此基础上，本轮新增了 CSV-stage runtime benchmark：在 RTX 5090 ×2 环境中，18 个
-轻量命令全部成功，总耗时 22.645 秒；三数据集主融合+metrics 合计 3.640 秒，9 个
-score metrics 合计 10.180 秒，三数据集 alpha sweep 合计 4.883 秒，审计脚本合计
-3.942 秒。该 benchmark 可直接作为“后处理和论文资产重建成本”报告；它不覆盖原始视频解码、
-DINOv3 embedding、patch prefill 或全量 patch eval。
+benchmark，论文中应只把它们作为可追溯运行片段。在此基础上，本轮新增了
+CSV-stage runtime benchmark：在 RTX 5090 ×2 环境中，18 个轻量命令全部成功，总耗时
+22.579 秒；三数据集主融合+metrics 合计 3.678 秒，9 个 score metrics 合计
+10.050 秒，三数据集 alpha sweep 合计 4.845 秒，审计脚本合计 4.006 秒。
+进一步新增 video-stage runtime benchmark：ComGenVid 2s、每个 `(subset, source_model)`
+2 个视频、从干净临时 cache 计时，global compact embedding + scoring 为 8.359 秒，
+patch compact cache prefill 为 7.928 秒，patch cached scoring 为 3.796 秒。
+因此当前可报告 storage footprint、CSV 级后处理成本、代表性 video-stage 成本和已有全量
+补充实验日志片段；但不应把小样本 clean-cache benchmark 线性外推为三数据集全量总耗时。
 
 同时补充了与论文 Average 行一致的生成器宏平均 paired bootstrap。结果显示
 Alpha-STALLED 相对 global-only 的宏平均 ΔAUC 在三个数据集上均为正且 95% CI 不跨 0：
@@ -282,9 +286,9 @@ P0/P1/P2 优先级。全部候选都匹配到 `video_path`、duration、fps 和 
 aggregation、temporal derivative、FPS/duration、扰动鲁棒性、normality test、D3 protocol、
 efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结论是：当前已完成或已有
 充分替代证据的项包括组件消融、patch aggregation/region 边界、统计稳定性、失败案例和大部分
-期刊补充图表；真正值得继续投入的 P1 仅剩两类：代表数据集 duration/window 实跑，以及固定环境
-端到端 runtime benchmark。Backbone、扰动鲁棒性、calibration size/source 等都需要重新提特征
-或重建大量 cache，当前不建议作为默认下一步。
+期刊补充图表；duration/window 代表性实跑和 video-stage runtime benchmark 也已补齐。
+当前 reference alignment 已无 P1 缺口。Backbone、扰动鲁棒性、calibration size/source
+等都需要重新提特征或重建大量 cache，当前不建议作为默认下一步。
 
 ## 仍建议补充的实跑实验
 
@@ -298,11 +302,11 @@ efficiency 和 qualitative examples 映射到当前 Alpha-STALLED 资产。结�
    结果同样支持 mean aggregation。aggregation 敏感性的 P0 指标证据已补齐。
 2. **patch 可解释案例图**：已基于 `failure_case_candidates.csv` 选取 6 个 VideoFeedback 代表案例，并从 patch cache 绘制 anomaly map。若版面允许，可进一步补原视频关键帧。
 
-优先级 P1：
+已完成的 P1：
 
-3. **duration/window 敏感性**：已完成可行性审计，见 `results/journal_experiments/duration_window_feasibility/`。若继续实跑，应先补一个代表数据集的 1s/2s 对照 cache，再考虑 3s/4s。
+3. **duration/window 敏感性**：已完成可行性审计和 ComGenVid 1s/2s 代表性实跑，见 `results/journal_experiments/duration_window_feasibility/` 与 `results/journal_experiments/duration_window_representative/`。除非审稿要求，不建议直接铺开 3 数据集 × 4 时长。
 4. **cross-dataset frozen hyperparameter**：已完成，见 `results/journal_experiments/cross_dataset_frozen_hyperparams/`。当前结论是 beta 与 aggregation 可迁移损失较小，region 和 alpha 应作为方法边界报告。
-5. **runtime 和存储开销**：已完成当前 storage footprint、已有日志审计和 CSV-stage benchmark，见 `results/journal_experiments/runtime_storage_audit/` 与 `results/journal_experiments/runtime_benchmark/`。若手稿需要完整端到端 runtime 表，还需固定环境重跑视频级 benchmark。
+5. **runtime 和存储开销**：已完成当前 storage footprint、已有日志审计、CSV-stage benchmark 和代表性 video-stage benchmark，见 `results/journal_experiments/runtime_storage_audit/`、`results/journal_experiments/runtime_benchmark/` 与 `results/journal_experiments/video_stage_runtime_benchmark/`。若手稿需要三数据集全量 clean-cache 总耗时，需另行清空/固定 cache 后重跑，但当前不建议默认执行。
 
 优先级 P2：
 

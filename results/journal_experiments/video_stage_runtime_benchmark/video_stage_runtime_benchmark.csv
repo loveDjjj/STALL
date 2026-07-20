@@ -1,0 +1,37 @@
+stage,command,returncode,elapsed_sec,cache_files_after_stage,cache_size_mib_after_stage,score_rows,stdout_tail
+global_compact_embedding_and_scoring,conda run --no-capture-output -n stall python STALL/src/eval.py --csv STALL/cache/indexes/comgenvid.csv --emb-cache /tmp/alpha_stalled_video_runtime_uu0anwta/global_embeddings/comgenvid --params STALL/precomputed/stall_params_vatex_dino_v3.npz --duration 2 --compact --workers 2 --video-batch 2 --debug 2 --output-csv STALL/results/journal_experiments/video_stage_runtime_benchmark/comgenvid_2s_debug2_global_scores.csv,0,8.359012745320797,6,0.3855266571044922,6,"
+已保存逐视频分数 → STALL/results/journal_experiments/video_stage_runtime_benchmark/comgenvid_2s_debug2_global_scores.csv
+
+============================================================
+                          RESULTS                           
+============================================================
+| Generative Model   |  #real  |  #fake  |  AP   |  AUC  |
+|--------------------|---------|---------|-------|-------|
+| Sora               |    2    |    2    | 0.833 | 0.750 |
+| VEO3               |    2    |    2    | 0.833 | 0.750 |
+| Average            |    2    |    2    | 0.833 | 0.750 |
+============================================================"
+patch_compact_cache_prefill,conda run --no-capture-output -n stall python STALL/tools/prefill_patch_cache.py --csv STALL/cache/indexes/comgenvid.csv --patch-emb-cache /tmp/alpha_stalled_video_runtime_uu0anwta/patch_embeddings/comgenvid --duration 2 --compact --debug-n 2 --num-workers 2 --video-batch 2 --frame-batch 16 --device cuda --execute --output-summary-csv STALL/results/journal_experiments/video_stage_runtime_benchmark/comgenvid_2s_debug2_patch_prefill.csv,0,7.928252723067999,6,73.88772392272949,1,"  .apply(lambda g: g.head(debug_n))
+DINOv3 模型已加载到 cuda (2 个可见 GPU)
+
+Patch cache:   0%|          | 0/6 [00:00<?, ? video/s]/data/OneDay/STALL_project/STALL/src/dataset_utils_patch.py:98: FutureWarning: DataFrameGroupBy.apply operated on the grouping columns. This behavior is deprecated, and in a future version of pandas the grouping columns will be excluded from the operation. Either pass `include_groups=False` to exclude the groupings or explicitly select the grouping columns after groupby to silence this warning.
+  .apply(lambda g: g.head(debug_n))
+
+Patch cache:  17%|█▋        | 1/6 [00:01<00:05,  1.12s/ video]
+Patch cache:  50%|█████     | 3/6 [00:02<00:02,  1.34 video/s]
+Patch cache:  83%|████████▎ | 5/6 [00:03<00:00,  1.70 video/s]
+Patch cache: 100%|██████████| 6/6 [00:03<00:00,  1.86 video/s]
+                              csv                                                      patch_emb_cache  duration  compact  debug_n  num_workers  video_batch  frame_batch device  execute   status  misses_before  written
+STALL/cache/indexes/comgenvid.csv /tmp/alpha_stalled_video_runtime_uu0anwta/patch_embeddings/comgenvid         2     True        2            2            2           16   cuda     True EXECUTED              6        6"
+patch_cached_scoring,conda run --no-capture-output -n stall python STALL/src/eval_patch_fast.py --csv STALL/cache/indexes/comgenvid.csv --patch-emb-cache /tmp/alpha_stalled_video_runtime_uu0anwta/patch_embeddings/comgenvid --patch-params STALL/precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p20_v2.npz --output-csv STALL/results/journal_experiments/video_stage_runtime_benchmark/comgenvid_2s_debug2_patch_scores.csv --duration 2 --compact --debug-n 2 --score-device cuda --score-batch-size 8 --patch-spat-weight 0.10 --patch-temp-weight 0.90 --patch-temp-mode same_grid_second_order --patch-region-size 3 --aggregation bottomk_mean --bottomk-ratio 0.20,0,3.795595192350447,6,73.88772392272949,6,"快速打分: 100%|██████████| 1/1 [00:00<00:00,  3.00batch/s]
+已保存逐视频分数 -> STALL/results/journal_experiments/video_stage_runtime_benchmark/comgenvid_2s_debug2_patch_scores.csv
+
+============================================================
+                          RESULTS                           
+============================================================
+| Generative Model   |  #real  |  #fake  |  AP   |  AUC  |
+|--------------------|---------|---------|-------|-------|
+| Sora               |    2    |    2    | 1.000 | 1.000 |
+| VEO3               |    2    |    2    | 1.000 | 1.000 |
+| Average            |    2    |    2    | 1.000 | 1.000 |
+============================================================"

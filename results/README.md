@@ -138,14 +138,18 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md` | alpha、beta、region、aggregation 冻结配置与目标 oracle gap 的可读结论 |
 | `cross_dataset_frozen_hyperparams/*_leave_one_out.csv` | 每类超参数的 leave-one-dataset-out 选择结果 |
 | `cross_dataset_frozen_hyperparams/*_transfer_matrix.csv` | 每类超参数的 source-to-target transfer matrix |
-| `runtime_storage_audit/` | 当前 cache、结果资产体积和已有日志中可解析耗时的轻量审计 |
-| `runtime_storage_audit/runtime_storage_audit.md` | storage footprint、可追溯 runtime 片段与仍需端到端实测的项目 |
+| `runtime_storage_audit/` | 当前 cache、结果资产体积、已有日志和固定 benchmark 的 runtime/storage 审计 |
+| `runtime_storage_audit/runtime_storage_audit.md` | storage footprint、可追溯 runtime 片段、CSV-stage 和 video-stage benchmark 汇总 |
 | `runtime_storage_audit/storage_audit.csv` | cache、precomputed、results 等目录的文件数和体积 |
 | `runtime_storage_audit/runtime_log_audit.csv` | 已有补充实验日志中可解析的 tqdm elapsed time |
 | `runtime_benchmark/` | 不重提特征、不重建 cache 的 CSV-stage runtime benchmark |
 | `runtime_benchmark/csv_stage_runtime_benchmark.md` | 融合、metrics、alpha sweep 和审计脚本的固定命令计时报告 |
 | `runtime_benchmark/csv_stage_runtime_benchmark.csv` | 每个 timed command 的命令、return code、elapsed seconds 和输出尾部 |
 | `runtime_benchmark/runtime_benchmark_environment.md` | CPU/GPU/conda/package 环境记录 |
+| `video_stage_runtime_benchmark/` | 使用原始视频和干净临时 cache 的小样本 video-stage runtime benchmark |
+| `video_stage_runtime_benchmark/video_stage_runtime_benchmark.md` | global compact embedding、patch prefill 和 patch cached scoring 的代表性阶段成本 |
+| `video_stage_runtime_benchmark/video_stage_runtime_benchmark.csv` | 每个 video-stage timed command 的命令、return code、elapsed seconds 和 cache 体积 |
+| `video_stage_runtime_benchmark/*_scores.csv` | runtime 小样本输出分数，仅用于验证命令成功和输出规模 |
 | `macro_average_bootstrap/` | 与论文 Average 行一致的生成器宏平均 paired bootstrap 结果 |
 | `macro_average_bootstrap/macro_average_paired_bootstrap_delta.md` | Alpha-STALLED / patch / global 方法差值的宏平均 ΔAUC/ΔAP 置信区间 |
 | `macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv` | 宏平均 paired bootstrap 数值表 |

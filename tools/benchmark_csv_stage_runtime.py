@@ -263,14 +263,14 @@ def write_markdown(results: pd.DataFrame, env_path: Path, out_path: Path) -> Non
     lines.extend(
         [
             "",
-            "## Pending end-to-end benchmark items",
+            "## Video-stage benchmark status",
             "",
-            "| item | why not included here | required next step |",
+            "| item | status | where to look |",
             "|---|---|---|",
-            "| global embedding extraction | requires raw video decoding and DINOv3 inference | run fixed-dataset video scoring benchmark with cache state recorded |",
-            "| compact patch cache prefill | dominant storage/runtime cost; can run for many hours and hundreds of GiB | choose one representative dataset/duration and time prefill from a clean cache |",
-            "| full patch eval | existing logs are available, but not a clean fixed benchmark | rerun selected dataset/region/aggregation with fixed GPU and batch size |",
-            "| raw-video keyframe visualization | requires video decoding and visual selection | run only if manuscript needs raw-frame qualitative panels |",
+            "| global embedding extraction | covered by representative clean-cache video-stage benchmark | `results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md` |",
+            "| compact patch cache prefill | covered by representative clean-cache video-stage benchmark | `results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md` |",
+            "| patch cached scoring | covered by representative clean-cache video-stage benchmark | `results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md` |",
+            "| full-dataset clean-cache total runtime | intentionally not run by this CSV-stage script | only run if reviewers require a full end-to-end wall-clock table |",
         ]
     )
     out_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

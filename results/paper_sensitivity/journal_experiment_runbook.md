@@ -31,10 +31,11 @@
   用于区分目标数据集 oracle sweep 与跨数据集冻结配置。
 - Runtime / storage 代价审计：
   已读取当前 cache、precomputed、results 目录体积，解析已有补充实验日志中的 tqdm elapsed time，
-  并完成不重提特征的 CSV-stage runtime benchmark；
-  完整端到端 runtime 表仍需固定环境单独 benchmark。
+  并完成不重提特征的 CSV-stage runtime benchmark 和 ComGenVid 小样本 clean-cache
+  video-stage benchmark。
 - Reference alignment audit：
-  已对照 `2603.15026v2` 主文和附录实验体系，生成当前 Alpha-STALLED 结果覆盖矩阵和 P1/P2/P3 缺口优先级。
+  已对照 `2603.15026v2` 主文和附录实验体系，生成当前 Alpha-STALLED 结果覆盖矩阵；
+  当前已无 P1 缺口。
 - Duration/window representative run：
   已完成 ComGenVid 1s patch-only 代表性实跑，并与 2s 主实验 patch-only 指标对照。
 
@@ -237,7 +238,7 @@ results/paper_figures/cross_dataset_frozen_hyperparams.svg
 results/paper_figures/cross_dataset_frozen_hyperparams.png
 ```
 
-## P1：runtime 和存储开销
+## Runtime 和存储开销
 
 为什么要做：方法论文需要说明代价。建议报告：
 
@@ -247,12 +248,19 @@ results/paper_figures/cross_dataset_frozen_hyperparams.png
 - fusion 和 CSV 级分析时间；
 - embedding cache 与 patch cache 大小。
 
-当前状态：已完成 `results/journal_experiments/runtime_storage_audit/` 审计和
-`results/journal_experiments/runtime_benchmark/` CSV-stage benchmark。
-当前 compact patch cache 合计约 682.55 GiB，global embedding cache 合计约 8.23 GiB；
-已有日志只能支持补充实验片段耗时，不足以作为完整端到端 runtime 表。
-CSV-stage benchmark 在 RTX 5090 ×2 环境中完成 18 个固定命令，总耗时 22.645 秒，
-其中三数据集主融合+metrics 合计 3.640 秒，三数据集 alpha sweep 合计 4.883 秒。
+当前状态：已完成 `results/journal_experiments/runtime_storage_audit/` 审计、
+`results/journal_experiments/runtime_benchmark/` CSV-stage benchmark，以及
+`results/journal_experiments/video_stage_runtime_benchmark/` 小样本 clean-cache
+video-stage benchmark。当前 compact patch cache 合计约 713.22 GiB，global
+embedding cache 合计约 8.23 GiB；cache 体积增加主要来自新增 ComGenVid 1s
+duration/window 代表性实跑。
+
+CSV-stage benchmark 在 RTX 5090 ×2 环境中完成 18 个固定命令，总耗时 22.579 秒，
+其中三数据集主融合+metrics 合计 3.678 秒，三数据集 alpha sweep 合计 4.845 秒。
+video-stage benchmark 使用 ComGenVid 2s、每个 `(subset, source_model)` 2 个视频，
+从干净临时 cache 计时：global compact embedding + scoring 为 8.359 秒，
+patch compact cache prefill 为 7.928 秒，patch cached scoring 为 3.796 秒。
+这些结果足以报告代表性阶段成本；不应线性外推为三数据集全量 clean-cache 总耗时。
 
 重建命令：
 
@@ -266,7 +274,13 @@ CSV-stage benchmark 重建命令：
 conda run --no-capture-output -n stall python tools/benchmark_csv_stage_runtime.py
 ```
 
-若要生成正式 runtime 表，建议固定如下条件后单独重跑：
+Video-stage benchmark 重建命令：
+
+```bash
+conda run --no-capture-output -n stall python tools/benchmark_video_stage_runtime.py
+```
+
+若审稿要求三数据集全量 clean-cache runtime 表，再固定如下条件后单独重跑：
 
 ```text
 GPU 型号和数量
@@ -337,13 +351,13 @@ conda run --no-capture-output -n stall python tools/audit_reference_experiment_a
 关键结论：
 
 - `done`：组件消融、patch aggregation/region 边界、统计稳定性已经足够，不建议重复。
-- `P1`：若继续投入，最值得做的是代表数据集 duration/window 实跑，或固定环境视频级端到端 runtime benchmark。
+- 当前已无 P1 缺口；若继续投入，应只处理审稿明确要求的 P2/P3 项。
 - `P2`：外部 baseline/D3 protocol、原视频关键帧 qualitative examples、calibration source 只在投稿或审稿明确要求时做。
 - `P3`：backbone、image/temporal perturbation、calibration size/source 大多需要重新提特征或重建大量 cache，当前不建议默认执行。
 
 ## 推荐执行顺序
 
-1. 根据版面决定是否投入 patch cache prefill 来补 duration/window 实跑；当前已完成可行性审计。
+1. Duration/window 代表性实跑已完成；除非审稿要求，不建议铺开三数据集 × 多时长全网格。
 2. Cross-dataset frozen hyperparameter 已完成，可直接写入泛化/边界分析。
 3. Macro-average paired bootstrap 已完成，可用于总体显著性/稳定性表述。
-4. Reference alignment audit 已完成；CSV-stage runtime benchmark 也已完成。若继续补，只建议做三类需要额外资源或人工判断的工作：视频级端到端 runtime benchmark、代表数据集 duration cache prefill、失败样本关键帧人工语义解释。Backbone、扰动鲁棒性、calibration size/source 暂列 P3，不作为默认下一步。
+4. Reference alignment audit、CSV-stage runtime benchmark 和 video-stage runtime benchmark 都已完成。若继续补，只建议做审稿明确要求的工作，例如外部 baseline、D3 protocol 审计或失败样本关键帧人工语义解释。Backbone、扰动鲁棒性、calibration size/source 暂列 P3，不作为默认下一步。
