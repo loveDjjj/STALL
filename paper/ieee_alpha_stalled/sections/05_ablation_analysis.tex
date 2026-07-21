@@ -1,42 +1,74 @@
 \section{消融与机制分析}
 \label{sec:ablation}
 
+本节将 \method 的主要设计拆解为三个可验证问题：全局 \stall 分支和局部 patch 分支是否互补，局部二阶时序证据是否优于一阶或更高阶替代，局部尺度和聚合方式是否构成跨数据集边界。按照这一证据链，本文把平均结果、生成器级结果、分数分布、敏感性和边界实验分别做成表格或图像，避免只用单一平均值支撑机制结论。
+
+\subsection{全局--局部联合分数结构}
+原版 \stall 通过空间/时序似然的联合分布展示真实视频和生成视频的分离结构。本文保留这一分析思路，但把横轴设为 global-only \stall 分数，把纵轴设为新增的局部同网格二阶 patch 分数。图~\ref{fig:global_patch_joint} 因而直接检验本文创新点：局部分支是否只是在重复全局分支，还是提供了独立的局部动态证据。
+
+三组数据集均显示 global score 和 patch score 存在正相关，但并非一条单调直线。ComGenVid 上生成视频在两个分支上均明显偏低，说明局部二阶时序证据与全局真实视频校准方向一致；VideoFeedback 和 GenVideo 中存在更多 off-diagonal 样本，表示部分视频由全局分支或局部分支单独捕获。这一结构解释了后续组件消融中的两类现象：融合能提升多数生成器相对 global-only 的性能，但在 patch-only 已经很强的 ComGenVid 上不必然超过 patch-only。
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{global_patch_likelihood_joint_panel.pdf}
+  \caption{全局 \stall 分数与局部二阶 patch 分数的联合分布。蓝色为真实视频，红色为生成视频。该图复用原 \stall 联合似然分析思想，但纵轴替换为本文新增的局部同网格二阶证据，用于展示全局校准与局部动态异常之间的互补关系。}
+  \label{fig:global_patch_joint}
+\end{figure*}
+
 \subsection{全局分支与局部分支互补}
-表~\ref{tab:component_ablation} 给出 global-only、patch-only 和 \method 的组件消融。ComGenVid 上 patch-only 已超过 global-only，说明该数据集的主要可分性来自局部二阶时序证据；但融合分数略低于 patch-only，提示全局分支并非在所有数据集上都能增加均值上限。VideoFeedback 上 patch-only 低于 global-only，而融合后高于二者，说明全局分支在该数据集上提供必要约束。GenVideo 上 patch-only 与 global-only 接近，融合后取得最佳结果。总体上，局部分支不是替代全局 \stall，而是补充全局特征遗漏的局部动态证据。
+表~\ref{tab:component_ablation} 给出三数据集宏平均组件消融，表~\ref{tab:per_generator_component_matrix} 进一步展开到 20 个生成器来源。宏平均结果显示，\method 在 VideoFeedback 和 GenVideo 上均超过 global-only 与 patch-only；ComGenVid 上 patch-only 最高，而 \method 仍显著高于 global-only。该结果说明融合分支的主要目标不是在所有数据集上追求 patch-only 上限，而是在未知视频中同时保留全局真实视频校准和局部动态证据。
 
 \input{tables/component_ablation}
 
+\input{tables/per_generator_component_matrix}
+
+生成器级结果提供了更细的机制边界。VideoFeedback 中，Text2Video-Zero 和 VideoCrafter2 的 global-only AUC 高于融合分支，而 patch-only 明显较弱；相反，ZeroScope-576w 和 Pika 更受益于 patch 分支。GenVideo 中 Sora 的 patch-only 明显超过 global-only，但融合略低于 patch-only；多数其他生成器则由融合取得最高或接近最高的结果。图~\ref{fig:component_matrix} 将这种模式可视化为 AUC 热图和 $\Delta$AUC 条形图：\method 相对 global-only 的正增益分布广泛，但相对 patch-only 的增益取决于生成器类型。
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{component_per_generator_matrix.pdf}
+  \caption{生成器级组件消融矩阵。左图为 global-only、patch-only 和 \method 的 AUC 热图；右图为 \method 相对两个分支的 $\Delta$AUC。该图显示局部分支不是全局分支的简单替代，而是在不同生成器上提供强弱不同的互补证据。}
+  \label{fig:component_matrix}
+\end{figure*}
+
+为避免把随机波动误写为机制差异，表~\ref{tab:per_generator_bootstrap_delta} 报告生成器级 paired bootstrap AUC 差值区间。大多数生成器的 $\Delta_{\alpha-G}$ 为正，但 VideoFeedback 中 Text2Video-Zero 和 VideoCrafter2 为负，说明融合权重在强 global-only 生成器上存在负迁移边界。相对 patch-only 的差值则在 VideoFeedback 大多为正，在 ComGenVid 为负，进一步支持“融合提供跨来源稳健性，而非总是提高单一数据集 oracle 上限”的写作边界。
+
+\input{tables/per_generator_bootstrap_delta}
+
 \subsection{局部二阶时序是否必要}
-ComGenVid 局部时序定义消融显示，同网格二阶分支明显优于 patch 空间、lag-1、多滞后和 motion-hard/soft 等替代方案。为进一步检验二阶选择是否任意，本文补充了三阶和四阶同网格 patch temporal derivative 对照。表~\ref{tab:temporal_order} 显示，在相同 region、bottom-$k$ 和真实视频校准条件下，二阶分支取得 0.9273/0.9309 的 AUC/AP，而三阶和四阶分别下降到 0.8853/0.8936 与 0.8866/0.8949。这说明更高阶差分会强调更高频局部变化，但在当前 16 帧窗口和 patch 统计下没有带来收益。
+局部时序设计需要同时排除三类替代解释：仅用静态 patch 外观即可、使用一阶相邻差分即可、使用更高阶差分更好。表~\ref{tab:patch_temporal_comprehensive} 因此把 ComGenVid 上的 spatial-only、D=1 lag-1、D=1 multi-lag、motion-hard/soft、D=2、D=3 和 D=4 放在同一协议下比较。D=1 lag-1 的平均 AUC/AP 为 0.8556/0.8617，相对 D=2 下降 0.0718/0.0692；D=3 和 D=4 虽高于一阶替代，但仍低于 D=2。该结果说明当前 patch 分支的主要贡献来自同网格二阶局部动态，而不是简单增加 patch 外观分支或任意提高导数阶数。
 
-\input{tables/temporal_order}
+\input{tables/patch_temporal_comprehensive}
 
-\begin{figure}[!t]
+\begin{figure*}[!t]
   \centering
-  \includegraphics[width=\columnwidth]{comgenvid_temporal_derivative_order.pdf}
-  \caption{ComGenVid 上同网格 patch temporal derivative order 对照。二阶分支优于三阶和四阶，是当前局部时序主线。}
-  \label{fig:temporal_order}
-\end{figure}
+  \includegraphics[width=\textwidth]{patch_temporal_design_landscape.pdf}
+  \caption{局部 patch 证据定义的性能地形。左图按 AUC 排序展示静态、一阶、扰动、高阶和二阶分支；右图展示各变体相对 D=2 的 AUC/AP 损失。D=1 已纳入对照，结果表明二阶同网格证据是当前局部时序主线。}
+  \label{fig:patch_temporal_landscape}
+\end{figure*}
 
-\subsection{局部尺度与聚合边界}
-patch region size 和局部聚合方式决定局部证据的空间支持域。已有敏感性实验显示，ComGenVid 在更大局部区域上收益更明显，region=3 mean 相对 region=1 mean 平均 AUC 提升 +0.0211；GenVideo 的最优 mean 设置出现在 region=2；VideoFeedback 则在 region=1 上最好，扩大 region 会持续降低 AUC/AP。aggregation 也呈现数据集差异：GenVideo 和 VideoFeedback 上 mean 优于 bottom-$k$，而 ComGenVid 上扩大 bottom-$k$ 比例仍能提高 patch-only 性能。该结果表明，region 和 aggregation 不是装饰性参数，而是局部异常空间分布的边界条件。
+关于全局分支的不同导数阶数，当前 release 不应给出未经实验支持的数值。代码层面，patch 分支在 \texttt{src/patch\_matching.py} 和 \texttt{src/eval\_patch\_fast.py} 中显式支持 D=1/2/3/4；global-only 分支则通过原 \stall 参数文件和 \texttt{src/eval.py} 打分，当前没有可直接切换 global temporal order 的命令行参数。因此，全局 D=2/D=3/D=4 不是已有 CSV 的重汇总，而需要重新定义全局时序特征、重建真实视频校准参数并重跑三数据集。本文把全局 \stall 作为固定主干 baseline，把导数阶数消融限定在新增 patch 分支；若审稿要求，可按补充计划扩展 global-order sweep。
 
-\subsection{跨数据集冻结超参数}
-为区分目标数据集 oracle sweep 和可迁移设置，我们复用现有敏感性结果做 leave-one-dataset-out frozen 分析。结果显示，patch 内部空间/时序权重和 aggregation 的跨数据集 gap 较小，而 region size 的 gap 更大。该现象与上一节一致：局部二阶时序证据本身较稳定，但局部空间支持域受视频分辨率、运动尺度和生成器类型影响更大。
+\subsection{局部尺度、聚合方式与跨数据集边界}
+局部异常的空间支持域决定 patch 证据是捕获小范围纹理/运动异常，还是被较大区域的平均效应稀释。表~\ref{tab:hyperparameter_sensitivity_matrix} 汇总 region size、aggregation 和 bottom-$k$ ratio 的多数据集敏感性。ComGenVid 在 region=3 mean 下取得最高 region-family AUC，VideoFeedback 在 region=1 mean 下最好，GenVideo 的最优 mean 设置为 region=2。aggregation 也呈现同样边界：GenVideo 和 VideoFeedback 上 mean 优于 bottom-$k$，而 ComGenVid 中增大 bottom-$k$ ratio 可继续提升 patch-only AUC。
 
-\begin{figure}[!t]
+\input{tables/hyperparameter_sensitivity_matrix}
+
+\begin{figure*}[!t]
   \centering
-  \includegraphics[width=\columnwidth]{cross_dataset_frozen_hyperparams.pdf}
-  \caption{Leave-one-dataset-out frozen hyperparameter 与目标数据集 oracle 的 AUC gap。region size 的迁移 gap 大于 patch 内部权重和 aggregation，说明局部空间支持域是主要边界。}
-  \label{fig:frozen_hyperparams}
-\end{figure}
+  \includegraphics[width=\textwidth]{hyperparameter_sensitivity_grid.pdf}
+  \caption{局部尺度与聚合方式的四面板敏感性分析。左上展示 region size 在三数据集上的不同最优点；右上比较 mean 与 bottom-$k$ aggregation；左下展示 ComGenVid bottom-$k$ ratio 曲线；右下展示 leave-one-dataset-out frozen setting 相对目标数据集 oracle 的平均 AUC gap。}
+  \label{fig:hyperparameter_grid}
+\end{figure*}
+
+跨数据集 frozen 分析进一步说明，region size 的迁移 gap 大于 patch 内部权重和 aggregation。该现象与表~\ref{tab:hyperparameter_sensitivity_matrix} 一致：局部二阶证据本身较稳定，但局部空间支持域受视频分辨率、运动尺度和生成器类型影响更强。因此，本文不把 region size 写成普适最优常数，而把它作为局部分支的主要边界条件。
 
 \subsection{时间窗口、覆盖缺口与计算代价}
-为对齐 \stall 原文附录中的 temporal setting 分析，本文补充了 ComGenVid 1 秒代表性窗口实验。该实验只评测 patch-only 分支，因为当前资产没有匹配的 1 秒 global score；在同网格二阶、region=3、bottom-$k=0.20$ 的设置下，1 秒窗口取得 0.9434/0.9456 的 AUC/AP，高于 2 秒 patch-only 主线的 0.9273/0.9309。该结果说明局部二阶时序证据不严格依赖较长窗口，但由于只在 ComGenVid 上实跑，本文将其作为代表性边界证据，而不是三数据集鲁棒性结论。
+表~\ref{tab:runtime_window_boundary} 将时间窗口和计算/存储边界集中报告。为对齐 \stall 原文附录中的 temporal setting 分析，本文补充了 ComGenVid 1 秒代表性窗口实验。该实验只评测 patch-only 分支，因为当前资产没有匹配的 1 秒 global score；在同网格二阶、region=3、bottom-$k=0.20$ 的设置下，1 秒窗口取得 0.9434/0.9456 的 AUC/AP，高于 2 秒 patch-only 主线的 0.9273/0.9309。该结果说明局部二阶时序证据不严格依赖较长窗口，但由于只在 ComGenVid 上实跑，本文将其作为代表性边界证据，而不是三数据集鲁棒性结论。
 
-当前 release 还记录了 patch 覆盖缺口：VideoFeedback 的 Hotshot-XL、GenVideo 的 HotShot-XL 和 MoonValley 未纳入主线 patch baseline，原因是短视频 duration mismatch 或缺少 patch score 资产。因此，VideoFeedback 主线覆盖 10 个 2 秒来源，GenVideo 主线覆盖 8 个来源。该边界应在投稿表格脚注或补充材料中保留，避免把主线均值误写为覆盖所有原始来源。
+\input{tables/runtime_window_boundary}
 
-计算代价方面，runtime/storage audit 显示 compact patch cache 是主要存储成本，三个数据集合计约 713.22 GiB，而全局 embedding cache 合计约 8.23 GiB。小样本 clean-cache video-stage benchmark 在 ComGenVid 2 秒设置下完成了三个阶段计时：global compact embedding and scoring 为 8.359 s，patch compact cache prefill 为 7.928 s，patch cached scoring 为 3.796 s。该结果只代表阶段成本，不应线性外推为全数据集端到端耗时。
+当前 release 还记录了 patch 覆盖缺口：VideoFeedback 的 Hotshot-XL、GenVideo 的 HotShot-XL 和 MoonValley 未纳入主线 patch baseline，原因是短视频 duration mismatch 或缺少 patch score 资产。因此，VideoFeedback 主线覆盖 10 个 2 秒来源，GenVideo 主线覆盖 8 个来源。该边界应保留在主文脚注或补充材料中，避免把主线均值误写为覆盖所有原始来源。计算代价方面，compact patch cache 是主要存储成本；debug-2 clean-cache benchmark 只代表阶段成本，不能线性外推为全数据集端到端耗时。
 
 \subsection{关键帧解释与失败模式}
 图~\ref{fig:keyframes} 给出代表性关键帧解释案例。关键帧由局部二阶 patch anomaly 曲线自动选择，仅用于事后解释，不参与训练、推理或调参。主文保留残余难例和负迁移两个紧凑案例；完整 6 案例图保存在补充图资产中，包括 patch/global 分支冲突和真实视频误伤。该图的作用不是证明具体语义原因，而是展示分支分数与局部 anomaly map 如何帮助定位方法边界。

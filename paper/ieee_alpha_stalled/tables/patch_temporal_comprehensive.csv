@@ -1,0 +1,9 @@
+group,variant,mode,source,auc,ap,n_real,n_fake,delta_auc_vs_d2,delta_ap_vs_d2
+静态对照,Spatial-only,patch spatial percentile,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_spatial_metrics.csv,0.8091202530240664,0.8193681650348652,1698,1698,-0.11820166037505475,-0.1115409128420094
+一阶对照,D=1 lag-1,same_grid_lag1,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_lag1_metrics.csv,0.8555594748065001,0.8617169603383037,1698,1698,-0.0717624385926211,-0.06919211753857091
+一阶对照,D=1 multi-lag,same_grid_multilag,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_multilag_metrics.csv,0.8545615398702278,0.8586450164520019,1698,1698,-0.07276037352889342,-0.07226406142487274
+匹配扰动,Motion-hard,motion hard control,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_motionhard_metrics.csv,0.8430245483843668,0.8491417478203466,1698,1698,-0.08429736501475438,-0.08176733005652803
+匹配扰动,Motion-soft,motion soft control,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_motionsoft_metrics.csv,0.8180853661412789,0.8255533633851666,1698,1698,-0.10923654725784226,-0.105355714491708
+二阶主线,D=2 same-grid,same_grid_second_order,/data/OneDay/STALL_project/STALL/results/paper_tables/comgenvid_patch_only_metrics.csv,0.9273219133991212,0.9309090778768746,1698,1698,0.0,0.0
+高阶对照,D=3 same-grid,same_grid_third_order,/data/OneDay/STALL_project/STALL/results/journal_experiments/temporal_derivative_order/comgenvid_patch_third_order_metrics.csv,0.8853179483657764,0.8935691154557568,1698,1698,-0.0420039650333448,-0.03733996242111781
+高阶对照,D=4 same-grid,same_grid_fourth_order,/data/OneDay/STALL_project/STALL/results/journal_experiments/temporal_derivative_order/comgenvid_patch_fourth_order_metrics.csv,0.8866111277592568,0.8948583004018713,1698,1698,-0.04071078563986441,-0.03605077747500329
