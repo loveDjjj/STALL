@@ -9,6 +9,7 @@
 - `tables/patch_temporal_comprehensive.tex`：ComGenVid patch spatial、D=1、multi-lag、motion-hard/soft、D=2/3/4 完整局部证据对照。
 - `tables/hyperparameter_sensitivity_matrix.tex`：region、aggregation、bottom-k 多数据集敏感性大表。
 - `tables/runtime_window_boundary.tex`：时间窗口、运行时间和存储成本边界。
+- `tables/keyframe_case_summary.tex`：关键帧解释案例的分支分数、Patch-Global 差值和关键帧时间。
 
 ## 新增主文图
 

@@ -71,7 +71,9 @@
 当前 release 还记录了 patch 覆盖缺口：VideoFeedback 的 Hotshot-XL、GenVideo 的 HotShot-XL 和 MoonValley 未纳入主线 patch baseline，原因是短视频 duration mismatch 或缺少 patch score 资产。因此，VideoFeedback 主线覆盖 10 个 2 秒来源，GenVideo 主线覆盖 8 个来源。该边界应保留在主文脚注或补充材料中，避免把主线均值误写为覆盖所有原始来源。计算代价方面，compact patch cache 是主要存储成本；debug-2 clean-cache benchmark 只代表阶段成本，不能线性外推为全数据集端到端耗时。
 
 \subsection{关键帧解释与失败模式}
-图~\ref{fig:keyframes} 给出代表性关键帧解释案例。关键帧由局部二阶 patch anomaly 曲线自动选择，仅用于事后解释，不参与训练、推理或调参。主文保留残余难例和负迁移两个紧凑案例；完整 6 案例图保存在补充图资产中，包括 patch/global 分支冲突和真实视频误伤。该图的作用不是证明具体语义原因，而是展示分支分数与局部 anomaly map 如何帮助定位方法边界。
+图~\ref{fig:keyframes} 给出代表性关键帧解释案例，表~\ref{tab:keyframe_case_summary} 同步报告 6 个候选案例的 global、patch、融合分数和关键帧时间。关键帧由局部二阶 patch anomaly 曲线自动选择，仅用于事后解释，不参与训练、推理或调参。主文保留残余难例和负迁移两个紧凑案例；完整 6 案例图保存在补充图资产中，包括 patch/global 分支冲突和真实视频误伤。该图表组合的作用不是证明具体语义原因，而是展示分支分数与局部 anomaly map 如何帮助定位方法边界。
+
+\input{tables/keyframe_case_summary}
 
 \begin{figure*}[!t]
   \centering

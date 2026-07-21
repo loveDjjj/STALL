@@ -422,6 +422,46 @@ def build_runtime_boundary_table() -> None:
     _write_text(TAB_DIR / "runtime_window_boundary.tex", "\n".join(lines))
 
 
+def build_keyframe_case_table() -> None:
+    df = pd.read_csv(ROOT / "results/journal_experiments/keyframe_case_explanations/keyframe_case_explanations.csv")
+    lines = [
+        r"\begin{table*}[!t]",
+        r"  \centering",
+        r"  \caption{关键帧解释案例的分支分数与定位信息。关键帧由局部二阶 patch anomaly 曲线选择；表格用于补充图~\ref{fig:keyframes} 中的可量化分支关系。}",
+        r"  \label{tab:keyframe_case_summary}",
+        r"  \resizebox{\textwidth}{!}{%",
+        r"  \begin{tabular}{lllcccccl}",
+        r"    \toprule",
+        r"    案例 & 子集 & 来源 & Global & Patch & \method & Patch-Global & 关键帧(s) & 解释标签 \\",
+        r"    \midrule",
+    ]
+    for r in df.itertuples(index=False):
+        lines.append(
+            "    "
+            + " & ".join(
+                [
+                    _latex_escape(r.case_label),
+                    _latex_escape("real" if r.subset == "real" else "generated"),
+                    _latex_escape(r.source_model),
+                    _fmt(r.global_score),
+                    _fmt(r.patch_score),
+                    _fmt(r.alpha_score),
+                    _fmt_delta(float(r.patch_score) - float(r.global_score)),
+                    f"{float(r.keyframe_time_sec):.3f}",
+                    _latex_escape(r.interpretation_tag),
+                ]
+            )
+            + r" \\"
+        )
+    lines += [
+        r"    \bottomrule",
+        r"  \end{tabular}%",
+        r"  }",
+        r"\end{table*}",
+    ]
+    _write_text(TAB_DIR / "keyframe_case_summary.tex", "\n".join(lines))
+
+
 def plot_global_patch_joint() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.25), sharex=True, sharey=True, constrained_layout=True)
     for ax, dataset in zip(axes, ["comgenvid", "videofeedback", "genvideo"]):
@@ -633,6 +673,7 @@ def update_notes() -> None:
 - `tables/patch_temporal_comprehensive.tex`：ComGenVid patch spatial、D=1、multi-lag、motion-hard/soft、D=2/3/4 完整局部证据对照。
 - `tables/hyperparameter_sensitivity_matrix.tex`：region、aggregation、bottom-k 多数据集敏感性大表。
 - `tables/runtime_window_boundary.tex`：时间窗口、运行时间和存储成本边界。
+- `tables/keyframe_case_summary.tex`：关键帧解释案例的分支分数、Patch-Global 差值和关键帧时间。
 
 ## 新增主文图
 
@@ -656,6 +697,7 @@ def main() -> None:
     build_bootstrap_table()
     hyper = build_hyperparameter_table()
     build_runtime_boundary_table()
+    build_keyframe_case_table()
     plot_global_patch_joint()
     plot_patch_temporal_landscape(temporal)
     plot_component_matrix(component)

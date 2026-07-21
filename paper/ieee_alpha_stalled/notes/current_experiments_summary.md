@@ -42,6 +42,7 @@
 |---|---|---|---|
 | Failure case audit | `results/journal_experiments/failure_case_audit/failure_case_audit.md` | VideoFeedback 存在稳定负迁移生成器；真实视频低分案例可作为边界 | 不观看原视频前不写具体语义原因 |
 | Keyframe case explanations | `results/journal_experiments/keyframe_case_explanations/keyframe_case_explanations.md` | 已有 6 个关键帧解释案例 | 事后解释，不参与训练或推理 |
+| Keyframe case summary table | `paper/ieee_alpha_stalled/tables/keyframe_case_summary.tex` | 6 个案例的 global/patch/Alpha 分数、Patch-Global 差值和关键帧时间 | 与主文关键帧图配套，避免只有定性展示 |
 | Patch anomaly visualization | `results/journal_experiments/case_visualizations/patch_anomaly_case_summary.md` | 已有 patch anomaly map 资产 | 主文空间有限时放补充 |
 
 ## 尚未完成但可执行的高成本实验

@@ -1,0 +1,19 @@
+\begin{table*}[!t]
+  \centering
+  \caption{关键帧解释案例的分支分数与定位信息。关键帧由局部二阶 patch anomaly 曲线选择；表格用于补充图~\ref{fig:keyframes} 中的可量化分支关系。}
+  \label{tab:keyframe_case_summary}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lllcccccl}
+    \toprule
+    案例 & 子集 & 来源 & Global & Patch & \method & Patch-Global & 关键帧(s) & 解释标签 \\
+    \midrule
+    T2V-Zero / hard generated & generated & Text2Video-Zero & 0.9293 & 0.9042 & 0.9193 & -0.0251 & 1.625 & 残余难例 \\
+    T2V-Zero / patch raises score & generated & Text2Video-Zero & 0.0324 & 0.8972 & 0.3783 & +0.8647 & 0.125 & 负迁移案例 \\
+    VideoCrafter2 / patch-global conflict & generated & VideoCrafter2 & 0.0013 & 0.9104 & 0.3649 & +0.9091 & 0.750 & 分支冲突 \\
+    LaVie-base / patch-global conflict & generated & LaVie-base & 0.0234 & 0.9839 & 0.4076 & +0.9605 & 0.375 & 分支冲突 \\
+    AnimateDiff / patch-global conflict & generated & AnimateDiff & 0.0166 & 0.9082 & 0.3733 & +0.8915 & 0.250 & 分支冲突 \\
+    Panda70M / real false-positive & real & Panda70M & 0.0048 & 0.0014 & 0.0035 & -0.0034 & 1.500 & 真实误伤 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}
