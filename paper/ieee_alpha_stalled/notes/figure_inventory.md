@@ -11,6 +11,7 @@
 | `figures/results/component_per_generator_matrix.pdf/.svg/.png` | `results/paper_sensitivity/component_per_generator_delta.csv` | 主文消融 | 展示 20 个生成器上 global/patch/Alpha 的 AUC 矩阵和分支 delta |
 | `figures/results/comgenvid_temporal_derivative_order.pdf/.svg/.png` | `results/journal_experiments/temporal_derivative_order/` | 主文消融 | 支撑二阶优于三阶/四阶 |
 | `figures/results/patch_temporal_design_landscape.pdf/.svg/.png` | `results/paper_tables/` 与 `results/journal_experiments/temporal_derivative_order/` | 主文消融 | 把 spatial、D=1、multi-lag、motion、D=2/3/4 放在同一图中 |
+| `figures/results/patch_likelihood_assumption_audit.pdf/.svg/.png` | `results/journal_experiments/patch_likelihood_assumption_audit/` | 主文机制诊断 | 验证 patch token、region-pooled token 和二阶 patch 差分的白化 covariance、正态性、方向余弦与位置共享残差 |
 | `figures/results/cross_dataset_frozen_hyperparams.pdf/.svg/.png` | `results/paper_figures/` | 主文或补充 | 展示冻结超参数迁移 gap |
 | `figures/results/hyperparameter_sensitivity_grid.pdf/.svg/.png` | `results/journal_experiments/*sensitivity/` 与 frozen hyperparams | 主文消融 | 四面板展示 region、aggregation、bottom-k 和 frozen oracle gap |
 | `figures/results/keyframe_patch_anomaly_cases_main.pdf/.png` | 从完整 6 案例图裁剪 | 主文 | 展示两个代表性失败/边界案例，避免主文图过密 |

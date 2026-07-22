@@ -19,6 +19,7 @@
 |---|---|---|---|
 | Temporal derivative order | `results/journal_experiments/temporal_derivative_order/comgenvid_temporal_derivative_order.md` | D=2 优于 D=3/D=4 | 代表性机制对照，只在 ComGenVid |
 | Patch temporal comprehensive | `paper/ieee_alpha_stalled/tables/patch_temporal_comprehensive.tex`; `figures/results/patch_temporal_design_landscape.pdf` | D=1 lag-1 0.8556/0.8617，D=2 0.9273/0.9309，D=3/D=4 低于 D=2 | D=1 已补进主文表；D=3/D=4 仍是 ComGenVid 代表性对照 |
+| Patch likelihood assumption audit | `results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_audit.md`; `paper/ieee_alpha_stalled/tables/patch_likelihood_assumption_audit.tex`; `figures/results/patch_likelihood_assumption_audit.pdf` | ComGenVid 真实视频抽样显示二阶 patch 差分的白化 covariance、AD/DP 正态性、方向余弦和位置共享残差均优于 raw patch/region-pooled token | 可作为主文机制诊断；不能写成严格多元高斯证明 |
 | Region sensitivity | `results/journal_experiments/region_sensitivity/region_sensitivity_summary.md` | ComGenVid region=3 更好；GenVideo region=2；VideoFeedback region=1 | 局部空间支持域存在数据集边界 |
 | Aggregation sensitivity | `results/journal_experiments/aggregation_sensitivity/aggregation_sensitivity_summary.md` | GenVideo/VideoFeedback mean 优于 bottom-k | aggregation 不是普适优劣 |
 | Bottom-k sensitivity | `results/journal_experiments/bottomk_sensitivity/bottomk_sensitivity_summary.md` | ComGenVid bottom-k 比例增大仍保持收益 | 用作 ComGenVid 局部异常分布分析 |

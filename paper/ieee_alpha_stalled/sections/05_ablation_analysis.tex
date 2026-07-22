@@ -49,6 +49,20 @@
 
 关于全局分支的不同导数阶数，当前 release 不应给出未经实验支持的数值。代码层面，patch 分支在 \texttt{src/patch\_matching.py} 和 \texttt{src/eval\_patch\_fast.py} 中显式支持 D=1/2/3/4；global-only 分支则通过原 \stall 参数文件和 \texttt{src/eval.py} 打分，当前没有可直接切换 global temporal order 的命令行参数。因此，全局 D=2/D=3/D=4 不是已有 CSV 的重汇总，而需要重新定义全局时序特征、重建真实视频校准参数并重跑三数据集。本文把全局 \stall 作为固定主干 baseline，把导数阶数消融限定在新增 patch 分支；若审稿要求，可按补充计划扩展 global-order sweep。
 
+\subsection{Patch 似然统计假设诊断}
+\stall 原文验证了全局帧特征和归一化一阶帧差分在白化后近似满足高斯似然建模所需的统计条件。由于本文把同一套真实视频白化高斯似然扩展到 patch token、局部 region-pooled token 和归一化二阶 patch 差分，我们补充了对应的统计诊断。该实验使用 ComGenVid 真实视频 patch cache 抽样 256 个视频，每种表示最多抽取约 5 万行；诊断量包括坐标级 Anderson--Darling (AD) 与 D'Agostino--Pearson (DP) 正态性压力测试、白化后 covariance 与单位阵的接近程度、白化方向余弦分布，以及不同 patch/region 位置共享同一个 $\mu,W$ 时的残余差异。这里 patch token 和二阶 patch 差分使用 release 中真实视频拟合的 $\mu,W$；region-pooled token 是二阶差分前的中间表示，不作为独立最终分支，因此只使用随机 half-split diagnostic whitening 做假设审计。
+
+\input{tables/patch_likelihood_assumption_audit}
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{patch_likelihood_assumption_audit.pdf}
+  \caption{Patch 似然统计假设诊断。二阶 patch 差分在 covariance、坐标级正态性、方向余弦和位置共享残差上均最接近白化球形高斯假设；patch token 和 region-pooled token 在 covariance 与方向分布上可被白化近似球形化，但坐标级正态性和位置共享更弱。}
+  \label{fig:patch_likelihood_assumption_audit}
+\end{figure*}
+
+表~\ref{tab:patch_likelihood_assumption_audit} 和图~\ref{fig:patch_likelihood_assumption_audit} 显示，归一化二阶 patch 差分是三类表示中最符合建模假设的一类：其白化 covariance diagonal mean 为 0.975，off-diagonal RMS 为 0.009，AD pass@5\% 与 DP $p>0.01$ 分别为 0.883 和 0.906，方向余弦标准差 0.0319 接近 1024 维球面期望 0.0312。相比之下，raw patch token 和 region-pooled token 的 covariance 与方向余弦仍接近球形化目标，但坐标级正态性通过率较低，且不同位置的白化范数残差更大。该结果支持本文把主要创新落在局部二阶时序分支，而不是单纯依赖 patch 外观似然；同时也提示，若后续进一步提高 patch 空间分支权重，per-position 或分层位置校准可能比单一共享 $\mu,W$ 更稳健。
+
 \subsection{局部尺度、聚合方式与跨数据集边界}
 局部异常的空间支持域决定 patch 证据是捕获小范围纹理/运动异常，还是被较大区域的平均效应稀释。表~\ref{tab:hyperparameter_sensitivity_matrix} 汇总 region size、aggregation 和 bottom-$k$ ratio 的多数据集敏感性。ComGenVid 在 region=3 mean 下取得最高 region-family AUC，VideoFeedback 在 region=1 mean 下最好，GenVideo 的最优 mean 设置为 region=2。aggregation 也呈现同样边界：GenVideo 和 VideoFeedback 上 mean 优于 bottom-$k$，而 ComGenVid 中增大 bottom-$k$ ratio 可继续提升 patch-only AUC。
 
