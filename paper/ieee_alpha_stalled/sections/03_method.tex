@@ -122,4 +122,4 @@ mean 更适合整体局部网格发生系统性偏移的场景；bottom-$k$ 更�
   S(V)=\alpha\,\sglobal(V)+(1-\alpha)\,\slocal(V),\qquad 0\leq\alpha\leq1 .
   \label{eq:final_score}
 \end{equation}
-这里的 $\alpha$ 与 $\theta_{\mathrm{local}}$ 是评测前冻结的超参数，不由测试标签、生成器来源或测试批次统计决定。该两级设计明确保留 \stall 全局分支作为主干，并将 patch 分支限定为补充局部证据，而不是把全局分数、局部空间分数和局部时序分数写成无结构的并列三分支加权和。
+这里的 $\alpha$ 与 $\theta_{\mathrm{local}}$ 是目标测试前冻结的超参数，不由目标测试标签、生成器来源或测试批次统计决定。实际使用时可以采用 release 默认 $\alpha$，也可以在独立验证源上选择 $\alpha$ 后再固定到目标评测；第~\ref{sec:ablation} 节把这两种情况与三分支权重选择分开分析。该两级设计明确保留 \stall 全局分支作为主干，并将 patch 分支限定为补充局部证据，而不是把全局分数、局部空间分数和局部时序分数写成无结构的并列三分支加权和。

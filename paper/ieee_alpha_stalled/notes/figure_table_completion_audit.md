@@ -1,6 +1,6 @@
 # 图表强化完成审计
 
-日期：2026-07-21
+日期：2026-07-23
 
 本审计按用户提出的图表强化目标逐项核对当前论文状态。核心原则是：每个机制主张都需要对应表格、图像或明确的边界说明；没有实验支撑的内容不伪造数值。
 
@@ -8,11 +8,12 @@
 
 | 用户目标 | 当前证据 | 完成判断 |
 |---|---|---|
-| V 节图表太少，需要增加大表格和多种绘图形式 | `sections/05_ablation_analysis.tex` 现在包含 5 个表格输入和 5 个图/图表组合：`component_ablation`、`per_generator_component_matrix`、`per_generator_bootstrap_delta`、`patch_temporal_comprehensive`、`hyperparameter_sensitivity_matrix`、`runtime_window_boundary`、`keyframe_case_summary`；图包括 `global_patch_likelihood_joint_panel`、`component_per_generator_matrix`、`patch_temporal_design_landscape`、`hyperparameter_sensitivity_grid`、`keyframe_patch_anomaly_cases_main` | 已完成 |
+| V 节图表太少，需要增加大表格和多种绘图形式 | `sections/05_ablation_analysis.tex` 现在包含 10 个表格输入和 8 个图/图表组合：`component_ablation`、`per_generator_component_matrix`、`per_generator_bootstrap_delta`、`real_calib_alpha_summary`、`validation_fusion_loso`、`patch_temporal_comprehensive`、`patch_likelihood_assumption_audit`、`hyperparameter_sensitivity_matrix`、`runtime_window_boundary`、`keyframe_case_summary`；图包括 `global_patch_likelihood_joint_panel`、`component_per_generator_matrix`、`real_calib_size_curves`、`alpha_gain_summary`、`patch_temporal_design_landscape`、`patch_likelihood_assumption_audit`、`hyperparameter_sensitivity_grid`、`keyframe_patch_anomaly_cases_main` | 已完成 |
 | D=1 缺失，temporal derivative 对比不全面 | `tables/patch_temporal_comprehensive.tex` 已纳入 D=1 lag-1、D=1 multi-lag、D=2、D=3、D=4，以及 spatial-only、motion-hard/soft；`tables/temporal_order.tex` 也补入 D=1 | 已完成 |
 | 类似原文 Figure 1 的 spatio-temporal likelihood 分析，但突出本文创新 | `figures/results/global_patch_likelihood_joint_panel.pdf/.png/.svg` 使用 global STALL 分数为横轴、本文新增 patch second-order 分数为纵轴，三数据集 real/generated 散点展示全局--局部联合结构 | 已完成 |
 | Fig. 4 temporal order 原来数据单薄 | `tables/patch_temporal_comprehensive.tex` + `figures/results/patch_temporal_design_landscape.pdf` 将 spatial、一阶、多滞后、扰动、高阶和二阶放在同一协议下比较 | 已完成 |
 | Fig. 5 frozen hyperparameter 原来形式单一 | `tables/hyperparameter_sensitivity_matrix.tex` + `figures/results/hyperparameter_sensitivity_grid.pdf` 统一展示 region、aggregation、bottom-k 和 leave-one-dataset-out oracle gap | 已完成 |
+| 真实校准数量和 alpha 微调需要进入论文证据链 | `tables/real_calib_alpha_summary.tex` + `tables/validation_fusion_loso.tex` + `figures/results/real_calib_size_curves.pdf` + `figures/results/alpha_gain_summary.pdf` 已接入 V 节，展示真实校准数量曲线、固定 alpha、best/oracle alpha、alpha-only LOSO 和 three-branch LOSO 的部署边界 | 已完成 |
 | Fig. 6 关键帧解释案例只有图，数据不足 | `tables/keyframe_case_summary.tex` 补充 6 个关键帧案例的 global、patch、Alpha 分数、Patch-Global 差值和关键帧时间 | 已完成 |
 | 参考多数据权威表格形式 | 新增 `per_generator_component_matrix.tex` 和 `per_generator_bootstrap_delta.tex`，按 20 个生成器展开 AUC/AP、delta 和 bootstrap CI；`hyperparameter_sensitivity_matrix.tex` 按多数据集、多设置组织 | 已完成 |
 | 全局分支不同阶数可以考虑和分析是否需要 | `notes/global_derivative_order_gap_analysis.md` 和 V 节文字说明当前 release 没有 global order CLI；global D sweep 需要重定义全局时序特征、重建校准参数并三数据集重跑，当前不报告不存在的数值 | 已完成为“分析边界”，未伪造实验 |
@@ -25,7 +26,10 @@
 - `tables/component_ablation.tex`
 - `tables/per_generator_component_matrix.tex`
 - `tables/per_generator_bootstrap_delta.tex`
+- `tables/real_calib_alpha_summary.tex`
+- `tables/validation_fusion_loso.tex`
 - `tables/patch_temporal_comprehensive.tex`
+- `tables/patch_likelihood_assumption_audit.tex`
 - `tables/hyperparameter_sensitivity_matrix.tex`
 - `tables/runtime_window_boundary.tex`
 - `tables/keyframe_case_summary.tex`
@@ -34,7 +38,10 @@
 
 - `figures/results/global_patch_likelihood_joint_panel.pdf`
 - `figures/results/component_per_generator_matrix.pdf`
+- `figures/results/real_calib_size_curves.pdf`
+- `figures/results/alpha_gain_summary.pdf`
 - `figures/results/patch_temporal_design_landscape.pdf`
+- `figures/results/patch_likelihood_assumption_audit.pdf`
 - `figures/results/hyperparameter_sensitivity_grid.pdf`
 - `figures/results/keyframe_patch_anomaly_cases_main.pdf`
 

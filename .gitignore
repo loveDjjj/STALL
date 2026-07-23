@@ -52,6 +52,7 @@ venv.bak/
 __pypackages__/
 
 # Notebook / editor / misc
+.local_tools/
 .ipynb_checkpoints
 profile_default/
 ipython_config.py
@@ -79,6 +80,7 @@ dinov3/
 # Runtime data, datasets, caches, outputs
 datasets/
 cache/embeddings/
+cache/d3_frames/
 cache/patch_embeddings/
 cache/patch_embedding_shards_debug/
 cache/indexes/
@@ -119,6 +121,8 @@ results/*
 !results/paper_figures/
 !results/paper_figures/**/*.svg
 !results/paper_figures/**/*.png
-!results/journal_experiments/
-!results/journal_experiments/**/*.csv
-!results/journal_experiments/**/*.md
+# Existing tracked journal artifacts remain available, but new experiment outputs
+# stay local until they are intentionally promoted into the compact summary.
+!results/research_summary/
+!results/research_summary/*.csv
+!results/research_summary/*.md

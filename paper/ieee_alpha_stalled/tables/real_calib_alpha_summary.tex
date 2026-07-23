@@ -1,0 +1,20 @@
+\begin{table*}[!t]
+  \centering
+  \caption{真实视频校准数量与全局--局部融合权重的跨数据集汇总。Global-only 为原版 \stall 主干分支；Patch-only 为局部二阶分支；固定融合使用 release 默认权重；LOGO 表示 leave-one-generator-out 选择 $\alpha$ 后评估留出生成器；best/oracle 表示在同一 holdout 上扫描 $\alpha$ 后的诊断上限。}
+  \label{tab:real_calib_alpha_summary}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lccccccccc}
+    \toprule
+    数据集 & 校准 real 数 & Global AUC & Patch AUC & 固定融合 AUC & LOGO AUC & Best AUC & LOGO $\Delta$AUC & Best $\Delta$AUC & 证据等级 \\
+    \midrule
+    AEGIS-hard & 100 & 0.6023 & 0.7061 & 0.6701 & 0.7664 & 0.7664 & +0.1641 & +0.1641 & 强 \\
+    ComGenVid & 200 & 0.8550 & 0.8034 & 0.8668 & 0.8703 & 0.8704 & +0.0152 & +0.0154 & 较强 \\
+    GenVideo & 200 & 0.8085 & 0.8137 & 0.8423 & 0.8484 & 0.8492 & +0.0398 & +0.0406 & 较强 \\
+    VideoFeedback-small & 200 & 0.8528 & 0.7761 & 0.8631 & 0.8649 & 0.8682 & +0.0122 & +0.0155 & 中等 \\
+    GenVidBench-Pair1 & 100 & 0.7921 & 0.5611 & 0.7981 & -- & 0.8027 & -- & +0.0106 & 中等 \\
+    AIGVDBench-small & 200 & 0.7070 & 0.5679 & 0.7096 & -- & 0.7097 & -- & +0.0027 & 弱/诊断 \\
+    AIGVDBench-resplit & 300 & 0.6975 & 0.6588 & 0.7033 & 0.6801 & 0.7038 & -0.0174 & +0.0062 & 弱到中等 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}

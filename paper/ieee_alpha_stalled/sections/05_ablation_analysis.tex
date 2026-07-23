@@ -1,7 +1,7 @@
 \section{消融与机制分析}
 \label{sec:ablation}
 
-本节将 \method 的主要设计拆解为三个可验证问题：全局 \stall 分支和局部 patch 分支是否互补，局部二阶时序证据是否优于一阶或更高阶替代，局部尺度和聚合方式是否构成跨数据集边界。按照这一证据链，本文把平均结果、生成器级结果、分数分布、敏感性和边界实验分别做成表格或图像，避免只用单一平均值支撑机制结论。
+本节将 \method 的主要设计拆解为四个可验证问题：全局 \stall 分支和局部 patch 分支是否互补，局部 patch 似然是否依赖足够真实视频校准，局部二阶时序证据是否优于一阶或更高阶替代，以及局部尺度和聚合方式是否构成跨数据集边界。按照这一证据链，本文把平均结果、生成器级结果、分数分布、真实校准数量、融合权重敏感性和边界实验分别做成表格或图像，避免只用单一平均值支撑机制结论。
 
 \subsection{全局--局部联合分数结构}
 原版 \stall 通过空间/时序似然的联合分布展示真实视频和生成视频的分离结构。本文保留这一分析思路，但把横轴设为 global-only \stall 分数，把纵轴设为新增的局部同网格二阶 patch 分数。图~\ref{fig:global_patch_joint} 因而直接检验本文创新点：局部分支是否只是在重复全局分支，还是提供了独立的局部动态证据。
@@ -34,6 +34,35 @@
 为避免把随机波动误写为机制差异，表~\ref{tab:per_generator_bootstrap_delta} 报告生成器级 paired bootstrap AUC 差值区间。大多数生成器的 $\Delta_{\alpha-G}$ 为正，但 VideoFeedback 中 Text2Video-Zero 和 VideoCrafter2 为负，说明融合权重在强 global-only 生成器上存在负迁移边界。相对 patch-only 的差值则在 VideoFeedback 大多为正，在 ComGenVid 为负，进一步支持“融合提供跨来源稳健性，而非总是提高单一数据集 oracle 上限”的写作边界。
 
 \input{tables/per_generator_bootstrap_delta}
+
+\subsection{真实校准数量与 alpha 微调}
+局部 patch 分支通过真实视频估计 patch-level 白化似然，因此其有效性应同时受校准样本数量和真实域代表性影响。为检验这一点，本文在原始主实验数据集和外部小规模数据集上构建互不泄漏的真实视频校准池与 holdout 评测集，并在固定 patch 结构下扫描真实校准数量。表~\ref{tab:real_calib_alpha_summary} 汇总每个数据集的最佳校准规模、global-only、patch-only、固定融合和 best/oracle alpha 结果；图~\ref{fig:real_calib_size_curves} 进一步展示 patch-only AUC 与 best-fusion $\Delta$AUC 随真实校准数量变化的趋势。
+
+\input{tables/real_calib_alpha_summary}
+
+\begin{figure*}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{real_calib_size_curves.pdf}
+  \caption{真实视频校准数量对局部 patch 分支和融合增益的影响。左图为 patch-only 宏平均 AUC；右图为同一 holdout 上 best/oracle alpha 相对 global-only 的 AUC 增益。多数数据集在 25/50 个真实视频时 patch 分支接近随机，100/200/300 个真实视频后才形成可用信号。}
+  \label{fig:real_calib_size_curves}
+\end{figure*}
+
+结果显示，真实校准数量不足时局部分支通常不可用。GenVidBench、AIGVDBench、ComGenVid、GenVideo 和 VideoFeedback-small 在 25 或 50 个真实视频校准时均未形成稳定的 patch-only 优势；随着真实校准数量增加，patch-only AUC 在多个数据集上明显上升。例如，GenVideo 从 $n=50$ 的 0.5204 提升到 $n=200$ 的 0.8137，VideoFeedback-small 从 $n=50$ 的 0.6153 提升到 $n=200$ 的 0.7761，AIGVDBench-resplit 从 $n=200$ 的 0.5983 提升到 $n=300$ 的 0.6588。该趋势在修正 AIGVDBench 聚合方式后仍然存在：在 Open-Sora/Pika/Vidu 三源、region3 mean 协议下，$n=25/50$ 的 patch-only AUC/AP 均为 0.5000/0.5000，$n=100$ 仍接近随机，而 $n=300$ 提升到 0.7138/0.7074，并使固定 $\alpha=0.60$ 达到 0.7272/0.7326。该结果支持一个较弱但重要的结论：局部二阶 patch 统计需要足够真实视频来估计稳定的真实域分布；过少真实视频会把 patch 似然退化为接近随机的排序证据。
+
+真实校准数量的收益并不严格单调。ComGenVid 在 $n=800$ 时低于 $n=400$，GenVideo 在 $n=500$ 时低于 $n=200$，VideoFeedback-small 在 $n=500$ 时也低于 $n=200$。这说明校准样本数量是 patch 分支可用性的必要条件，但不是充分条件；真实视频来源、质量噪声和目标真实域覆盖会共同影响校准分布。相应地，本文不把“更多真实视频”写成无条件提升，而将其作为带有代表性要求的校准边界。
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{alpha_gain_summary.pdf}
+  \caption{冻结 alpha 与 best/oracle alpha 相对 global-only 的宏平均 AUC 增益。不同数据集的最优融合权重差异较大，因此固定 alpha 更适合作为 release 默认设置，best/oracle alpha 只表示同一 holdout 上的诊断上限。}
+  \label{fig:alpha_gain_summary}
+\end{figure}
+
+融合权重同样呈现数据集相关性。AEGIS-hard 的最佳点接近 patch 主导，ComGenVid 和 GenVideo 的最佳点偏向中等全局权重，VideoFeedback-small 则需要更强 global 主导。为降低测试集 oracle 选择的偏差，我们进一步做了 leave-one-generator-out alpha 选择：每次用其他生成器选择 alpha，再评估留出的生成器。该协议下，ComGenVid 在 $n=200$ 时仍取得 0.8703/0.8854 的 AUC/AP，GenVideo 在 $n=200$ 时取得 0.8484/0.8380，VideoFeedback-small 在 $n=200$ 时取得 0.8649/0.8729，均高于各自 global-only。相反，AIGVDBench-resplit 在 $n=300$ 的默认 region3 bottom-$k$ 设置下，固定 $\alpha=0.60$ 和 best $\alpha=0.65$ 虽分别达到 0.7033/0.7146 与 0.7038/0.7158，但 LOGO 选择降至 0.6801/0.6812，低于 global-only 的 0.6975/0.7070；其 paired bootstrap 相对 global-only 的 95\% CI 也跨 0。后续 region/aggregation 网格显示，该失败主要来自 bottom-$k$ 聚合不适合 AIGVDBench：region3 mean 在固定 $\alpha=0.60$ 下达到 0.7162/0.7278，且相对 global-only 的 paired bootstrap $\Delta$AUC/$\Delta$AP 区间均大于 0。进一步加入 Vidu 第三生成器后，Open-Sora/Pika/Vidu 三源宏平均 global-only 为 0.6994/0.7008，region3 mean 固定 $\alpha=0.60$ 为 0.7272/0.7326，其 paired bootstrap $\Delta$AUC/$\Delta$AP 区间为 [0.0116, 0.0461] 和 [0.0164, 0.0457]。继续加入 CogVideoX1.5 后，四源宏平均 global-only 为 0.6673/0.6633，固定 $\alpha=0.60$ 为 0.6782/0.6832，其 paired bootstrap $\Delta$AUC/$\Delta$AP 区间为 [0.0004, 0.0220] 和 [0.0088, 0.0292]；但 CogVideoX1.5 单源 patch-only 仅 0.4560/0.4764，LOGO alpha 也降至 0.6519/0.6519。该扩展说明 mean 聚合不是只对两源小协议有效，保守固定融合可吸收部分新源负迁移；但跨生成器 alpha 选择仍是明确边界。因此，本文将固定 alpha 视为冻结默认配置，将验证集选择 alpha 作为潜在部署适配策略；测试集 best/oracle alpha 只表示诊断上限，不写成严格部署协议。
+
+表~\ref{tab:validation_fusion_loso} 进一步区分了普通 alpha 微调和三分支权重选择。Alpha-only LOSO 只在 global-only 分数和整体 patch 分数之间选择 $\alpha$，因此对应最小的验证式部署适配；three-branch LOSO 则分别选择 global、spatial patch 和 temporal patch 的非负权重，用于检验空间 patch 与时序 patch 是否值得分开融合。在外部集合上，alpha-only LOSO 已经稳定超过 global-only；three-branch LOSO 在 global\_min\_050 约束下进一步取得 +0.0026 AUC 和 +0.0079 AP 的额外增益，且 paired bootstrap 区间为正。在更保守的 global\_min\_060 约束下，三分支相对 alpha-only 的 AP 仍为正，但 AUC 区间跨 0。原始三数据集上，alpha-only LOSO 已解释几乎全部验证式融合收益，three-branch 相对 alpha-only 的 AUC 增益只有约 +0.0005，AP 约为 0 或略负。该对照使本文的写作边界更清楚：验证式 alpha 选择是当前更稳妥的部署适配策略；三分支拆分提供外部数据集上的潜在优化线索，但尚不足以替代 alpha-only 作为默认方法。
+
+\input{tables/validation_fusion_loso}
 
 \subsection{局部二阶时序是否必要}
 局部时序设计需要同时排除三类替代解释：仅用静态 patch 外观即可、使用一阶相邻差分即可、使用更高阶差分更好。表~\ref{tab:patch_temporal_comprehensive} 因此把 ComGenVid 上的 spatial-only、D=1 lag-1、D=1 multi-lag、motion-hard/soft、D=2、D=3 和 D=4 放在同一协议下比较。D=1 lag-1 的平均 AUC/AP 为 0.8556/0.8617，相对 D=2 下降 0.0718/0.0692；D=3 和 D=4 虽高于一阶替代，但仍低于 D=2。该结果说明当前 patch 分支的主要贡献来自同网格二阶局部动态，而不是简单增加 patch 外观分支或任意提高导数阶数。

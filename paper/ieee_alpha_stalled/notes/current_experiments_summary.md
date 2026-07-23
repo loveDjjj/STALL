@@ -2,6 +2,17 @@
 
 本文件把 `results/` 中已经完成的论文实验和审计资产映射到当前稿件。主文不必逐项展开所有数字，但投稿前应保证每个核心结论都能追溯到这里列出的证据文件。
 
+> 2026-07-23 清理说明：此前未提交的外部数据集、真实校准规模、三分支和
+> raw D3 探索已压缩到 `results/research_summary/`。下文保留历史实验名称用于
+> 解释稿件形成过程；被清理的逐视频融合、bootstrap 抽样和临时 split 路径不再是
+> release 复现入口。
+
+## 当前持续目标审计
+
+| 审计文件 | 用途 | 当前结论 |
+|---|---|---|
+| `paper/ieee_alpha_stalled/notes/current_goal_progress_audit.md`; `results/research_summary/` | 对可调 alpha、新增数据集、真实校准数量、D3 正负迁移和组件去留做统一审计 | 已支持多个数据集上的可调 alpha 与真实校准数量结论；raw D3 在 VideoFeedback-small 负迁移，不能作为默认第三分支 |
+
 ## 主线结果
 
 | 实验 | 证据文件 | 关键结果 | 主文用途 |
@@ -12,6 +23,8 @@
 | 生成器宏平均 paired bootstrap | `results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md` | Alpha-STALLED 相对 global-only 的三数据集 $\Delta$AUC 95% CI 均大于 0 | 支撑稳定性 |
 | 生成器级组件矩阵 | `paper/ieee_alpha_stalled/tables/per_generator_component_matrix.tex`; `figures/results/component_per_generator_matrix.pdf` | 20 个生成器上展开 global/patch/Alpha AUC/AP 与 delta | 主文 V 节机制大表和热图 |
 | 全局--局部联合分数图 | `figures/results/global_patch_likelihood_joint_panel.pdf` | 三数据集 real/fake 在 global score 与 patch second-order score 上形成非完全重合的联合结构 | 对应原 STALL Fig. 1 风格，但突出本文局部二阶创新 |
+| 真实校准、外部扩展与 alpha | `results/research_summary/`; `paper/ieee_alpha_stalled/tables/real_calib_alpha_summary.tex`; `figures/results/real_calib_size_curves.pdf`; `figures/results/alpha_gain_summary.pdf` | 25/50 real 通常不足；region3 mean 缓解 AIGVDBench bottom-k 负迁移；最优 alpha 明显随数据集变化 | 冻结 alpha 是默认，验证式选择是扩展，test oracle 只作上界 |
+| 三分支历史诊断 | `results/research_summary/`; `paper/ieee_alpha_stalled/tables/validation_fusion_loso.tex` | 外部集合有少量额外 AP，原始集合相对 alpha-only 几乎无实质增益 | 不作为默认方法；后续收敛为 global multi-order + local D2 residual 两分支 |
 
 ## 机制和敏感性实验
 
@@ -25,6 +38,7 @@
 | Bottom-k sensitivity | `results/journal_experiments/bottomk_sensitivity/bottomk_sensitivity_summary.md` | ComGenVid bottom-k 比例增大仍保持收益 | 用作 ComGenVid 局部异常分布分析 |
 | Cross-dataset frozen hyperparameters | `results/journal_experiments/cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md` | beta/aggregation gap 小，region gap 大 | 区分 oracle sweep 与冻结泛化 |
 | Hyperparameter sensitivity grid | `paper/ieee_alpha_stalled/tables/hyperparameter_sensitivity_matrix.tex`; `figures/results/hyperparameter_sensitivity_grid.pdf` | region、aggregation、bottom-k 和 frozen gap 统一进入主文 V 节 | 不把测试集 oracle sweep 写成部署时调参 |
+| Real-calibration / external-boundary summary | `results/research_summary/`; `paper/ieee_alpha_stalled/notes/real_calib_alpha_experiment_draft.md` | 真实校准数量、aggregation mismatch、alpha 数据集依赖和三分支负结果已统一归档 | 不把外部诊断写成普适部署结论 |
 
 ## 协议、覆盖和成本
 

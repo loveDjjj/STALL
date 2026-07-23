@@ -4,6 +4,20 @@
 persistence、source/rank selector、debug run 等结果已经删除或归档，不属于当前
 主线。
 
+新实验默认不直接提交到 `journal_experiments/`。先保留在本地输出目录，确认协议
+和结论后，再把机器可读指标与决策摘要汇总到 `research_summary/`。这样可以避免
+把逐视频融合网格、bootstrap 抽样明细、prefill 清单和 smoke 输出混入 release。
+
+## `research_summary/`
+
+| 文件 | 说明 |
+|---|---|
+| `README.md` | 当前研究结果、失败方向、协议边界和保留工具的统一索引 |
+| `experiment_metrics.csv` | 关键数据集/协议的 AUC、AP 与结论级状态 |
+
+`journal_experiments/` 中已经提交的历史证据仍保留；新增文件只有在成为稳定、
+不可由其他资产替代的证据后才应显式纳入版本控制。
+
 ## 顶层文件
 
 | 路径 | 说明 | 是否提交 |
@@ -132,6 +146,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `d3_protocol_audit/` | D3 baseline protocol 审计，不包含外部 D3 重跑分数 |
 | `d3_protocol_audit/d3_protocol_audit.md` | D3 采样、类别平衡、FPS 处理、encoder 和指标方向审计 |
 | `d3_protocol_audit/d3_protocol_dataset_summary.csv` | 三个 index 的 FPS、duration 和 2s window 覆盖摘要 |
+| `research_summary/` | 外部数据集、真实校准数量、三分支与 raw D3 探索的紧凑结论和关键指标；原始网格与抽样明细不进入 release |
 | `temporal_derivative_order/` | ComGenVid D=3/D=4 patch temporal derivative 代表性对照 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.md` | D=2/D=3/D=4 平均 AUC/AP 对照和结论 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.*` | temporal derivative order 对照图 |

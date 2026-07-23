@@ -16,6 +16,10 @@
 - `notes/`：写作计划、图表清单、实验到论点映射和参考文献阅读摘要。
   - `submission_readiness_audit.md` 记录投稿前仍需作者确认或补充的项目。
 
+## 可复现表格来源
+
+- `tables/validation_fusion_loso.tex` 是已完成 LOSO 诊断的冻结论文表格；结论级数据和协议边界已汇总到 `results/research_summary/`。大体量 bootstrap 抽样明细和一次性表格构建脚本不属于 release。
+
 ## Overleaf 设置
 
 1. 上传整个 `ieee_alpha_stalled/` 目录。
@@ -27,6 +31,7 @@
 
 - 主结果使用 `results/paper_tables/alpha_stalled_main_summary.md` 和 `results/paper_tables/ablation_summary.md` 的 pairwise balanced AUC/AP。
 - 方法部分不绑定具体融合比例；只定义先构造局部分数，再与全局 STALL 分数进行评测前冻结融合。
+- 当前稿件将 alpha-only validation/LOSO 选参写作更稳妥的部署适配策略；three-branch LOSO 只作为诊断和外部数据集潜在优化方向，不作为默认方法。
 - D3 只写 protocol audit，不声称已经完成外部 baseline 重跑。
 - 关键帧解释案例只作为事后解释，不参与训练、推理或调参。
 - 数据/代码/伦理/利益冲突/作者贡献声明已经放入 `sections/08_declarations.tex`，未知事实保留为 `AUTHOR_INPUT_NEEDED`。

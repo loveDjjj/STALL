@@ -1,0 +1,17 @@
+dataset,protocol,method,auc,ap,status
+ComGenVid,release,global_plus_patch_alpha060,0.9198,0.9211,stable_default
+VideoFeedback,release,global_plus_patch_alpha060,0.8628,0.8750,stable_default
+GenVideo,release,global_plus_patch_alpha060,0.8374,0.8283,stable_default
+AEGIS-hard,holdout_calib_real100,global_only,0.6023,0.5998,external_diagnostic
+AEGIS-hard,holdout_calib_real100,best_alpha,0.7664,0.7927,oracle_upper_bound
+AIGVDBench-three-source,region3_mean_calib_real300,global_only,0.6994,0.7008,external_diagnostic
+AIGVDBench-three-source,region3_mean_calib_real300,fixed_alpha060,0.7272,0.7326,external_positive
+GenVideo,2s,global_only,0.8085,0.8036,operator_controlled
+GenVideo,2s,raw_d3_dinov3_l2,0.8429,0.8628,extension_only
+GenVideo,2s,global_plus_raw_d3_best_auc,0.8950,0.9011,oracle_upper_bound
+GenVideo,2s_fallback_1s,global_only,0.7964,0.7965,operator_controlled
+GenVideo,2s_fallback_1s,raw_d3_dinov3_l2,0.8487,0.8678,extension_only
+GenVideo,2s_fallback_1s,global_plus_raw_d3_best_auc,0.8957,0.9033,oracle_upper_bound
+VideoFeedback-small,holdout_2s_fallback_1s,global_only,0.8528,0.8640,operator_controlled
+VideoFeedback-small,holdout_2s_fallback_1s,raw_d3_dinov3_l2,0.5245,0.5637,rejected_default
+VideoFeedback-small,holdout_2s,global_plus_patch_alpha080,0.8682,0.8757,stable_reference

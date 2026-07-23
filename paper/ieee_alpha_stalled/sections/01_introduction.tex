@@ -14,5 +14,6 @@
 \begin{itemize}
   \item 提出一种全局--局部真实视频校准框架，将 \stall 的全局空间--时序似然扩展到 DINOv3 patch token，而不引入生成视频训练。
   \item 提出同网格二阶 patch 时序似然，用局部特征轨迹加速度刻画生成视频中的局部动态不连续，并通过消融验证其优于 patch 空间、lag-1、多滞后和更高阶导数替代项。
+  \item 系统分析真实校准数量和融合权重选择，说明 patch 分支依赖足够且有代表性的真实视频校准，alpha-only 验证选参是比固定权重更稳妥的部署适配策略。
   \item 在 ComGenVid、VideoFeedback 和 GenVideo 上按 pairwise balanced AUC/AP 报告主结果、组件消融、生成器宏平均 paired bootstrap、跨数据集冻结超参数和关键帧解释，明确区分稳定增益、负迁移来源和协议边界。
 \end{itemize}

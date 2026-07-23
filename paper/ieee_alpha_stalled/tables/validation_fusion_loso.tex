@@ -1,0 +1,28 @@
+\begin{table*}[!t]
+  \centering
+  \caption{验证式融合选择的 leave-one-source-out paired bootstrap 对照。Alpha-only LOSO 仅在 global 分数与整体 patch 分数之间选择 $\alpha$；three-branch LOSO 在 global、spatial patch 和 temporal patch 三个分支之间选择非负权重。$\Delta$AUC/$\Delta$AP 为留出 source 上的宏平均差值，括号内为 95\% paired bootstrap 区间。}
+  \label{tab:validation_fusion_loso}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llllcc}
+    \toprule
+    数据集合 & 约束 & 比较 & 含义 & $\Delta$AUC & $\Delta$AP \\
+    \midrule
+    External & global\_min\_050 & alpha-only vs global-only & 普通 $\alpha$ 验证选参收益 & +0.0211 [ +0.0131, +0.0295 ] & +0.0163 [ +0.0096, +0.0244 ] \\
+     &  & three-branch vs global-only & 三分支验证选权重收益 & +0.0236 [ +0.0167, +0.0317 ] & +0.0244 [ +0.0176, +0.0314 ] \\
+     &  & three-branch vs alpha-only & 三分支相对普通 $\alpha$ 选参的额外收益 & +0.0026 [ +0.0003, +0.0047 ] & +0.0079 [ +0.0044, +0.0109 ] \\
+    \midrule
+     & global\_min\_060 & alpha-only vs global-only & 普通 $\alpha$ 验证选参收益 & +0.0182 [ +0.0110, +0.0261 ] & +0.0141 [ +0.0085, +0.0199 ] \\
+     &  & three-branch vs global-only & 三分支验证选权重收益 & +0.0202 [ +0.0137, +0.0268 ] & +0.0191 [ +0.0143, +0.0246 ] \\
+     &  & three-branch vs alpha-only & 三分支相对普通 $\alpha$ 选参的额外收益 & +0.0017 [ -0.0005, +0.0041 ] & +0.0050 [ +0.0021, +0.0079 ] \\
+    \midrule
+    Original & global\_min\_050 & alpha-only vs global-only & 普通 $\alpha$ 验证选参收益 & +0.0292 [ +0.0269, +0.0321 ] & +0.0275 [ +0.0257, +0.0293 ] \\
+     &  & three-branch vs global-only & 三分支验证选权重收益 & +0.0287 [ +0.0262, +0.0316 ] & +0.0272 [ +0.0252, +0.0290 ] \\
+     &  & three-branch vs alpha-only & 三分支相对普通 $\alpha$ 选参的额外收益 & +0.0005 [ +0.0001, +0.0009 ] & -0.0003 [ -0.0006, 0.0000 ] \\
+    \midrule
+     & global\_min\_060 & alpha-only vs global-only & 普通 $\alpha$ 验证选参收益 & +0.0287 [ +0.0261, +0.0315 ] & +0.0269 [ +0.0252, +0.0286 ] \\
+     &  & three-branch vs global-only & 三分支验证选权重收益 & +0.0286 [ +0.0260, +0.0313 ] & +0.0263 [ +0.0245, +0.0283 ] \\
+     &  & three-branch vs alpha-only & 三分支相对普通 $\alpha$ 选参的额外收益 & +0.0006 [ +0.0001, +0.0010 ] & 0.0000 [ -0.0004, +0.0003 ] \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}

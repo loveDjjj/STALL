@@ -9,6 +9,8 @@
 
 另一个边界是校准来源。全局 \stall 分支沿用 VATEX 等真实视频校准设定~\cite{wang2019vatex}；当前 patch release 资产使用真实视频构建局部分支统计，但不同 benchmark 的真实来源和覆盖情况需要在实验协议中明确标注。由于该方法不使用生成视频训练，仍符合生成器零样本检测的核心目标；但若投稿要求严格外部校准，应补充 calibration source ablation 或构建完全外部真实校准集。
 
+融合权重也不应被写成普适常数。当前证据支持三层边界：固定 $\alpha$ 适合作为 release 默认配置，alpha-only LOSO 更接近可部署的验证式适配策略，three-branch LOSO 主要用于诊断 global、spatial patch 和 temporal patch 的相对贡献。外部集合中 three-branch LOSO 相对 alpha-only LOSO 仍保留一定 AP 增益，但原始三数据集上该额外收益几乎为零。因此，本文不把三分支权重选择提升为默认方法，而把它作为后续优化局部分支参数化的证据。
+
 \subsection{与 D3 的公平比较}
 D3 使用二阶时序特征进行训练自由检测~\cite{zheng2025d3}，与本文的局部二阶时序动机相关。但直接引用外部 D3 数值作为主表 baseline 并不公平。根据 \stall 原文附录 A.4，D3 官方协议与 \stall 协议在类别比例、GenVideo 真实视频 FPS 处理和 encoder 选择上存在差异；AP 对类别不平衡敏感，3 FPS 真实视频通过帧复制补到 8 FPS 还可能影响时序差分检测器。因此，除非在同一视频索引、同一帧索引、同一 8 FPS/2 秒窗口和 pairwise balanced AUC/AP 下重跑，否则本文只报告 protocol audit。
 
