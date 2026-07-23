@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
@@ -19,7 +20,13 @@ if str(SRC_DIR) not in sys.path:
 from eval_alpha_stalled import compute_metrics, fuse_scores
 from eval_score_csv import evaluate_score_csv
 from patch_math import bottomk_mean, empirical_percentile
-from patch_matching import patch_temporal_delta, pool_patch_regions, same_grid_finite_difference
+from patch_matching import (
+    patch_temporal_delta,
+    pool_patch_regions,
+    same_grid_finite_difference,
+    second_order_residual,
+)
+from eval_patch_fast import FastPatchScorer, load_cache_batch
 
 
 def _write_csv(path: Path, rows: list[dict]) -> None:
@@ -189,6 +196,55 @@ class AlphaStalledFusionTest(unittest.TestCase):
         )
         self.assertEqual(tuple(fourth.shape), (2, 1, 2))
         np.testing.assert_allclose(fourth, np.tile([[[1.0, 0.0]]], (2, 1, 1)), atol=1e-6)
+
+    def test_global_second_order_residual_removes_shared_acceleration(self) -> None:
+        global_seq = np.array([[0.0, 0.0], [1.0, 0.0], [3.0, 0.0], [6.0, 0.0]], dtype=np.float32)
+        patch = np.stack([global_seq + [2.0, 0.0], global_seq + [0.0, 3.0]], axis=1)
+        residual = second_order_residual(
+            patch,
+            mode="global_residual_second_order",
+            global_seq=global_seq,
+        )
+        np.testing.assert_allclose(residual, 0.0, atol=1e-6)
+
+    def test_spatial_median_second_order_residual_keeps_local_outlier(self) -> None:
+        patch = np.zeros((3, 3, 2), dtype=np.float32)
+        patch[2, 2, 0] = 2.0
+        residual = second_order_residual(
+            patch,
+            mode="spatial_median_residual_second_order",
+        )
+        np.testing.assert_allclose(residual[0, :2], 0.0, atol=1e-6)
+        np.testing.assert_allclose(residual[0, 2], [1.0, 0.0], atol=1e-6)
+
+    def test_fast_spatial_median_matches_numpy_for_even_patch_count(self) -> None:
+        patch = np.zeros((1, 3, 4, 2), dtype=np.float32)
+        patch[0, 2, :, 0] = [0.0, 2.0, 4.0, 10.0]
+        scorer = FastPatchScorer.__new__(FastPatchScorer)
+        fast = scorer.temporal_features(
+            torch.from_numpy(patch),
+            "spatial_median_residual_second_order",
+            region_size=1,
+        ).numpy()
+        reference = second_order_residual(
+            patch[0],
+            mode="spatial_median_residual_second_order",
+        )[None]
+        np.testing.assert_allclose(fast, reference, atol=1e-6)
+
+    def test_cache_batch_default_remains_patch_only_compatible(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            cache_path = Path(temp) / "patch-only.pt"
+            torch.save(
+                {
+                    "patch": torch.zeros((3, 4, 2), dtype=torch.float32),
+                    "grid_size": torch.tensor([2, 2]),
+                },
+                cache_path,
+            )
+            patch_batch, grid_size = load_cache_batch([{"cache_path": cache_path}])
+            self.assertEqual(tuple(patch_batch.shape), (1, 3, 4, 2))
+            self.assertEqual(grid_size, (2, 2))
 
     def test_pool_patch_regions_averages_non_overlapping_blocks(self) -> None:
         patch = np.arange(16, dtype=np.float32).reshape(1, 4, 4)

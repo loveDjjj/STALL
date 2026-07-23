@@ -1,0 +1,2 @@
+d3_official_real_ap,real_auc,fake_ap_with_neg_score,fake_auc_with_neg_score,n_models
+0.8529255396428906,0.8011391036559992,0.7026851340806808,0.8011391036559992,10

@@ -136,6 +136,32 @@ def same_grid_finite_difference(
     return l2_normalize_last_dim(diff)
 
 
+def second_order_residual(
+    patch_seq: np.ndarray,
+    mode: str,
+    global_seq: np.ndarray | None = None,
+) -> np.ndarray:
+    """Compute normalized local D2 after removing a global or spatial reference."""
+    if len(patch_seq) < 3:
+        raise ValueError(f"视频帧数过少，无法使用二阶残差: T={len(patch_seq)}")
+    patch_d2 = patch_seq[2:] - 2.0 * patch_seq[1:-1] + patch_seq[:-2]
+    if mode == "global_residual_second_order":
+        if global_seq is None:
+            raise ValueError("global_residual_second_order 需要 global_seq")
+        global_seq = np.asarray(global_seq, dtype=np.float32)
+        if global_seq.ndim != 2 or global_seq.shape[0] != patch_seq.shape[0]:
+            raise ValueError(
+                f"global_seq 应为 [T,D] 且与 patch T 一致，实际为 {global_seq.shape}"
+            )
+        global_d2 = global_seq[2:] - 2.0 * global_seq[1:-1] + global_seq[:-2]
+        residual = patch_d2 - global_d2[:, None, :]
+    elif mode == "spatial_median_residual_second_order":
+        residual = patch_d2 - np.median(patch_d2, axis=1, keepdims=True)
+    else:
+        raise ValueError(f"未知二阶残差模式: {mode}")
+    return l2_normalize_last_dim(residual)
+
+
 def match_patches_local_window(
     patch_t: np.ndarray,        # [P, D]
     patch_t1: np.ndarray,       # [P, D]
@@ -291,6 +317,7 @@ def patch_temporal_delta(
     temperature: float = 0.07,
     lambda_dist: float = 0.01,
     region_size: int = 1,
+    global_seq: np.ndarray | None = None,
 ) -> np.ndarray:
     if patch_seq.ndim != 3:
         raise ValueError(f"期望 patch_seq [T, P, D]，实际为 {patch_seq.shape}")
@@ -304,6 +331,8 @@ def patch_temporal_delta(
             "same_grid_third_order",
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
+            "global_residual_second_order",
+            "spatial_median_residual_second_order",
         }:
             raise ValueError("patch region pooling 只支持 same-grid 模式")
         patch_seq, grid_size = pool_patch_regions(patch_seq, grid_size, region_size)
@@ -322,6 +351,9 @@ def patch_temporal_delta(
 
     if mode == "same_grid_second_order":
         return same_grid_finite_difference(patch_seq, order=2)
+
+    if mode in {"global_residual_second_order", "spatial_median_residual_second_order"}:
+        return second_order_residual(patch_seq, mode=mode, global_seq=global_seq)
 
     if mode == "same_grid_third_order":
         return same_grid_finite_difference(patch_seq, order=3)

@@ -143,11 +143,12 @@ def load_encoder(encoder: str, device: str, local_files_only: bool):
         model, _ = load_dinov3_model(device)
         return LocalDINOv3VisionWrapper(model).to(device).eval()
 
-    from transformers import AutoModel, CLIPVisionModel, XCLIPVisionModel
+    from transformers import AutoModel, CLIPVisionModel, XCLIPModel
 
     kwargs = {"local_files_only": local_files_only}
     if encoder.startswith("XCLIP"):
-        model = XCLIPVisionModel.from_pretrained(model_id, **kwargs)
+        full_model = XCLIPModel.from_pretrained(model_id, **kwargs)
+        model = full_model.vision_model
     elif encoder.startswith("CLIP"):
         model = CLIPVisionModel.from_pretrained(model_id, **kwargs)
     else:

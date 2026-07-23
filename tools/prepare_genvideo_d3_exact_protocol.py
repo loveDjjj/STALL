@@ -206,6 +206,20 @@ def write_ffmpeg_runlist(plan: pd.DataFrame, out_dir: Path) -> Path:
     return path
 
 
+def select_planned_rows(csv_manifest: pd.DataFrame, plan: pd.DataFrame) -> pd.DataFrame:
+    selected_paths: set[str] = set()
+    for csv_path in csv_manifest["csv_path"]:
+        frame = pd.read_csv(csv_path, usecols=["content_path"])
+        selected_paths.update(frame["content_path"].astype(str))
+    selected = plan[plan["content_path"].astype(str).isin(selected_paths)].copy()
+    expected = int(csv_manifest["rows"].sum())
+    if len(selected) != expected:
+        raise ValueError(
+            f"selected runlist rows do not match CSV manifest: {len(selected)} != {expected}"
+        )
+    return selected
+
+
 def summarize(plan: pd.DataFrame, csv_manifest: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     source_summary = (
         plan.groupby(["subset", "source_model"], as_index=False)
@@ -317,7 +331,8 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     plan = build_plan(load_index(args.index_csv), args.frames_root, args.seed, args.frame_rate)
     csv_manifest = write_d3_csvs(plan, args.output_dir, args.cap)
-    runlist_path = write_ffmpeg_runlist(plan, args.output_dir)
+    selected_plan = select_planned_rows(csv_manifest, plan)
+    runlist_path = write_ffmpeg_runlist(selected_plan, args.output_dir)
     source_summary, csv_manifest = summarize(plan, csv_manifest)
 
     plan.to_csv(args.output_dir / "d3_exact_video_plan.csv", index=False)

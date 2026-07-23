@@ -243,6 +243,7 @@ def collect_fit_samples(
             temperature=temperature,
             lambda_dist=lambda_dist,
             region_size=patch_region_size,
+            global_seq=payload["global"].numpy().astype(np.float32),
         )  # [T-1, P, D]
         flat_temp = patch_temp.reshape(-1, patch_temp.shape[-1]).astype(np.float32)
         temp_reservoir, temp_seen = reservoir_update(
@@ -321,6 +322,7 @@ def compute_calibration_scores(
             temperature=temperature,
             lambda_dist=lambda_dist,
             region_size=patch_region_size,
+            global_seq=payload["global"].numpy().astype(np.float32),
         )[np.newaxis]  # [1, T-1, P, D]
         patch_temp_ll = log_likelihood(
             apply_whitening(patch_temp, mu_patch_temp, W_patch_temp)
@@ -484,6 +486,8 @@ def main():
             "same_grid_third_order",
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
+            "global_residual_second_order",
+            "spatial_median_residual_second_order",
             "motion_hard",
             "motion_soft",
         ],

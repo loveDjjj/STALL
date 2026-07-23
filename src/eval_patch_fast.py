@@ -79,6 +79,8 @@ class FastPatchScorer:
             "same_grid_third_order",
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
+            "global_residual_second_order",
+            "spatial_median_residual_second_order",
         }
         if patch_temp_mode not in supported:
             raise ValueError(
@@ -130,7 +132,13 @@ class FastPatchScorer:
         pooled = x.mean(dim=(3, 5)).reshape(patch.shape[0], patch.shape[1], pooled_h * pooled_w, patch.shape[-1])
         return pooled, (pooled_h, pooled_w)
 
-    def temporal_features(self, patch: torch.Tensor, mode: str, region_size: int) -> torch.Tensor:
+    def temporal_features(
+        self,
+        patch: torch.Tensor,
+        mode: str,
+        region_size: int,
+        global_emb: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         if region_size > 1:
             patch, _ = self.pool_patch_regions(patch, self.patch_grid_size, region_size)
 
@@ -148,6 +156,28 @@ class FastPatchScorer:
                 raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
             accel = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
             chunks.append(self._l2_normalize(accel))
+
+        if mode in {"global_residual_second_order", "spatial_median_residual_second_order"}:
+            if patch.shape[1] < 3:
+                raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
+            patch_d2 = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
+            if mode == "global_residual_second_order":
+                if global_emb is None:
+                    raise ValueError("global_residual_second_order 需要 global embedding")
+                global_d2 = global_emb[:, 2:] - 2.0 * global_emb[:, 1:-1] + global_emb[:, :-2]
+                residual = patch_d2 - global_d2[:, :, None, :]
+            else:
+                ordered = torch.sort(patch_d2, dim=2).values
+                middle = ordered.shape[2] // 2
+                if ordered.shape[2] % 2:
+                    median = ordered[:, :, middle : middle + 1]
+                else:
+                    median = 0.5 * (
+                        ordered[:, :, middle - 1 : middle]
+                        + ordered[:, :, middle : middle + 1]
+                    )
+                residual = patch_d2 - median
+            chunks.append(self._l2_normalize(residual))
 
         if mode == "same_grid_third_order":
             if patch.shape[1] < 4:
@@ -265,6 +295,7 @@ class FastPatchScorer:
     def score_batch_on_device(
         self,
         patch_batch: torch.Tensor | np.ndarray,
+        global_batch: torch.Tensor | np.ndarray | None,
         device: torch.device,
         patch_temp_mode: str,
         patch_spat_weight: float,
@@ -281,6 +312,9 @@ class FastPatchScorer:
             if patch.dtype != torch.float32:
                 patch = patch.float()
         patch = patch.to(device, non_blocking=True)
+        global_emb = None
+        if global_batch is not None:
+            global_emb = torch.as_tensor(global_batch, dtype=torch.float32, device=device)
 
         mu_spat, W_spat, mu_temp, W_temp = self._params_for_device(device)
 
@@ -288,7 +322,9 @@ class FastPatchScorer:
         spat_ll = self.log_likelihood_from_white(spat_white)
         spat_agg = self._aggregate(spat_ll, aggregation, bottomk_ratio, temporal_run_length)
 
-        temp = self.temporal_features(patch, patch_temp_mode, patch_region_size)
+        temp = self.temporal_features(
+            patch, patch_temp_mode, patch_region_size, global_emb=global_emb
+        )
         temp_white = torch.matmul(temp - mu_temp, W_temp)
         temp_ll = self.log_likelihood_from_white(temp_white)
         temp_agg = self._aggregate(temp_ll, aggregation, bottomk_ratio, temporal_run_length)
@@ -317,10 +353,12 @@ class FastPatchScorer:
         bottomk_ratio: float,
         temporal_run_length: int,
         patch_region_size: int,
+        global_batch: torch.Tensor | np.ndarray | None = None,
     ) -> dict[str, np.ndarray]:
         if len(self.devices) == 1 or patch_batch.shape[0] < 2:
             return self.score_batch_on_device(
                 patch_batch,
+                global_batch,
                 self.device,
                 patch_temp_mode,
                 patch_spat_weight,
@@ -332,15 +370,21 @@ class FastPatchScorer:
             )
 
         chunks = torch.tensor_split(patch_batch, len(self.devices), dim=0)
+        global_chunks = (
+            torch.tensor_split(global_batch, len(self.devices), dim=0)
+            if global_batch is not None
+            else [None] * len(chunks)
+        )
         jobs = [
-            (chunk, device)
-            for chunk, device in zip(chunks, self.devices)
+            (chunk, global_chunk, device)
+            for chunk, global_chunk, device in zip(chunks, global_chunks, self.devices)
             if chunk.shape[0] > 0
         ]
         futures = [
             self._executor.submit(
                 self.score_batch_on_device,
                 chunk,
+                global_chunk,
                 device,
                 patch_temp_mode,
                 patch_spat_weight,
@@ -350,7 +394,7 @@ class FastPatchScorer:
                 temporal_run_length,
                 patch_region_size,
             )
-            for chunk, device in jobs
+            for chunk, global_chunk, device in jobs
         ]
         parts = [future.result() for future in futures]
         return {
@@ -389,8 +433,12 @@ def iter_cache_jobs(csv_path: str, patch_cache_root: str, duration: int, compact
         }
 
 
-def load_cache_batch(jobs: list[dict]) -> tuple[torch.Tensor, tuple[int, int]]:
+def load_cache_batch(
+    jobs: list[dict],
+    include_global: bool = False,
+) -> tuple[torch.Tensor, tuple[int, int]] | tuple[torch.Tensor, torch.Tensor, tuple[int, int]]:
     patches = []
+    globals_ = []
     grid_size = None
     shape = None
     for job in jobs:
@@ -408,7 +456,12 @@ def load_cache_batch(jobs: list[dict]) -> tuple[torch.Tensor, tuple[int, int]]:
                 f"期望 {shape}/{grid_size}，文件 {job['cache_path']}"
             )
         patches.append(patch)
-    return torch.stack(patches, dim=0), grid_size
+        if include_global:
+            globals_.append(payload["global"].float())
+    patch_batch = torch.stack(patches, dim=0)
+    if include_global:
+        return patch_batch, torch.stack(globals_, dim=0), grid_size
+    return patch_batch, grid_size
 
 
 def run(args) -> pd.DataFrame:
@@ -443,7 +496,7 @@ def run(args) -> pd.DataFrame:
 
     for start in tqdm(range(0, len(jobs), args.score_batch_size), desc="快速打分", unit="batch"):
         batch_jobs = jobs[start : start + args.score_batch_size]
-        patch_batch, grid_size = load_cache_batch(batch_jobs)
+        patch_batch, global_batch, grid_size = load_cache_batch(batch_jobs, include_global=True)
         if grid_size != scorer.patch_grid_size:
             raise ValueError(f"参数 grid_size={scorer.patch_grid_size}, cache grid_size={grid_size}")
         scores = scorer.score_batch(
@@ -455,6 +508,7 @@ def run(args) -> pd.DataFrame:
             bottomk_ratio=bottomk_ratio,
             temporal_run_length=temporal_run_length,
             patch_region_size=patch_region_size,
+            global_batch=global_batch,
         )
 
         for i, job in enumerate(batch_jobs):
@@ -522,6 +576,8 @@ def main():
             "same_grid_third_order",
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
+            "global_residual_second_order",
+            "spatial_median_residual_second_order",
         ],
         required=True,
     )
