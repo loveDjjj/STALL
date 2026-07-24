@@ -1,0 +1,2 @@
+macro_ap_delta,worst_dataset_ap_delta,generator_non_decline_count,generator_total,macro_ap_ci95_low,macro_ap_ci95_high,focus_improvement_count,high_motion_real_fp_R0,high_motion_real_fp_R1,admitted
+-0.008778015545773399,-0.014718606828933667,4,20,-0.010338437035253235,-0.007289730089989807,1,1365,1260,False

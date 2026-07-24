@@ -155,6 +155,8 @@ def second_order_residual(
             )
         global_d2 = global_seq[2:] - 2.0 * global_seq[1:-1] + global_seq[:-2]
         residual = patch_d2 - global_d2[:, None, :]
+    elif mode == "spatial_mean_residual_second_order":
+        residual = patch_d2 - np.mean(patch_d2, axis=1, keepdims=True)
     elif mode == "spatial_median_residual_second_order":
         residual = patch_d2 - np.median(patch_d2, axis=1, keepdims=True)
     else:
@@ -332,6 +334,7 @@ def patch_temporal_delta(
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
             "global_residual_second_order",
+            "spatial_mean_residual_second_order",
             "spatial_median_residual_second_order",
         }:
             raise ValueError("patch region pooling 只支持 same-grid 模式")
@@ -352,7 +355,11 @@ def patch_temporal_delta(
     if mode == "same_grid_second_order":
         return same_grid_finite_difference(patch_seq, order=2)
 
-    if mode in {"global_residual_second_order", "spatial_median_residual_second_order"}:
+    if mode in {
+        "global_residual_second_order",
+        "spatial_mean_residual_second_order",
+        "spatial_median_residual_second_order",
+    }:
         return second_order_residual(patch_seq, mode=mode, global_seq=global_seq)
 
     if mode == "same_grid_third_order":

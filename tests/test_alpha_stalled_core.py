@@ -217,6 +217,31 @@ class AlphaStalledFusionTest(unittest.TestCase):
         np.testing.assert_allclose(residual[0, :2], 0.0, atol=1e-6)
         np.testing.assert_allclose(residual[0, 2], [1.0, 0.0], atol=1e-6)
 
+    def test_spatial_mean_second_order_residual_removes_common_acceleration(self) -> None:
+        patch = np.zeros((4, 3, 2), dtype=np.float32)
+        patch[2:] = np.array([1.0, -2.0], dtype=np.float32)
+        residual = second_order_residual(
+            patch,
+            mode="spatial_mean_residual_second_order",
+        )
+        np.testing.assert_allclose(residual, 0.0, atol=1e-7)
+
+    def test_fast_spatial_mean_matches_numpy(self) -> None:
+        rng = np.random.default_rng(17)
+        patch = rng.normal(size=(1, 5, 6, 8)).astype(np.float32)
+        expected = second_order_residual(
+            patch[0],
+            mode="spatial_mean_residual_second_order",
+        )
+        scorer = FastPatchScorer.__new__(FastPatchScorer)
+        scorer.patch_grid_size = (2, 3)
+        actual = scorer.temporal_features(
+            torch.from_numpy(patch),
+            "spatial_mean_residual_second_order",
+            region_size=1,
+        )
+        np.testing.assert_allclose(actual.numpy()[0], expected, atol=1e-6)
+
     def test_fast_spatial_median_matches_numpy_for_even_patch_count(self) -> None:
         patch = np.zeros((1, 3, 4, 2), dtype=np.float32)
         patch[0, 2, :, 0] = [0.0, 2.0, 4.0, 10.0]

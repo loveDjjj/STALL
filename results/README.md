@@ -147,6 +147,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `d3_protocol_audit/d3_protocol_audit.md` | D3 采样、类别平衡、FPS 处理、encoder 和指标方向审计 |
 | `d3_protocol_audit/d3_protocol_dataset_summary.csv` | 三个 index 的 FPS、duration 和 2s window 覆盖摘要 |
 | `research_summary/` | 外部数据集、真实校准数量、三分支与 raw D3 探索的紧凑结论和关键指标；原始网格与抽样明细不进入 release |
+| `local_residual/` | K=3 spatial-mean residual D2 的轻量指标、共同运动诊断与准入结论；逐窗口/逐视频分数和参数保持本地 |
 | `temporal_derivative_order/` | ComGenVid D=3/D=4 patch temporal derivative 代表性对照 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.md` | D=2/D=3/D=4 平均 AUC/AP 对照和结论 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.*` | temporal derivative order 对照图 |

@@ -80,6 +80,7 @@ class FastPatchScorer:
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
             "global_residual_second_order",
+            "spatial_mean_residual_second_order",
             "spatial_median_residual_second_order",
         }
         if patch_temp_mode not in supported:
@@ -157,7 +158,11 @@ class FastPatchScorer:
             accel = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
             chunks.append(self._l2_normalize(accel))
 
-        if mode in {"global_residual_second_order", "spatial_median_residual_second_order"}:
+        if mode in {
+            "global_residual_second_order",
+            "spatial_mean_residual_second_order",
+            "spatial_median_residual_second_order",
+        }:
             if patch.shape[1] < 3:
                 raise ValueError(f"视频帧数过少，无法使用 {mode}: T={patch.shape[1]}")
             patch_d2 = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
@@ -166,6 +171,8 @@ class FastPatchScorer:
                     raise ValueError("global_residual_second_order 需要 global embedding")
                 global_d2 = global_emb[:, 2:] - 2.0 * global_emb[:, 1:-1] + global_emb[:, :-2]
                 residual = patch_d2 - global_d2[:, :, None, :]
+            elif mode == "spatial_mean_residual_second_order":
+                residual = patch_d2 - patch_d2.mean(dim=2, keepdim=True)
             else:
                 ordered = torch.sort(patch_d2, dim=2).values
                 middle = ordered.shape[2] // 2
@@ -577,6 +584,7 @@ def main():
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
             "global_residual_second_order",
+            "spatial_mean_residual_second_order",
             "spatial_median_residual_second_order",
         ],
         required=True,

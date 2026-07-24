@@ -129,3 +129,10 @@ results/*
 !results/multi_order_baselines/
 !results/multi_order_baselines/*.csv
 !results/multi_order_baselines/*.md
+!results/local_residual/
+results/local_residual/*
+!results/local_residual/dataset_metrics.csv
+!results/local_residual/generator_metrics.csv
+!results/local_residual/bootstrap_deltas.csv
+!results/local_residual/common_mode_analysis.csv
+!results/local_residual/admission_summary.csv

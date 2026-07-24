@@ -19,3 +19,7 @@ ComGenVid,strict_2s_k3_mw2,alpha_stalled,0.8857,0.8996,frozen_baseline
 VideoFeedback,strict_2s_k3_mw2,alpha_stalled,0.8623,0.8684,frozen_baseline
 GenVideo,strict_2s_k3_mw2,alpha_stalled,0.8601,0.8410,frozen_baseline
 Macro-3,strict_2s_k3_mw2,alpha_stalled,0.8694,0.8697,frozen_baseline
+ComGenVid,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8836,0.8954,rejected_default
+VideoFeedback,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8495,0.8537,rejected_default
+GenVideo,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8547,0.8336,rejected_default
+Macro-3,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8626,0.8609,rejected_default

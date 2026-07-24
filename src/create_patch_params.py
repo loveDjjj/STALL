@@ -487,6 +487,7 @@ def main():
             "same_grid_fourth_order",
             "same_grid_multilag_second_order",
             "global_residual_second_order",
+            "spatial_mean_residual_second_order",
             "spatial_median_residual_second_order",
             "motion_hard",
             "motion_soft",

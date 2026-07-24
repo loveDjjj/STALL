@@ -19,6 +19,7 @@
 | K=3 MW2 | ComGenVid 0.8857/0.8996，VideoFeedback 0.8623/0.8684，GenVideo 0.8601/0.8410，Macro-3 0.8694/0.8697 | 当前无泄漏冻结基线；相对 clean single-window AP +0.0096 |
 | K=5 / all-window | Macro AP 0.8672/0.8695；成本高于 K=3 | 不进入默认方法 |
 | Joint Typicality | 最好 J3 Macro AP 0.8602，低于固定线性融合 0.8697 | 全部拒绝，保留 0.6/0.4 |
+| Spatial-mean residual D2 | K=3 Macro 0.8626/0.8609，AP 相对 R0 -0.0088，4/20 生成器不下降 | 拒绝；停止 residual/multiscale/layer 后续复杂化 |
 
 ## 方法决策
 
