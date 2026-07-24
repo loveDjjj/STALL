@@ -97,8 +97,14 @@ class PatchSTALL(STALL):
                 ]
                 x = torch.stack(tensors).to(device)
 
-                global_batch = self.model(x)
                 feature_dict = self._forward_features_dict(x)
+                if "x_norm_clstoken" not in feature_dict:
+                    raise KeyError("forward_features() 输出中缺少 'x_norm_clstoken'")
+                if hasattr(self.model, "module"):
+                    core_model = self.model.module
+                else:
+                    core_model = self.model
+                global_batch = core_model.head(feature_dict["x_norm_clstoken"])
                 patch_batch = feature_dict["x_norm_patchtokens"]
 
                 num_patches = patch_batch.shape[1]

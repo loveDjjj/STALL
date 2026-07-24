@@ -193,7 +193,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 - `component_ablation.*`
 - `temporal_ablation.*`
 
-## 当前 baseline 数值
+## 历史 release baseline 数值
 
 | 数据集 | 平均 AUC | 平均 AP | 覆盖范围 |
 |---|---:|---:|---|
@@ -202,6 +202,12 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | GenVideo | 0.8374 | 0.8283 | 8 个 2 秒生成来源 |
 
 短视频来源覆盖缺口见 `paper_tables/patch_coverage_gaps.md`。
+
+当前严格、无泄漏的研究基线已经更新为 K=3 MW2：ComGenVid
+`0.8857/0.8996`、VideoFeedback `0.8623/0.8684`、GenVideo
+`0.8601/0.8410`、Macro-3 `0.8694/0.8697`。完整协议与旧 release 数值不可直接
+混用，详见 `reports/multi_window_joint_typicality.md` 和
+`configs/alpha_stalled_multi_window.yaml`。
 
 ## 重建命令
 

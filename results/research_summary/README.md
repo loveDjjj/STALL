@@ -16,20 +16,23 @@
 | VideoFeedback-small raw D3-style | 2s→1s raw D3 0.5245/0.5637；GenVideo 三分支权重明显负迁移 | raw D3 不能进入默认方法 |
 | 简单 gate/cap | 最佳跨 GenVideo/VideoFeedback 规则只有约 0.001 worst-case AP 改善 | 不继续扩展简单 gate、clip、cap 或非线性融合 |
 | Local volatility / 高阶 | 小样本局部 volatility 增益不足；D=3/4 低于 same-grid D=2 | 保留 same-grid D=2，后续只研究局部二阶残差 |
+| K=3 MW2 | ComGenVid 0.8857/0.8996，VideoFeedback 0.8623/0.8684，GenVideo 0.8601/0.8410，Macro-3 0.8694/0.8697 | 当前无泄漏冻结基线；相对 clean single-window AP +0.0096 |
+| K=5 / all-window | Macro AP 0.8672/0.8695；成本高于 K=3 | 不进入默认方法 |
+| Joint Typicality | 最好 J3 Macro AP 0.8602，低于固定线性融合 0.8697 | 全部拒绝，保留 0.6/0.4 |
 
 ## 方法决策
 
-下一阶段主线收敛为两分支：
+当前主线收敛为两分支 K=3 MW2：
 
 ```text
-Global calibrated multi-order likelihood
-+ Local calibrated second-order residual
+Global = mean of calibrated STALL window scores
++ Local = mean of calibrated spatial + same-grid D2 window scores
 ```
 
-Global 分支保留 STALL 空间、一阶时序与经过真实视频校准的全局二阶信息；Local
-分支从当前 same-grid D=2 出发，研究相对全局运动或空间中位数的二阶残差。Raw
-volatility 不再作为独立第三分支，motion hard/soft、更高阶、多 lag、简单 gate/cap
-只保留为失败消融结论。
+Global 分支只保留 STALL 空间和一阶时序；Local 分支保留 patch 空间与 same-grid
+D=2。每视频取三个均匀 2 秒窗口，分支分别均值后按 effective-K 用独立真实视频
+重校准。全局 D3、raw volatility、motion hard/soft、更高阶、多 lag、简单 gate/cap
+和 Joint Typicality 只保留为失败消融结论。
 
 ## 协议边界
 
@@ -53,5 +56,6 @@ volatility 不再作为独立第三分支，motion hard/soft、更高阶、多 l
 - `compare_d3_smoke_with_existing_scores.py`
 - `analyze_d3_window_cache_variants.py`
 
-论文资产构建器和仍被稿件引用的验证分析入口也保留。与已暂停方向绑定的一次性
-gating、nonlinear、multi-window、third-branch 和外部下载/扫描脚本不再进入提交。
+论文资产构建器和仍被稿件引用的验证分析入口也保留。Multi-window 的通用采样、
+打分和统计入口已进入主线；与已暂停方向绑定的一次性 gating、nonlinear、
+third-branch 和外部下载/扫描脚本不再进入提交。
