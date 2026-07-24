@@ -124,6 +124,33 @@ class MultiWindowAnalysisTests(unittest.TestCase):
         auc = result[result.metric.eq("auc")].iloc[0]
         self.assertAlmostEqual(auc.delta, 0.5)
 
+    def test_macro_bootstrap_accepts_explicit_baseline_name(self) -> None:
+        rows = []
+        for subset, base, candidate in (
+            ("real", 0.8, 1.0),
+            ("annotated", 0.2, 0.0),
+        ):
+            for index in range(4):
+                rows.append(
+                    {
+                        "dataset": "d",
+                        "subset": subset,
+                        "source_model": "real" if subset == "real" else "fake",
+                        "filename": f"{subset}-{index}",
+                        "BASE": base,
+                        "CANDIDATE": candidate,
+                    }
+                )
+        result = macro_cluster_bootstrap(
+            pd.DataFrame(rows),
+            ["CANDIDATE"],
+            seed=42,
+            iterations=10,
+            base_config="BASE",
+        )
+        self.assertEqual(set(result.base_config), {"BASE"})
+        self.assertEqual(set(result.comparison), {"CANDIDATE-BASE"})
+
     def test_unconditional_calibration_accepts_unseen_effective_k(self) -> None:
         rows = []
         for index in range(200):

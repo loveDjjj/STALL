@@ -19,7 +19,9 @@
 | K=3 MW2 | ComGenVid 0.8857/0.8996，VideoFeedback 0.8623/0.8684，GenVideo 0.8601/0.8410，Macro-3 0.8694/0.8697 | 当前无泄漏冻结基线；相对 clean single-window AP +0.0096 |
 | K=5 / all-window | Macro AP 0.8672/0.8695；成本高于 K=3 | 不进入默认方法 |
 | Joint Typicality | 最好 J3 Macro AP 0.8602，低于固定线性融合 0.8697 | 全部拒绝，保留 0.6/0.4 |
-| Spatial-mean residual D2 | K=3 Macro 0.8626/0.8609，AP 相对 R0 -0.0088，4/20 生成器不下降 | 拒绝；停止 residual/multiscale/layer 后续复杂化 |
+| Spatial-mean residual D2 | K=3 Macro 0.8626/0.8609，AP 相对 R0 -0.0088，4/20 生成器不下降 | 拒绝；停止共同运动 residual 路线 |
+| 统一 region 多尺度 | 最佳 MS1 Macro 0.8687/0.8695，AP 相对基线 -0.0001，CI 跨 0 | MS1-MS4 全部拒绝；数据集特定 region 只作为参考上界 |
+| DINO 中间层 D2 | 最佳 H4（layer 17/23 等权）Macro 0.8721/0.8698，AUC +0.0028、AP 仅 +0.0002 | 9/20 生成器不下降且两个数据集 AP 约 -0.005；拒绝，保留 final layer |
 
 ## 方法决策
 

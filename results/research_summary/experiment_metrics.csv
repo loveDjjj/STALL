@@ -23,3 +23,11 @@ ComGenVid,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8836,0.8954,rejected_defau
 VideoFeedback,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8495,0.8537,rejected_default
 GenVideo,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8547,0.8336,rejected_default
 Macro-3,strict_2s_k3_mw2,spatial_mean_residual_d2,0.8626,0.8609,rejected_default
+ComGenVid,strict_2s_k3_mw2,unified_region1,0.8875,0.9012,rejected_default
+VideoFeedback,strict_2s_k3_mw2,unified_region1,0.8623,0.8685,rejected_default
+GenVideo,strict_2s_k3_mw2,unified_region1,0.8563,0.8390,rejected_default
+Macro-3,strict_2s_k3_mw2,unified_region1,0.8687,0.8695,rejected_default
+ComGenVid,strict_2s_k3_mw2,layer17_layer23_equal,0.9040,0.9104,rejected_default
+VideoFeedback,strict_2s_k3_mw2,layer17_layer23_equal,0.8582,0.8631,rejected_default
+GenVideo,strict_2s_k3_mw2,layer17_layer23_equal,0.8542,0.8360,rejected_default
+Macro-3,strict_2s_k3_mw2,layer17_layer23_equal,0.8721,0.8698,rejected_default

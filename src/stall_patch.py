@@ -127,6 +127,95 @@ class PatchSTALL(STALL):
         patch_out = torch.cat(patch_embs, dim=0).numpy()
         return global_out, patch_out, patch_grid_size
 
+    def _embed_flat_frames_with_layers(
+        self,
+        flat_frames: List[np.ndarray],
+        layers: tuple[int, ...],
+        batch_size: int = 32,
+    ) -> Tuple[Dict[int, np.ndarray], Tuple[int, int]]:
+        """Return normalized patch tokens for several blocks in one traversal."""
+        if not flat_frames:
+            raise ValueError("flat_frames 为空")
+        if not layers or len(set(layers)) != len(layers):
+            raise ValueError("layers 必须是非空且不重复的层号")
+
+        core_model = self.model.module if hasattr(self.model, "module") else self.model
+        if not hasattr(core_model, "get_intermediate_layers"):
+            raise AttributeError("DINOv3 模型没有暴露 get_intermediate_layers()")
+
+        device = next(self.model.parameters()).device
+        collected: Dict[int, list[torch.Tensor]] = {layer: [] for layer in layers}
+        patch_grid_size = None
+        with torch.no_grad():
+            for start in range(0, len(flat_frames), batch_size):
+                batch = flat_frames[start : start + batch_size]
+                tensors = [
+                    self.transform(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
+                    for frame in batch
+                ]
+                x = torch.stack(tensors).to(device)
+                outputs = core_model.get_intermediate_layers(
+                    x,
+                    n=list(layers),
+                    reshape=False,
+                    return_class_token=False,
+                    norm=True,
+                )
+                if len(outputs) != len(layers):
+                    raise ValueError(
+                        f"中间层输出数量不匹配: expected={len(layers)} actual={len(outputs)}"
+                    )
+                for layer, patch_batch in zip(layers, outputs):
+                    if isinstance(patch_batch, tuple):
+                        patch_batch = patch_batch[0]
+                    num_patches = patch_batch.shape[1]
+                    side = int(round(num_patches**0.5))
+                    if side * side != num_patches:
+                        raise ValueError(f"Layer {layer} patch token 数量不是平方网格: {num_patches}")
+                    current_grid = (side, side)
+                    if patch_grid_size is None:
+                        patch_grid_size = current_grid
+                    elif patch_grid_size != current_grid:
+                        raise ValueError(
+                            f"Patch 网格尺寸不一致: {patch_grid_size} vs {current_grid}"
+                        )
+                    collected[layer].append(patch_batch.detach().cpu())
+
+        return {
+            layer: torch.cat(parts, dim=0).numpy() for layer, parts in collected.items()
+        }, patch_grid_size
+
+    def frames_to_layer_patch_embeddings(
+        self,
+        video_arrays: List[np.ndarray],
+        layers: tuple[int, ...] = (11, 17, 23),
+        batch_size: int = 32,
+    ) -> List[Dict[str, object]]:
+        """Extract requested patch layers and split the flat output by video."""
+        if not video_arrays:
+            return []
+        lengths = [len(video) for video in video_arrays]
+        if any(length == 0 for length in lengths):
+            raise ValueError("video_arrays 至少包含一个空视频")
+        flat_frames = [frame for video in video_arrays for frame in video]
+        layer_flat, grid_size = self._embed_flat_frames_with_layers(
+            flat_frames, layers=layers, batch_size=batch_size
+        )
+        outputs: List[Dict[str, object]] = []
+        cursor = 0
+        for length in lengths:
+            outputs.append(
+                {
+                    "layers": {
+                        layer: values[cursor : cursor + length]
+                        for layer, values in layer_flat.items()
+                    },
+                    "grid_size": grid_size,
+                }
+            )
+            cursor += length
+        return outputs
+
     def frames_to_global_patch_embeddings(
         self, video_arrays: List[np.ndarray], batch_size: int = 32
     ) -> List[Dict[str, np.ndarray | List[int]]]:

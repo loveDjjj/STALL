@@ -56,4 +56,6 @@ evaluation:
 evidence:
   report: reports/multi_window_joint_typicality.md
   local_audit: reports/local_residual_multiscale_audit.md
+  unified_scale_layer_audit: reports/unified_multiscale_intermediate_layer_audit.md
+  unified_scale_layer_report: reports/unified_multiscale_intermediate_layers.md
   local_results: results/multi_window_joint_typicality

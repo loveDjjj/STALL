@@ -213,6 +213,7 @@ def macro_cluster_bootstrap(
     candidates: list[str],
     seed: int,
     iterations: int,
+    base_config: str = "MW0",
 ) -> pd.DataFrame:
     dataset_pairs: list[list[pd.DataFrame]] = []
     for _, dataset_frame in per_video.groupby("dataset", sort=False):
@@ -230,7 +231,7 @@ def macro_cluster_bootstrap(
             split_pairs: list[tuple[pd.DataFrame, pd.DataFrame]] = []
             for pair in pairs:
                 new_auc, new_ap = _auc_ap(pair, candidate)
-                old_auc, old_ap = _auc_ap(pair, "MW0")
+                old_auc, old_ap = _auc_ap(pair, base_config)
                 dataset_point["auc"].append(new_auc - old_auc)
                 dataset_point["ap"].append(new_ap - old_ap)
                 split_pairs.append(
@@ -257,7 +258,7 @@ def macro_cluster_bootstrap(
                         ignore_index=True,
                     )
                     new_auc, new_ap = _auc_ap(sampled, candidate)
-                    old_auc, old_ap = _auc_ap(sampled, "MW0")
+                    old_auc, old_ap = _auc_ap(sampled, base_config)
                     dataset_deltas["auc"].append(new_auc - old_auc)
                     dataset_deltas["ap"].append(new_ap - old_ap)
                 macro_deltas["auc"].append(float(np.mean(dataset_deltas["auc"])))
@@ -268,9 +269,9 @@ def macro_cluster_bootstrap(
             rows.append(
                 {
                     "dataset": "Macro-3",
-                    "comparison": f"{candidate}-MW0",
+                    "comparison": f"{candidate}-{base_config}",
                     "new_config": candidate,
-                    "base_config": "MW0",
+                    "base_config": base_config,
                     "metric": metric,
                     "delta": float(np.mean(point[metric])),
                     "ci95_low": float(np.quantile(samples[metric], 0.025)),

@@ -1,0 +1,61 @@
+fake_motion_group,dataset,config,config_name,n_generators,auc,ap
+low,comgenvid,MS0,Dataset-specific region reference,2,0.9049149061760606,0.9160446458493238
+low,comgenvid,MS1,Unified region 1,2,0.908847798374016,0.9203086619918535
+low,comgenvid,MS2,Unified region 2,2,0.9082330320782139,0.9188955530393124
+low,comgenvid,MS3,Unified equal region 1+2,2,0.9091392155792877,0.9203886747206431
+low,comgenvid,MS4,Unified equal region 1+2+3,2,0.9081421967152942,0.9194470796271249
+low,genvideo,MS0,Dataset-specific region reference,8,0.9127380646655433,0.9190067389575618
+low,genvideo,MS1,Unified region 1,8,0.9125213432445644,0.919425855262696
+low,genvideo,MS2,Unified region 2,8,0.9127436615136572,0.9190207928935651
+low,genvideo,MS3,Unified equal region 1+2,8,0.9129821611881324,0.919585128812854
+low,genvideo,MS4,Unified equal region 1+2+3,8,0.9127360563953816,0.9194628098621008
+low,videofeedback,MS0,Dataset-specific region reference,10,0.9283248682227285,0.9379782238589118
+low,videofeedback,MS1,Unified region 1,10,0.9283393671645672,0.9379918986702656
+low,videofeedback,MS2,Unified region 2,10,0.9192679785717666,0.9289879968037834
+low,videofeedback,MS3,Unified equal region 1+2,10,0.9239032739400297,0.9338154444818887
+low,videofeedback,MS4,Unified equal region 1+2+3,10,0.9213462816283107,0.9309214163799512
+low,Macro-3,MS0,Dataset-specific region reference,20,0.9153259463547775,0.9243432028885992
+low,Macro-3,MS1,Unified region 1,20,0.9165695029277159,0.9259088053082717
+low,Macro-3,MS2,Unified region 2,20,0.9134148907212126,0.9223014475788869
+low,Macro-3,MS3,Unified equal region 1+2,20,0.9153415502358166,0.9245964160051287
+low,Macro-3,MS4,Unified equal region 1+2+3,20,0.9140748449129955,0.9232771019563923
+mid,comgenvid,MS0,Dataset-specific region reference,2,0.8630710390167035,0.8817741783767119
+mid,comgenvid,MS1,Unified region 1,2,0.8618159958780292,0.8806760279843238
+mid,comgenvid,MS2,Unified region 2,2,0.8649223802408381,0.883150733599646
+mid,comgenvid,MS3,Unified equal region 1+2,2,0.8635397188375411,0.882601843750505
+mid,comgenvid,MS4,Unified equal region 1+2+3,2,0.8633474347625403,0.8823380998668482
+mid,genvideo,MS0,Dataset-specific region reference,8,0.8514986284128915,0.8494399710908597
+mid,genvideo,MS1,Unified region 1,8,0.843254536455502,0.8401756035677221
+mid,genvideo,MS2,Unified region 2,8,0.851512600061886,0.8494618275427397
+mid,genvideo,MS3,Unified equal region 1+2,8,0.8472632382596014,0.8448508370530363
+mid,genvideo,MS4,Unified equal region 1+2+3,8,0.8482270994225856,0.8460845520783675
+mid,videofeedback,MS0,Dataset-specific region reference,10,0.8622899893698242,0.8897664104950319
+mid,videofeedback,MS1,Unified region 1,10,0.8622899893698242,0.8897664104950319
+mid,videofeedback,MS2,Unified region 2,10,0.8643868309413356,0.8885802866016844
+mid,videofeedback,MS3,Unified equal region 1+2,10,0.8644085609868432,0.8912815475649138
+mid,videofeedback,MS4,Unified equal region 1+2+3,10,0.8633307216381285,0.8894563216116674
+mid,Macro-3,MS0,Dataset-specific region reference,20,0.8589532189331397,0.8736601866542012
+mid,Macro-3,MS1,Unified region 1,20,0.855786840567785,0.8702060140156926
+mid,Macro-3,MS2,Unified region 2,20,0.8602739370813532,0.8737309492480234
+mid,Macro-3,MS3,Unified equal region 1+2,20,0.8584038393613286,0.8729114094561518
+mid,Macro-3,MS4,Unified equal region 1+2+3,20,0.8583017519410848,0.872626324518961
+high,comgenvid,MS0,Dataset-specific region reference,2,0.7793969921089414,0.7944726066942498
+high,comgenvid,MS1,Unified region 1,2,0.7660325038203539,0.7822909169554749
+high,comgenvid,MS2,Unified region 2,2,0.7819905823428766,0.7909258876889247
+high,comgenvid,MS3,Unified equal region 1+2,2,0.7720111552599953,0.7852009421298167
+high,comgenvid,MS4,Unified equal region 1+2+3,2,0.7741678856310523,0.785893850073293
+high,genvideo,MS0,Dataset-specific region reference,7,0.7264000378990183,0.7030490409087659
+high,genvideo,MS1,Unified region 1,7,0.7223802216514709,0.7011841063919507
+high,genvideo,MS2,Unified region 2,7,0.7263971138043851,0.7030664700936675
+high,genvideo,MS3,Unified equal region 1+2,7,0.7237593182892683,0.7018958044211395
+high,genvideo,MS4,Unified equal region 1+2+3,7,0.7214342925371117,0.6995345443684959
+high,videofeedback,MS0,Dataset-specific region reference,10,0.6678344369326678,0.7569019667218425
+high,videofeedback,MS1,Unified region 1,10,0.6679923978130984,0.7570223008433301
+high,videofeedback,MS2,Unified region 2,10,0.6635166707727915,0.7491617019730552
+high,videofeedback,MS3,Unified equal region 1+2,10,0.6673789264894283,0.7552857673817338
+high,videofeedback,MS4,Unified equal region 1+2+3,10,0.6683185278335575,0.7545132177813771
+high,Macro-3,MS0,Dataset-specific region reference,19,0.7245438223135424,0.751474538108286
+high,Macro-3,MS1,Unified region 1,19,0.718801707761641,0.7468324413969185
+high,Macro-3,MS2,Unified region 2,19,0.7239681223066844,0.747718019918549
+high,Macro-3,MS3,Unified equal region 1+2,19,0.7210498000128972,0.7474608379775635
+high,Macro-3,MS4,Unified equal region 1+2+3,19,0.7213069020005739,0.7466472040743888

@@ -350,6 +350,53 @@ class FastPatchScorer:
         }
 
     @torch.inference_mode()
+    def score_temporal_batch_on_device(
+        self,
+        patch_batch: torch.Tensor | np.ndarray,
+        device: torch.device,
+        patch_temp_mode: str,
+        aggregation: str,
+        bottomk_ratio: float,
+        temporal_run_length: int,
+        patch_region_size: int,
+    ) -> dict[str, np.ndarray]:
+        """Score only the temporal branch for scale/layer fusion studies."""
+        patch = torch.as_tensor(patch_batch, dtype=torch.float32, device=device)
+        _, _, mu_temp, W_temp = self._params_for_device(device)
+        temp = self.temporal_features(patch, patch_temp_mode, patch_region_size)
+        temp_white = torch.matmul(temp - mu_temp, W_temp)
+        temp_ll = self.log_likelihood_from_white(temp_white)
+        temp_agg = self._aggregate(
+            temp_ll, aggregation, bottomk_ratio, temporal_run_length
+        )
+        raw = temp_agg.detach().cpu().numpy()
+        percentile = self.percentile(raw, self.calib_temp)
+        return {
+            "patch_temp_raw": raw.astype(np.float32),
+            "patch_temp_percentile": percentile.astype(np.float32),
+        }
+
+    @torch.inference_mode()
+    def score_temporal_batch(
+        self,
+        patch_batch: torch.Tensor | np.ndarray,
+        patch_temp_mode: str,
+        aggregation: str,
+        bottomk_ratio: float,
+        temporal_run_length: int,
+        patch_region_size: int,
+    ) -> dict[str, np.ndarray]:
+        return self.score_temporal_batch_on_device(
+            patch_batch,
+            self.device,
+            patch_temp_mode,
+            aggregation,
+            bottomk_ratio,
+            temporal_run_length,
+            patch_region_size,
+        )
+
+    @torch.inference_mode()
     def score_batch(
         self,
         patch_batch: torch.Tensor | np.ndarray,
