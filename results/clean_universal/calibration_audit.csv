@@ -1,0 +1,4 @@
+dataset,calibration_real_videos,calibration_fake_videos,calibration_windows,evaluation_videos,evaluation_windows,calibration_evaluation_video_overlap
+comgenvid,200,0,600,4298,12890,0
+videofeedback,200,0,484,3500,6592,0
+genvideo,200,0,600,13623,37330,0

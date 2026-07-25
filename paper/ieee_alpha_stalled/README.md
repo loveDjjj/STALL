@@ -16,9 +16,13 @@
 - `notes/`：写作计划、图表清单、实验到论点映射和参考文献阅读摘要。
   - `submission_readiness_audit.md` 记录投稿前仍需作者确认或补充的项目。
 
-## 可复现表格来源
+## 可复现结果来源
 
-- `tables/validation_fusion_loso.tex` 是已完成 LOSO 诊断的冻结论文表格；结论级数据和协议边界已汇总到 `results/research_summary/`。大体量 bootstrap 抽样明细和一次性表格构建脚本不属于 release。
+- 锁定协议：`configs/alpha_stalled_u0_locked.yaml`。
+- 发布清单、锁定 Local 参数与逐视频分数：`release/u0/`。
+- 协议、核心消融、校准规模和数值稳定性报告：`reports/u0_*.md`。
+- 结论级指标索引：`results/research_summary/`。
+- 主文正式结果表：`tables/main_results.tex`、`tables/component_ablation.tex`、`tables/u0_calibration_stability.tex` 和 `tables/u0_failed_directions.tex`。
 
 ## Overleaf 设置
 
@@ -29,9 +33,10 @@
 
 ## 当前写作边界
 
-- 主结果使用 `results/paper_tables/alpha_stalled_main_summary.md` 和 `results/paper_tables/ablation_summary.md` 的 pairwise balanced AUC/AP。
-- 方法部分不绑定具体融合比例；只定义先构造局部分数，再与全局 STALL 分数进行评测前冻结融合。
-- 当前稿件将 alpha-only validation/LOSO 选参写作更稳妥的部署适配策略；three-branch LOSO 只作为诊断和外部数据集潜在优化方向，不作为默认方法。
-- D3 只写 protocol audit，不声称已经完成外部 baseline 重跑。
-- 关键帧解释案例只作为事后解释，不参与训练、推理或调参。
-- 数据/代码/伦理/利益冲突/作者贡献声明已经放入 `sections/08_declarations.tex`，未知事实保留为 `AUTHOR_INPUT_NEEDED`。
+- 主结果是固定 21,421 视频交集上的 U0：Macro-3 AUC/real-positive AP `0.8741/0.8723`。
+- 方法固定 `G_k=0.5G_s+0.5G_{t1}`、`L_k=0.1L_s+0.9L_{D2}`、K=3 分支均值、effective-K 真实重校准和 `S=0.6G+0.4L`。
+- 生成视频和测试真实视频不得用于 whitening、CDF、阈值、权重或模型选择；历史 leakage-affected `0.8737/0.8750` 只能作为审计记录。
+- K=5/all-window、bottom-2/hybrid、residual、多尺度、中间层、Joint Typicality、三分支和动态融合均不是正式方法。
+- 历史 clean single-window `0.8570/0.8600` 只用于方法演进展示；正式 K=3 增益以统一核心 K1 `0.8632/0.8636` 为因果对照。
+- 外部集、鲁棒性和可控注入只按预锁定协议报告，不允许据此回调 U0。
+- 数据/代码/伦理/利益冲突/作者贡献声明位于 `sections/08_declarations.tex`，未知事实保留为 `AUTHOR_INPUT_NEEDED`。

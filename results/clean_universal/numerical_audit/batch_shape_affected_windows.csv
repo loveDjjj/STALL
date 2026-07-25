@@ -1,0 +1,7 @@
+operator,dataset,protocol_split,subset,source_model,filename,window_id,region1_raw_batch8,region1_raw_batch4,region1_temporal_batch8,region1_temporal_batch4,layer17_raw_batch8,layer17_raw_batch4,layer17_temporal_batch8,layer17_temporal_batch4
+layer23_region1_mean,videofeedback,evaluation,annotated,ZeroScope-576w,8000861.mp4,2,-1402.9139404296875,-1322.309326171875,0.9399999976158142,1.0,,,,
+layer23_region1_mean,videofeedback,evaluation,annotated,SoRA-Clip,s000025.mp4,2,-1477.32470703125,-1436.491943359375,0.05999999865889549,0.6549999713897705,,,,
+layer23_region1_mean,videofeedback,evaluation,annotated,ZeroScope-576w,8002801.mp4,2,-1432.0322265625,-1347.654052734375,0.7200000286102295,1.0,,,,
+layer17_region1_mean,videofeedback,evaluation,annotated,ZeroScope-576w,8000861.mp4,2,,,,,-1397.0894775390625,-1303.4803466796875,0.7350000143051147,0.9900000095367432
+layer17_region1_mean,videofeedback,evaluation,annotated,SoRA-Clip,s000025.mp4,2,,,,,-1372.313232421875,-1327.000732421875,0.8450000286102295,0.9350000023841858
+layer17_region1_mean,videofeedback,evaluation,annotated,ZeroScope-576w,8002801.mp4,2,,,,,-1442.5146484375,-1346.114013671875,0.42500001192092896,0.9150000214576721

@@ -1,14 +1,18 @@
 # Unified region and intermediate-layer audit
 
+> **Status update (2026-07-24):** the historical 3/1/2 region configuration is an
+> historical dataset-specific tuned baseline because its choices used fake AUC/AP. The
+> clean universal successor fixes region 1 and mean aggregation everywhere.
+
 Date: 2026-07-24
 
-## Frozen protocol
+## Historical tuned protocol
 
 The reference is the leakage-free K=3 MW2 detector in
 `configs/alpha_stalled_multi_window.yaml`. Its Macro-3 AUC/AP is
 `0.8694/0.8697` on the fixed 21,421-video intersection. Global and Local
 window formulas, K=3 sampling, effective-K calibration, beta `0.1`, and alpha
-`0.6` remain frozen in this study.
+`0.6` were held fixed in this study.
 
 ## Region configuration
 
@@ -24,7 +28,7 @@ The settings were selected after comparing generated-video AUC/AP in the old
 region and aggregation sensitivity experiments. Region AP optima were region 3
 for ComGenVid (`0.9288`), region 1 for VideoFeedback (`0.8302`), and region 2
 for GenVideo (`0.8092`). Bottom-k versus mean was likewise selected from fake
-evaluation metrics. Consequently, the frozen K=3 result is a useful
+evaluation metrics. Consequently, the historical K=3 result is a useful
 dataset-specific reference upper bound, but it is not evidence for a single
 region configuration that transfers unchanged across datasets.
 
@@ -35,7 +39,7 @@ coarse-token operator; no single-scale feature extraction is repeated here.
 
 The old region 1/2/3 parameter files are not admissible for the new unified
 comparison: inspection found that their window CDFs used all available real
-videos (for example, 1,698 ComGenVid real scores), whereas the frozen K=3 model
+videos (for example, 1,698 ComGenVid real scores), whereas the historical K=3 model
 uses the disjoint 200-real calibration split. The old files remain historical
 sensitivity evidence only. The unified study therefore reuses the existing raw
 K1 patch-token caches, but refits region 1/2/3 whitening,

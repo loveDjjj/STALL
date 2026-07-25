@@ -1,11 +1,19 @@
 # Alpha-STALLED unified multiscale and intermediate-layer study
 
+> **Status update (2026-07-24):** the `0.8694/0.8697` MS0/H0 reference below
+> is dataset-specific and fake-label selected. It remains a historical tuned reference,
+> not the strict universal baseline. See
+> `reports/clean_universal_cross_layer_final.md` for the later temporal-unified
+> audit and `configs/alpha_stalled_u0_locked.yaml` for the corrected release.
+
 Date: 2026-07-24
 
 ## Executive decision
 
-No candidate is admitted. The final method remains the frozen, leakage-free
-K=3 MW2 Alpha-STALLED baseline with Macro-3 AUC/AP `0.8694/0.8697`.
+No candidate was admitted relative to the historical K=3 MW2 tuned comparator
+with Macro-3 AUC/AP `0.8694/0.8697`. The later temporal-unified audit reported
+U0 `0.8725/0.8722`, but its PatchSpatial inheritance was corrected only in the
+subsequent locked clean reproduction.
 
 - The best fully unified region configuration is MS1 (region 1), with
   `0.8687/0.8695`; its AP delta is `-0.00013` and its 95% paired-bootstrap CI
@@ -20,7 +28,7 @@ K=3 MW2 Alpha-STALLED baseline with Macro-3 AUC/AP `0.8694/0.8697`.
 - No layer candidate reaches the predeclared `+0.004` Macro AP trigger, so
   beta `0/0.05/0.2` is not run. Beta remains `0.1` and alpha remains `0.6`.
 
-## Frozen protocol and leakage audit
+## Held-fixed protocol and leakage audit
 
 The experiment uses the exact 21,421-video evaluation intersection and the
 fixed 200-real calibration split per dataset. Every K=3 window has 16 indexed
@@ -207,5 +215,6 @@ Unified region fusion does not beat the dataset-specific reference. A late
 intermediate layer contains useful ComGenVid and low-motion evidence, but the
 benefit does not transfer to VideoFeedback, GenVideo, high-motion fakes, or a
 majority of generators. The extra calibration/cache complexity is not
-justified. Retain K=3 MW2, final-layer Local D2, beta `0.1`, and fixed
-`0.6 Global + 0.4 Local` without adding a scale or layer branch.
+justified. This experiment therefore retains final-layer Local D2, beta `0.1`, and fixed
+`0.6 Global + 0.4 Local` without adding a scale or layer branch. The later universal audit
+fixes region1+mean as U0.

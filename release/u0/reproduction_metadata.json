@@ -1,0 +1,72 @@
+{
+  "calibration_raw_directory": "results/u0_locked_reproduction/calibration_raw",
+  "calibration_raw_files": {
+    "comgenvid_shard00_of_02.csv": {
+      "bytes": 37937,
+      "sha256": "118fa04eb21f8090f18b42bd669f6cd69bc360db2a1895b0550e329e18d915ec"
+    },
+    "comgenvid_shard01_of_02.csv": {
+      "bytes": 35064,
+      "sha256": "cc7ac44b3bd179cc3c046938a40f7539a0fca32fd944ecd9f5eb19e16eba16d8"
+    },
+    "genvideo_shard00_of_02.csv": {
+      "bytes": 32145,
+      "sha256": "26d1a0c9d0bb7bf187f867d306c69793575c2a6b97d4d24784ed46b87c4472cc"
+    },
+    "genvideo_shard01_of_02.csv": {
+      "bytes": 37567,
+      "sha256": "b6905191427f9005b75fcb69a73ac9aacad5a8867ae04c6d2ae38cb46259c811"
+    },
+    "videofeedback_shard00_of_02.csv": {
+      "bytes": 32694,
+      "sha256": "0ce07d1c0eab665056f88727f8b1c5b53266d669bbac9b20eec6302e2014149e"
+    },
+    "videofeedback_shard01_of_02.csv": {
+      "bytes": 34728,
+      "sha256": "85f171233da56be07a20996a4a34f6d7147d8d1b86ed243a90182beb15faf605"
+    }
+  },
+  "completed_utc": "2026-07-24T11:39:05.236362+00:00",
+  "config": "configs/alpha_stalled_u0_locked.yaml",
+  "environment": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "python": "3.10.20",
+    "sklearn": "1.7.2",
+    "torch": "2.11.0+cu128"
+  },
+  "evaluation_video_count": 21421,
+  "macro_auc": 0.8740724396350226,
+  "macro_real_positive_ap": 0.8722992273320395,
+  "num_shards_per_dataset": 2,
+  "protocol_correction": "PatchSpatial and PatchD2 both recomputed with region1 mean",
+  "raw_directory": "results/u0_locked_reproduction/raw",
+  "raw_files": {
+    "comgenvid_shard00_of_02.csv": {
+      "bytes": 2335900,
+      "sha256": "ac5cbf270358114d725f7fc92ba4c906322ec39f14936b809744f0b68e9dd380"
+    },
+    "comgenvid_shard01_of_02.csv": {
+      "bytes": 2346573,
+      "sha256": "93d8c20b1e5bdf0d92749547cb988460e8598c8f2bb11037a901ba7096dce50e"
+    },
+    "genvideo_shard00_of_02.csv": {
+      "bytes": 5886020,
+      "sha256": "c4f61eda4b7572812f9a90bbe2ce9d5bda554b6fdcde072d4ceb807909db4fd7"
+    },
+    "genvideo_shard01_of_02.csv": {
+      "bytes": 5993934,
+      "sha256": "ba4de16e29b3fe2a7a2722df21978336ee0f846f9d61bb6f8b1484fd7cb41bc4"
+    },
+    "videofeedback_shard00_of_02.csv": {
+      "bytes": 1078537,
+      "sha256": "421f86df5e4a8aae36f955942b1fbcfb67ae626ed59e32805815080cebaca9d0"
+    },
+    "videofeedback_shard01_of_02.csv": {
+      "bytes": 1122017,
+      "sha256": "0ba4dff7e98765a1a0dd8870316cdc1d952df1a62e98c70179dcce7bb0f40005"
+    }
+  },
+  "raw_window_count": 58496,
+  "schema_version": "u0_reproduction_v1"
+}

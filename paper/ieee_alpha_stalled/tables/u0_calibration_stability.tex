@@ -1,0 +1,15 @@
+\begin{table}[!t]
+  \centering
+  \caption{独立真实 reserve 上的校准规模稳定性。数值为五个 seed 的 Macro-3 AUC/real-positive AP 均值$\pm$标准差。}
+  \label{tab:u0_calibration_stability}
+  \begin{tabular}{rcc}
+    \toprule
+    校准真实视频/数据集 & Macro-3 AUC & Macro-3 AP \\
+    \midrule
+    25  & $0.8280\pm0.0060$ & $0.8237\pm0.0050$ \\
+    50  & $0.8495\pm0.0027$ & $0.8487\pm0.0026$ \\
+    100 & $0.8631\pm0.0054$ & $0.8628\pm0.0052$ \\
+    200 & $\mathbf{0.8712\pm0.0027}$ & $\mathbf{0.8680\pm0.0022}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}

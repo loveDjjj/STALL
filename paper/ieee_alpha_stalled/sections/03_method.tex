@@ -4,7 +4,7 @@
 \subsection{任务定义与总体流程}
 给定视频 $V=\{I_t\}_{t=1}^{T}$，目标是输出真实性分数 $S(V)\in[0,1]$，数值越大表示视频越符合真实视频统计规律，数值越小表示越可能为生成视频。检测器只允许使用预先指定的真实视频建立参考统计，不使用生成视频训练分类器，也不在推理时读取生成器来源、测试标签或测试批次真假组成。若投稿协议要求严格外部校准，真实校准集应与目标测试集完全隔离；当前 release 的具体校准来源在实验设置和讨论中单独标注。
 
-图~\ref{fig:pipeline} 展示了 \method 的两阶段流程。参考构建阶段，真实视频经过冻结 DINOv3 编码器，得到全局 token 与 patch token；随后分别估计全局空间、全局一阶时序、局部空间和局部二阶时序的白化参数，并保存真实视频分支统计用于百分位校准。推理阶段，对待测视频执行同一特征提取和似然计算，先得到原版 \stall 全局分数，再得到 patch 局部分数，最后按评测前冻结规则融合。
+图~\ref{fig:pipeline} 展示了 \method 的两阶段流程。参考构建阶段，真实视频经过冻结 DINOv3 编码器，得到全局 token 与 patch token；随后分别估计全局空间、全局一阶时序、局部空间和局部二阶时序的白化参数，并保存真实视频分支统计用于百分位校准。推理阶段，每个视频在完整可用时长内均匀选取至多三个互异的 2 秒窗口，每个窗口严格包含 8 FPS 下的 16 个不同帧。各窗口独立产生全局和局部分数，两个分支分别在视频级取均值、按有效窗口数重新校准，再使用固定权重融合。
 
 \begin{figure*}[!t]
   \centering
@@ -64,12 +64,11 @@
   q_{\mathrm{gt}}(V) &= \min_t \ell^{\mathrm{gt}}_t .
   \label{eq:global_temporal}
 \end{align}
-经百分位映射后，得到全局真实性分数
+本文使用 \stall 的等权全局空间--时序融合规则。经百分位映射后，第 $k$ 个窗口的全局真实性分数为
 \begin{equation}
-  \sglobal(V)=\Phi_{\mathrm{global}}\left(s_{\mathrm{gs}}(V),s_{\mathrm{gt}}(V)\right),
-  \label{eq:global_score}
+  G_k=0.5s_{\mathrm{gs},k}+0.5s_{\mathrm{gt},k}.
+  \label{eq:global_window_score}
 \end{equation}
-其中 $\Phi_{\mathrm{global}}$ 采用 \stall 的固定全局空间--时序融合规则。
 
 \subsection{局部 patch 分支}
 \subsubsection{局部空间似然}
@@ -81,45 +80,39 @@
 该分支提供局部纹理、结构和边缘异常证据。实验表明，单帧局部外观在跨数据集上通常弱于局部时序证据，因此它被作为局部分数中的辅助证据。
 
 \subsubsection{同网格二阶时序似然}
-局部时序分支是 \method 的核心新增模块。为避免显式 patch 匹配带来的不稳定性，我们固定 DINOv3 patch 网格，在同一空间位置上计算连续三帧的二阶差分。若使用区域尺度 $r$，先在非重叠 $r\times r$ patch 区域中做平均池化：
-\begin{equation}
-  \bar p_{t,k}=\frac{1}{r^2}\sum_{i\in\mathcal{N}_r(k)}p_{t,i}.
-  \label{eq:region_pooling}
-\end{equation}
-随后计算并归一化局部二阶差分：
+局部时序分支是 \method 的核心新增模块。为避免显式 patch 匹配带来的不稳定性，我们固定 DINOv3 的 $14\times14$ patch 网格，不包含 CLS 或 register token，并在同一空间位置上计算连续三帧的二阶差分。正式配置不做区域池化，即 region size 固定为 1：
 \begin{align}
-  a_{t,k}&=\bar p_{t+2,k}-2\bar p_{t+1,k}+\bar p_{t,k},\\
-  \hat a_{t,k}&=\frac{a_{t,k}}{\lVert a_{t,k}\rVert_2},
+  a_{t,i}&=p_{t+2,i}-2p_{t+1,i}+p_{t,i},\\
+  \hat a_{t,i}&=\frac{a_{t,i}}{\lVert a_{t,i}\rVert_2},
   \qquad t=1,\ldots,T-2 .
   \label{eq:patch_acceleration}
 \end{align}
-该特征刻画局部表征轨迹的加速度。真实视频中的局部纹理和结构通常随时间连续变化，而生成视频中的闪烁、漂移和局部形变突变会使 $\hat a_{t,k}$ 偏离真实参考分布。局部时序似然为
+该特征刻画局部表征轨迹的加速度。真实视频中的局部纹理和结构通常随时间连续变化，而生成视频中的闪烁、漂移和局部形变突变会使 $\hat a_{t,i}$ 偏离真实参考分布。局部时序似然为
 \begin{equation}
-  \ell^{\mathrm{pt}}_{t,k}=\ell_{\mathrm{pt}}(\hat a_{t,k}).
+  \ell^{\mathrm{pt}}_{t,i}=\ell_{\mathrm{pt}}(\hat a_{t,i}).
   \label{eq:patch_temporal}
 \end{equation}
 
 \subsubsection{局部证据聚合}
-局部似然场需要压缩为视频级统计。本文使用均值聚合或 bottom-$k$ 聚合表示不同局部异常形态。设 $L_{(1)}\leq\cdots\leq L_{(m)}$ 为排序后的局部似然，$k=\max(1,\lceil\rho m\rceil)$，则
-\begin{align}
-  A_{\mathrm{mean}}(L)&=\frac{1}{m}\sum_{j=1}^{m}L_j,\\
-  A_{\mathrm{bottom}\text{-}\rho}(L)&=\frac{1}{k}\sum_{j=1}^{k}L_{(j)}.
-  \label{eq:patch_agg}
-\end{align}
-mean 更适合整体局部网格发生系统性偏移的场景；bottom-$k$ 更敏感于稀疏、短时的低似然局部区域。二者不是普适优劣关系，而是反映不同数据集中的局部异常分布。
+局部空间和二阶时序似然均在窗口内对时间与 patch 位置取算术均值。该选择在三个开发 benchmark 上保持一致，不按数据集切换区域尺度、mean/bottom-$k$ 聚合或低分 patch 比例。历史 bottom-$k$、多尺度和 patch matching 结果仅作为失败或敏感性消融，不属于正式方法。
 
 \subsection{局部分数与全局--局部融合}
-经百分位校准后，局部空间分数 $s_{\mathrm{ps}}(V)$ 和局部二阶时序分数 $s_{\mathrm{pt}}(V)$ 先组合为局部分数：
+经窗口级真实百分位校准后，局部空间分数和局部二阶时序分数组合为
 \begin{equation}
-  \slocal(V)=
-  \Phi_{\mathrm{local}}\left(s_{\mathrm{ps}}(V),s_{\mathrm{pt}}(V);\theta_{\mathrm{local}}\right).
-  \label{eq:local_score}
+  L_k=0.1s_{\mathrm{ps},k}+0.9s_{\mathrm{pt},k}.
+  \label{eq:local_window_score}
 \end{equation}
-其中 $\theta_{\mathrm{local}}$ 包含局部空间与局部时序的相对权重、区域尺度和聚合方式。消融结果显示，局部二阶时序是 patch 分支的主要贡献，局部空间提供较弱但互补的静态异常线索。
+局部二阶时序是 Local 的主要证据；PatchSpatial 只保留固定的 0.1 权重，不再进行数据集特定搜索。
 
-最终分数由全局分数和局部分数融合得到：
+设视频 $V$ 的有效窗口数为 $K_V\leq3$。首先分别聚合两个分支，
 \begin{equation}
-  S(V)=\alpha\,\sglobal(V)+(1-\alpha)\,\slocal(V),\qquad 0\leq\alpha\leq1 .
+  G_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kG_k,\qquad
+  L_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kL_k.
+  \label{eq:branch_video_mean}
+\end{equation}
+随后使用具有相同有效窗口数的真实校准视频分别建立经验 CDF，得到 $G(V)$ 与 $L(V)$。每个校准视频在每个分支中只贡献一个视频级统计，长视频不会因窗口更多而获得更大权重。最终分数为
+\begin{equation}
+  S(V)=0.6G(V)+0.4L(V).
   \label{eq:final_score}
 \end{equation}
-这里的 $\alpha$ 与 $\theta_{\mathrm{local}}$ 是目标测试前冻结的超参数，不由目标测试标签、生成器来源或测试批次统计决定。实际使用时可以采用 release 默认 $\alpha$，也可以在独立验证源上选择 $\alpha$ 后再固定到目标评测；第~\ref{sec:ablation} 节把这两种情况与三分支权重选择分开分析。该两级设计明确保留 \stall 全局分支作为主干，并将 patch 分支限定为补充局部证据，而不是把全局分数、局部空间分数和局部时序分数写成无结构的并列三分支加权和。
+Local whitening、窗口级 CDF 和视频级 CDF 均仅由目标域独立真实视频估计；生成视频不参与拟合、校准或权重选择。正式实现将 whitening 和高斯似然阶段转换为 float64，经验 CDF 使用稳定排序和右闭合 tie 规则。该实现不改变 DINOv3 的 float32 特征，只消除高维 whitening 对外层 batch shape 的数值依赖。

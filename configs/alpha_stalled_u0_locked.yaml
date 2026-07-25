@@ -1,0 +1,134 @@
+# Locked Alpha-STALLED U0 release protocol. Do not tune from evaluation fakes.
+
+release:
+  name: Alpha-STALLED-U0-locked
+  protocol_version: u0_locked_v1
+  locked_date: 2026-07-24
+  random_seed: 42
+  score_direction: higher_is_real
+  pre_release_reference_macro_auc: 0.872499
+  pre_release_reference_macro_real_positive_ap: 0.872243
+  stable_macro_auc: 0.8740724396350226
+  stable_macro_real_positive_ap: 0.8722992273320395
+  reference_status: locked_clean_from_empty_reproduction_validated
+
+backbone:
+  implementation: dinov3_vitl16
+  repository: dinov3
+  repository_commit: 50001c6db58dbca7e7d06a5c5a9f1e078ca29197
+  checkpoint: dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
+  checkpoint_sha256: 8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035
+  output_layer: 23
+  output_feature: normalized_final_layer_cls_and_patch_tokens
+  feature_dtype: float32
+
+preprocessing:
+  input_channel_order: BGR_from_OpenCV_then_RGB
+  tensor_conversion: torchvision.transforms.ToTensor
+  resize: [224, 224]
+  resize_antialias: true
+  normalization_mean: [0.485, 0.456, 0.406]
+  normalization_std: [0.229, 0.224, 0.225]
+  patch_grid: [14, 14]
+  feature_dimension: 1024
+
+sampling:
+  source_manifest: results/multi_window_joint_typicality/multi_window_manifest.csv
+  source_manifest_sha256: 6b457bc9462e5f043366341f5bad284c3995b2363e116d72c126bd36aa751967
+  mode: deterministic_uniform_K3
+  requested_windows: 3
+  window_seconds: 2
+  frames_per_window: 16
+  nominal_fps: 8
+  start_interval: closed_0_to_duration_minus_2_seconds
+  short_window_fallback: false
+  duplicate_frames: false
+  duplicate_window_policy: deduplicate_identical_frame_index_lists
+  effective_k: number_of_unique_valid_windows
+  tail_policy: no_partial_window
+  local_window_cdf_reference: one_locked_K1_current_window_per_calibration_real_video
+  explicit_exclusions: configs/multi_window_exclusions.csv
+  exclusions_sha256: fe3533a0dcfcbd159645ec56d42baf4b80c1d2211075dd5788e5694e76d2e0c9
+
+global_branch:
+  params: precomputed/stall_params_vatex_dino_v3.npz
+  params_sha256: beede546ca4385242c2a26075b8087ab51bee709549fc4ddc79d0eef5acce240
+  spatial_feature: final_cls_embedding
+  spatial_aggregation: max
+  temporal_feature: l2_normalized_lag1_difference
+  temporal_aggregation: min
+  zero_temporal_difference_policy: positive_infinity_before_min
+  window_score: G_k = 0.5 * GlobalSpatial_k + 0.5 * GlobalT1_k
+
+local_branch:
+  params_by_dataset:
+    comgenvid:
+      path: release/u0/params/comgenvid_region1_mean.npz
+      sha256: 5716abb1e865f7e36552ecec72973e90040b9affe415c34e1807bc6fe08f134f
+    videofeedback:
+      path: release/u0/params/videofeedback_region1_mean.npz
+      sha256: 66e46032199bbe9ed58bb24e4682c06a6534ee80e025b0854fd40d139b7266ff
+    genvideo:
+      path: release/u0/params/genvideo_region1_mean.npz
+      sha256: 880d0e376cd0d9727806d243396cb1c6e1364369494bf9888d488da3e2340a05
+  patch_tokens: final_layer_patch_tokens_only
+  cls_or_register_tokens: excluded
+  region_size: 1
+  patch_spatial_aggregation: mean
+  temporal_formula: A[t,i] = P[t+2,i] - 2*P[t+1,i] + P[t,i]
+  temporal_normalization: feature_axis_L2_after_D2
+  temporal_aggregation: mean
+  beta: 0.1
+  window_score: L_k = 0.1 * PatchSpatial_k + 0.9 * PatchD2_k
+  protocol_correction: >-
+    The pre-release U0 analyzer inherited PatchSpatial from historical
+    dataset-specific score files. The locked implementation recomputes both
+    Local components with the declared region1/mean parameters so every
+    structural hyperparameter is common across datasets.
+
+numerics:
+  implementation: N2
+  backbone_dtype: float32
+  difference_and_l2_normalization_dtype: float32
+  whitening_mean_dtype: float64
+  whitening_matrix_dtype: float64
+  gaussian_likelihood_dtype: float64
+  raw_score_dtype: float64
+  cdf_dtype: float64
+  cdf_sort: stable_mergesort
+  cdf_tie_policy: right_inclusive_count_reference_less_than_or_equal
+  zero_eigenvalue_policy: retain_fitted_operator_rank_drop_omitted_directions
+  outer_video_batch_invariance_required: true
+  backbone_frame_batch_size_used_for_release: 32
+  backbone_frame_grouping: per_video_unique_frames
+
+video_aggregation:
+  global_raw: G_raw = mean_k(G_k)
+  local_raw: L_raw = mean_k(L_k)
+  calibration_unit: one_value_per_real_video
+  calibration_source: target_dataset_real_only
+  calibration_real_per_dataset: 200
+  local_window_cdf_reference_windows_per_dataset: 200
+  generated_calibration_videos: 0
+  effective_k_policy: separate_real_CDF_for_each_effective_K
+  cdf_tie_policy: right_inclusive
+  alpha: 0.6
+  final_score: S = 0.6 * CDF_real_effective_K(G_raw) + 0.4 * CDF_real_effective_K(L_raw)
+
+evaluation:
+  manifest: release/u0/evaluation_manifest.json
+  calibration_manifest: release/u0/calibration_manifest.json
+  frame_indices: release/u0/frame_indices.json
+  label_orientation:
+    stored_score: higher_is_real
+    stored_label: real_is_1_fake_is_0
+  expected_evaluation_counts:
+    comgenvid: 4298
+    videofeedback: 3500
+    genvideo: 13623
+    total: 21421
+  expected_calibration_real_counts:
+    comgenvid: 200
+    videofeedback: 200
+    genvideo: 200
+    total: 600

@@ -1,0 +1,80 @@
+# Historical pre-release U0 result. The locked correction is
+# configs/alpha_stalled_u0_locked.yaml.
+
+method:
+  name: Alpha-STALLED-U0
+  selection_role: pre_release_temporal_unified_result
+  score_direction: higher_is_real
+  global_window_score: G_k = 0.5 * global_spatial + 0.5 * global_T1
+  local_window_score: L_k = 0.1 * patch_spatial + 0.9 * patch_D2
+  video_score: S = 0.6 * recalibrated_mean_G + 0.4 * recalibrated_mean_L
+  sample_calibration_leakage: false
+  generated_video_fitting_or_calibration: false
+  dataset_specific_fake_hyperparameter_selection: true
+  temporal_region_aggregation_dataset_specific_fake_selection: false
+  patch_spatial_inherited_from_historical_dataset_specific_scores: true
+  inherited_hyperparameters_development_fake_informed: true
+  development_datasets_also_used_for_evaluation: true
+
+sampling:
+  mode: K3_uniform
+  requested_windows: 3
+  window_seconds: 2
+  frames_per_window: 16
+  nominal_fps: 8
+  short_window_fallback: false
+  duplicate_frames: false
+  deduplicate_identical_windows: true
+  explicit_exclusions: configs/multi_window_exclusions.csv
+
+local_branch:
+  beta: 0.10
+  temporal_feature: same_grid_second_order
+  temporal_feature_version: l2_normalized_delta_v1
+  dino_layer: 23
+  patch_region_size: 1
+  temporal_aggregation: mean
+  patch_spatial_aggregation: historical_inherited_bottom20_mean_mean
+  protocol_note: >-
+    The analysis replaced PatchD2 but retained PatchSpatial from historical
+    score files. ComGenVid therefore inherited bottom20 while VideoFeedback and
+    GenVideo used mean. This result remains valid as a no-sample-leakage audit
+    result but is not the fully unified locked release.
+
+calibration:
+  real_videos_per_dataset: 200
+  disjoint_from_evaluation_real: true
+  generated_video_use: forbidden
+  video_weighting: equal
+  effective_k_matched: true
+  window_percentile_grid: 1/200
+
+evaluation:
+  intersection_by_dataset:
+    comgenvid: 4298
+    videofeedback: 3500
+    genvideo: 13623
+  total_videos: 21421
+  total_windows_including_calibration: 58496
+  metrics: [ROC-AUC, AP]
+  protocol: pairwise_balanced_by_generator
+  bootstrap_iterations: 1000
+  dataset_metrics:
+    comgenvid: {auc: 0.898638, ap: 0.909223}
+    videofeedback: {auc: 0.862257, ap: 0.868411}
+    genvideo: {auc: 0.856603, ap: 0.839095}
+    macro_3: {auc: 0.872499, ap: 0.872243}
+
+numerics:
+  scoring_video_batch_size: 4
+  whitening_epsilon: 1.0e-5
+  videofeedback_rank: 1023
+  float64_audit: passed_against_batch4
+
+references:
+  corrected_locked_config: configs/alpha_stalled_u0_locked.yaml
+  historical_dataset_specific_tuned_config: configs/alpha_stalled_multi_window.yaml
+  historical_tuned_macro_auc: 0.869374
+  historical_tuned_macro_ap: 0.869673
+  report: reports/clean_universal_cross_layer_final.md
+  results: results/clean_universal

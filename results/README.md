@@ -149,6 +149,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 | `research_summary/` | 外部数据集、真实校准数量、三分支与 raw D3 探索的紧凑结论和关键指标；原始网格与抽样明细不进入 release |
 | `local_residual/` | K=3 spatial-mean residual D2 的轻量指标、共同运动诊断与准入结论；逐窗口/逐视频分数和参数保持本地 |
 | `unified_multiscale_layers/` | 统一 region 多尺度与 DINO 中间层 D2 的轻量指标、bootstrap、运动分组和准入结论；大缓存与逐视频分数保持本地 |
+| `clean_universal/` | Pre-release temporal-unified U0、跨层 C1/C2、bootstrap 与 VideoFeedback 数值稳定性审计；大参数和逐样本分数保持本地 |
 | `temporal_derivative_order/` | ComGenVid D=3/D=4 patch temporal derivative 代表性对照 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.md` | D=2/D=3/D=4 平均 AUC/AP 对照和结论 |
 | `temporal_derivative_order/comgenvid_temporal_derivative_order.*` | temporal derivative order 对照图 |
@@ -205,11 +206,17 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 
 短视频来源覆盖缺口见 `paper_tables/patch_coverage_gaps.md`。
 
-当前严格、无泄漏的研究基线已经更新为 K=3 MW2：ComGenVid
-`0.8857/0.8996`、VideoFeedback `0.8623/0.8684`、GenVideo
-`0.8601/0.8410`、Macro-3 `0.8694/0.8697`。完整协议与旧 release 数值不可直接
-混用，详见 `reports/multi_window_joint_typicality.md` 和
-`configs/alpha_stalled_multi_window.yaml`。
+Pre-release temporal-unified U0 的结果为 ComGenVid `0.8986/0.9092`、
+VideoFeedback `0.8623/0.8684`、GenVideo `0.8566/0.8391`、Macro-3
+`0.8725/0.8722`。它无 sample-calibration leakage，但 PatchSpatial 继承了历史
+bottom20/mean/mean 聚合，因此不是完全统一发布版。真正统一的 locked U0 对
+PatchSpatial 和 PatchD2 均使用 region1+mean，从空结果目录稳定重算得到
+ComGenVid `0.8968/0.9064`、VideoFeedback `0.8597/0.8689`、GenVideo
+`0.8657/0.8416`、Macro-3 **`0.8741/0.8723`**，并通过 61 项 release 检查。旧 K=3 MW2
+`0.8694/0.8697` 没有 sample-calibration leakage，但其 region/aggregation 是按
+目标 fake AUC/AP 选择的，只能作为 Historical dataset-specific tuned baseline。
+完整协议见 `reports/u0_protocol_provenance_audit.md` 和
+`configs/alpha_stalled_u0_locked.yaml`。
 
 ## 重建命令
 

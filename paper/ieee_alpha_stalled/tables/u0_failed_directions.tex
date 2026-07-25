@@ -1,0 +1,22 @@
+\begin{table*}[!t]
+  \centering
+  \caption{预先限定的主要失败方向。历史结果均保留，但未通过准入的组件不进入锁定 U0。}
+  \label{tab:u0_failed_directions}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcl}
+    \toprule
+    方向 & Macro-3 AUC/AP 或 AP 差值 & 决策依据 \\
+    \midrule
+    Spatial-mean residual D2 & $0.8626/0.8609$ ($\Delta$AP $-0.0088$) & 三数据集均下降，bootstrap CI 全负 \\
+    Unified fine region1 (MS1) & $0.8687/0.8695$ ($\Delta$AP $-0.0001$) & 最接近基线但 CI 跨 0 \\
+    Fine+coarse token fusion (MS3) & $0.8685/0.8687$ ($\Delta$AP $-0.0010$) & 未超过 fine token，停止更多尺度 \\
+    Late+final layer fusion & $0.8721/0.8698$ ($\Delta$AP $+0.0002$) & CI 跨 0，VideoFeedback/GenVideo 各下降约 0.005 \\
+    K=5 mean & $0.8663/0.8672$ & 额外窗口增加成本但低于 K=3 \\
+    All non-overlap mean & $0.8712/0.8695$ & 未改善 AP，且时长相关计算不均衡 \\
+    K=3 Local bottom-2/hybrid & $0.8680/0.8684$ / $0.8687/0.8691$ & lower-tail 聚合过度惩罚 GenVideo \\
+    Joint Typicality J2/J3 & AP $0.8437/0.8602$ & 均低于固定 $0.6/0.4$ 的 $0.8697$ \\
+    D3/D4、multi-lag、hard/soft matching & 均未超过同网格 D2 & 历史同协议消融已拒绝，不重复搜索 \\
+    \bottomrule
+  \end{tabular}
+  }
+\end{table*}

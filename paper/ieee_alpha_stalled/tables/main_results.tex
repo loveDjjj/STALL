@@ -1,14 +1,16 @@
 \begin{table}[!t]
   \centering
-  \caption{\method 在三个 benchmark 上的主结果。指标为 pairwise balanced AUC/AP，数值越高越好。}
+  \caption{锁定 \method 与正式方法链条对比。指标为 pairwise balanced AUC/real-positive AP，数值越高越好。}
   \label{tab:main_results}
-  \begin{tabular}{lcc}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{lcccc}
     \toprule
-    数据集 & 平均 AUC & 平均 AP \\
+    方法 & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
     \midrule
-    ComGenVid & 0.9198 & 0.9211 \\
-    VideoFeedback & 0.8628 & 0.8750 \\
-    GenVideo & 0.8374 & 0.8283 \\
+    Original STALL & 0.8508/0.8560 & 0.8449/0.8596 & 0.8206/0.8129 & 0.8388/0.8428 \\
+    Clean single-window & 0.8699/0.8819 & \textbf{0.8631/0.8708} & 0.8382/0.8274 & 0.8570/0.8600 \\
+    \method (locked K=3) & \textbf{0.8968/0.9064} & 0.8597/0.8689 & \textbf{0.8657/0.8416} & \textbf{0.8741/0.8723} \\
     \bottomrule
   \end{tabular}
+  }
 \end{table}

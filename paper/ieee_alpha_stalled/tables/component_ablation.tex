@@ -1,25 +1,15 @@
 \begin{table}[!t]
   \centering
-  \caption{Global/Patch 组件消融。Global-only 为原版 \stall 全局分支复现；Patch-only 为同网格二阶 patch 分支；\method 为全局--局部融合。}
+  \caption{锁定 K=3 协议下的 Global/Local 组件消融。每个单元格为 AUC/real-positive AP。}
   \label{tab:component_ablation}
-  \begin{tabular}{llcc}
+  \begin{tabular}{lccc}
     \toprule
-    数据集 & 组件 & AUC & AP \\
+    数据集 & Global-only & Local-only & Global+Local \\
     \midrule
-    \multirow{3}{*}{ComGenVid}
-      & Global-only & 0.8532 & 0.8553 \\
-      & Patch-only & 0.9273 & 0.9309 \\
-      & \method & 0.9198 & 0.9211 \\
-    \midrule
-    \multirow{3}{*}{VideoFeedback}
-      & Global-only & 0.8475 & 0.8614 \\
-      & Patch-only & 0.8228 & 0.8302 \\
-      & \method & 0.8628 & 0.8750 \\
-    \midrule
-    \multirow{3}{*}{GenVideo}
-      & Global-only & 0.7961 & 0.7901 \\
-      & Patch-only & 0.8072 & 0.8092 \\
-      & \method & 0.8374 & 0.8283 \\
+    ComGenVid & 0.8627/0.8694 & 0.8914/0.8912 & \textbf{0.8968/0.9064} \\
+    VideoFeedback & 0.8442/0.8582 & 0.7828/0.7849 & \textbf{0.8597/0.8689} \\
+    GenVideo & 0.8386/0.8181 & 0.8328/0.8114 & \textbf{0.8657/0.8416} \\
+    Macro-3 & 0.8485/0.8486 & 0.8357/0.8292 & \textbf{0.8741/0.8723} \\
     \bottomrule
   \end{tabular}
 \end{table}

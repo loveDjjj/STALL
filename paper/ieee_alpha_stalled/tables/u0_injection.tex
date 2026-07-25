@@ -1,0 +1,19 @@
+\begin{table}[!t]
+  \centering
+  \caption{300 条真实视频上的锁定合成注入。正值表示注入后真实性下降；负值表示错误方向。}
+  \label{tab:u0_injection}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{lrrrr}
+    \toprule
+    注入 & Global drop & Local drop & Final drop & AUPRC \\
+    \midrule
+    Local freeze & +0.0021 & +0.0027 & +0.0023 & 0.1558 \\
+    Local repeat & +0.0031 & -0.0007 & +0.0016 & 0.0670 \\
+    Local flicker & +0.0089 & -0.0153 & -0.0008 & 0.1032 \\
+    Affine jitter & -0.0029 & -0.0106 & -0.0060 & 0.1030 \\
+    Temporal shift & -0.0045 & -0.0023 & -0.0036 & 0.1245 \\
+    Full-frame freeze & -0.0055 & -0.4084 & -0.1667 & 0.3424 \\
+    Scene cut & -0.0182 & -0.0387 & -0.0264 & -- \\
+    \bottomrule
+  \end{tabular}}
+\end{table}

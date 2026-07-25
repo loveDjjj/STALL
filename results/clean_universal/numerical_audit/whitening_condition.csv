@@ -1,0 +1,3 @@
+operator,feature_dimension,retained_rank,dropped_dimensions,full_covariance_condition_number,retained_eigenvalue_min,retained_eigenvalue_max,retained_condition_number,whitening_epsilon,eigenvalue_source
+layer23_region1_mean,1024,1023,1,inf,6.125962207833023e-07,0.010933764748439592,17848.240615097206,1e-05,recovered_from_whitening_column_norms
+layer17_region1_mean,1024,1023,1,inf,1.6454278011224233e-06,0.04282500594854355,26026.669732534367,1e-05,stored_fit_eigenvalues

@@ -1,126 +1,49 @@
 \section{消融与机制分析}
 \label{sec:ablation}
 
-本节将 \method 的主要设计拆解为四个可验证问题：全局 \stall 分支和局部 patch 分支是否互补，局部 patch 似然是否依赖足够真实视频校准，局部二阶时序证据是否优于一阶或更高阶替代，以及局部尺度和聚合方式是否构成跨数据集边界。按照这一证据链，本文把平均结果、生成器级结果、分数分布、真实校准数量、融合权重敏感性和边界实验分别做成表格或图像，避免只用单一平均值支撑机制结论。
+\subsection{Local D2 的计算与作用}
+对于窗口内第 $t$ 帧、第 $i$ 个 patch token $P_{t,i}$，局部加速度为
+\begin{equation}
+ A_{t,i}=P_{t+2,i}-2P_{t+1,i}+P_{t,i}.
+\end{equation}
+196 个 patch 保持 14$\times$14 行优先网格顺序，CLS 与 register token 在计算前移除。$A_{t,i}$ 沿特征维 L2 归一化，再使用独立真实校准视频拟合的白化变换与高斯似然打分。窗口内对 patch 与时间位置取均值，并用真实窗口 CDF 转成 high-is-real percentile。该 same-grid D2 检测局部表征轨迹的非平滑加速度，而不是跨位置做 hard/soft matching。
 
-\subsection{全局--局部联合分数结构}
-原版 \stall 通过空间/时序似然的联合分布展示真实视频和生成视频的分离结构。本文保留这一分析思路，但把横轴设为 global-only \stall 分数，把纵轴设为新增的局部同网格二阶 patch 分数。图~\ref{fig:global_patch_joint} 因而直接检验本文创新点：局部分支是否只是在重复全局分支，还是提供了独立的局部动态证据。
+统一 K=1 核心消融中，PatchD2-only 的 Macro AP 为 0.8214；加入 0.1 PatchSpatial 后 Local 降到 0.8144，差值为 $-0.0070$，95\% 区间为 [$-0.0088,-0.0054$]。因此 Local 的有效信号主要来自 D2，PatchSpatial 只因冻结 clean 定义而保留。固定 beta 敏感性中 $\beta=0.05$ 与 $0.10$ 的 Macro AP 分别为 0.8725 和 0.8723，差异小于校准 seed 波动，不足以支持事后替换锁定值。
 
-三组数据集均显示 global score 和 patch score 存在正相关，但并非一条单调直线。ComGenVid 上生成视频在两个分支上均明显偏低，说明局部二阶时序证据与全局真实视频校准方向一致；VideoFeedback 和 GenVideo 中存在更多 off-diagonal 样本，表示部分视频由全局分支或局部分支单独捕获。这一结构解释了后续组件消融中的两类现象：融合能提升多数生成器相对 global-only 的性能，但在 patch-only 已经很强的 ComGenVid 上不必然超过 patch-only。
+\subsection{窗口数量与聚合}
+历史同协议时间覆盖实验比较了 K=1、K=3、K=5 和全部非重叠窗口。K=3 分支均值达到 0.8694/0.8697；K=5 降至 0.8663/0.8672，全部非重叠窗口为 0.8712/0.8695，AP 未改善且推理量与时长耦合。K=3 的 Local bottom-2 和 mean/bottom-2 hybrid 分别为 0.8680/0.8684 与 0.8687/0.8691，均低于分支均值。最低窗口天然随 $K$ 增大而下降，即使真实重校准也更容易放大剪辑、模糊和解码扰动；因此 U0 只保留 K=3 mean。
 
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{global_patch_likelihood_joint_panel.pdf}
-  \caption{全局 \stall 分数与局部二阶 patch 分数的联合分布。蓝色为真实视频，红色为生成视频。该图复用原 \stall 联合似然分析思想，但纵轴替换为本文新增的局部同网格二阶证据，用于展示全局校准与局部动态异常之间的互补关系。}
-  \label{fig:global_patch_joint}
-\end{figure*}
+按历史长度分组，K=3 在 10--20 秒和 20 秒以上视频上的 AP 分别提高约 0.0239 和 0.0177，而 2--4 秒组下降约 0.0024；这支持“额外覆盖主要帮助较长视频”。但 6--10 秒组下降约 0.0101，effective-$K=1$ 组也从重校准中获益，因此不能把全部增益归因于时长。
 
-\subsection{全局分支与局部分支互补}
-表~\ref{tab:component_ablation} 给出三数据集宏平均组件消融，表~\ref{tab:per_generator_component_matrix} 进一步展开到 20 个生成器来源。宏平均结果显示，\method 在 VideoFeedback 和 GenVideo 上均超过 global-only 与 patch-only；ComGenVid 上 patch-only 最高，而 \method 仍显著高于 global-only。该结果说明融合分支的主要目标不是在所有数据集上追求 patch-only 上限，而是在未知视频中同时保留全局真实视频校准和局部动态证据。
+\subsection{共同运动残差}
+我们在未池化 $[T-2,196,D]$ 加速度上计算空间均值共同运动比例，并测试先减共同运动、再独立拟合白化和 CDF 的 residual D2。Spatial-mean residual 将历史 K=3 对照的 Macro AUC/AP 从 0.8694/0.8697 降到 0.8626/0.8609，AP 差值为 $-0.0088$，95\% 区间 [$-0.0103,-0.0073$]，仅 4/20 个生成器不下降。真实与生成视频的共同运动比例方向在三个数据集间不一致；四个重点负迁移生成器也不存在统一高共同运动偏差。因此共同镜头运动不是当前误差的通用解释，mean/median residual 均不进入最终方法。
 
-\input{tables/component_ablation}
+\subsection{空间尺度与 DINO 层}
+旧 region=2 已经是在计算 D2 前对 raw 14$\times$14 token 做 2$\times$2 average pooling，即真正的 7$\times$7 coarse D2，而不是 likelihood 后的分数池化。独立校准的 fine+coarse 融合 Macro AP 为 0.8687，未超过 fine-only；继续增加尺度没有证据基础。
 
-\input{tables/per_generator_component_matrix}
+\input{tables/u0_region_aggregation_sensitivity}
 
-生成器级结果提供了更细的机制边界。VideoFeedback 中，Text2Video-Zero 和 VideoCrafter2 的 global-only AUC 高于融合分支，而 patch-only 明显较弱；相反，ZeroScope-576w 和 Pika 更受益于 patch 分支。GenVideo 中 Sora 的 patch-only 明显超过 global-only，但融合略低于 patch-only；多数其他生成器则由融合取得最高或接近最高的结果。图~\ref{fig:component_matrix} 将这种模式可视化为 AUC 热图和 $\Delta$AUC 条形图：\method 相对 global-only 的正增益分布广泛，但相对 patch-only 的增益取决于生成器类型。
+中间层实验从同一次 DINO forward 提取 mid、late 和 final patch token，每层分别执行 residual 定义、L2 归一化、白化、似然和真实 CDF。最佳 late+final 融合相对进入阶段的基线只提高约 0.0002 AP，置信区间跨 0，且 VideoFeedback 与 GenVideo 各下降约 0.005。该增益不足以抵消多套校准参数和缓存复杂度，最终只使用 final layer。
 
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{component_per_generator_matrix.pdf}
-  \caption{生成器级组件消融矩阵。左图为 global-only、patch-only 和 \method 的 AUC 热图；右图为 \method 相对两个分支的 $\Delta$AUC。该图显示局部分支不是全局分支的简单替代，而是在不同生成器上提供强弱不同的互补证据。}
-  \label{fig:component_matrix}
-\end{figure*}
+\subsection{联合融合与其他负结果}
+固定线性融合之外，我们用五折 cross-fitting 生成真实校准视频的 OOF $(G,L)$，比较对称 Mahalanobis、单侧 lower-tail Mahalanobis 和 Gaussian copula。固定 $0.6G+0.4L$ 的历史对照 AP 为 0.8697；J2 和最佳 J3 分别只有 0.8437 与 0.8602。J2 虽降低 ComGenVid 和 VideoFeedback conflict subset 的阈值错误率，却使 GenVideo 冲突样本恶化，并同时降低 SoRA-Clip、Text2Video-Zero 和 VideoCrafter2。二维联合模型没有优于稳定的单调融合。
 
-为避免把随机波动误写为机制差异，表~\ref{tab:per_generator_bootstrap_delta} 报告生成器级 paired bootstrap AUC 差值区间。大多数生成器的 $\Delta_{\alpha-G}$ 为正，但 VideoFeedback 中 Text2Video-Zero 和 VideoCrafter2 为负，说明融合权重在强 global-only 生成器上存在负迁移边界。相对 patch-only 的差值则在 VideoFeedback 大多为正，在 ComGenVid 为负，进一步支持“融合提供跨来源稳健性，而非总是提高单一数据集 oracle 上限”的写作边界。
+此前已完成的 lag-1/multi-lag、hard/soft matching、patch D3/D4、Global raw D3、三分支与 gate/clip/cap 也均未超过 same-grid D2 主线，因而不在 U0 上重复搜索。表~\ref{tab:u0_failed_directions} 汇总主要负结果。所有未通过预设增益、最差数据集和 bootstrap 门槛的组件均单独拒绝，不允许通过继续调权重或堆叠失败组件恢复。
 
-\input{tables/per_generator_bootstrap_delta}
+\input{tables/u0_failed_directions}
 
-\subsection{真实校准数量与 alpha 微调}
-局部 patch 分支通过真实视频估计 patch-level 白化似然，因此其有效性应同时受校准样本数量和真实域代表性影响。为检验这一点，本文在原始主实验数据集和外部小规模数据集上构建互不泄漏的真实视频校准池与 holdout 评测集，并在固定 patch 结构下扫描真实校准数量。表~\ref{tab:real_calib_alpha_summary} 汇总每个数据集的最佳校准规模、global-only、patch-only、固定融合和 best/oracle alpha 结果；图~\ref{fig:real_calib_size_curves} 进一步展示 patch-only AUC 与 best-fusion $\Delta$AUC 随真实校准数量变化的趋势。
+唯一允许的新性能候选是无超参数 OAS shrinkage covariance。表~\ref{tab:u0_oas_candidate} 显示它只改变 Macro AP $+0.000043$，95\% 区间为 [$-0.000089,+0.000174$]；五 seed AP 标准差还从 0.002210 增至 0.002245。该候选未达到 $+0.003$ 准入线，最终保留稳定有效秩 whitening，并关闭后续 covariance 搜索。
 
-\input{tables/real_calib_alpha_summary}
+\input{tables/u0_oas_candidate}
 
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{real_calib_size_curves.pdf}
-  \caption{真实视频校准数量对局部 patch 分支和融合增益的影响。左图为 patch-only 宏平均 AUC；右图为同一 holdout 上 best/oracle alpha 相对 global-only 的 AUC 增益。多数数据集在 25/50 个真实视频时 patch 分支接近随机，100/200/300 个真实视频后才形成可用信号。}
-  \label{fig:real_calib_size_curves}
-\end{figure*}
+\subsection{锁定合成注入与定位}
+在 300 条真实视频上，我们预先锁定 K=3 窗口，并向中央 25\% patch 区域注入局部冻结、重复、闪烁、仿射抖动和时间平移；全帧冻结与合成切镜作为控制。表~\ref{tab:u0_injection} 中正的 score drop 表示注入后真实性降低。Local D2 只对局部冻结产生很弱的预期响应（最终分数 $+0.0023$），对闪烁、仿射抖动和时间平移的平均响应方向错误。全帧冻结使 Local 分数反而提高 0.4084，原因是冻结压低了二阶 token 运动；合成切镜也未形成预期的负真实性响应。
 
-结果显示，真实校准数量不足时局部分支通常不可用。GenVidBench、AIGVDBench、ComGenVid、GenVideo 和 VideoFeedback-small 在 25 或 50 个真实视频校准时均未形成稳定的 patch-only 优势；随着真实校准数量增加，patch-only AUC 在多个数据集上明显上升。例如，GenVideo 从 $n=50$ 的 0.5204 提升到 $n=200$ 的 0.8137，VideoFeedback-small 从 $n=50$ 的 0.6153 提升到 $n=200$ 的 0.7761，AIGVDBench-resplit 从 $n=200$ 的 0.5983 提升到 $n=300$ 的 0.6588。该趋势在修正 AIGVDBench 聚合方式后仍然存在：在 Open-Sora/Pika/Vidu 三源、region3 mean 协议下，$n=25/50$ 的 patch-only AUC/AP 均为 0.5000/0.5000，$n=100$ 仍接近随机，而 $n=300$ 提升到 0.7138/0.7074，并使固定 $\alpha=0.60$ 达到 0.7272/0.7326。该结果支持一个较弱但重要的结论：局部二阶 patch 统计需要足够真实视频来估计稳定的真实域分布；过少真实视频会把 patch 似然退化为接近随机的排序证据。
+\input{tables/u0_injection}
 
-真实校准数量的收益并不严格单调。ComGenVid 在 $n=800$ 时低于 $n=400$，GenVideo 在 $n=500$ 时低于 $n=200$，VideoFeedback-small 在 $n=500$ 时也低于 $n=200$。这说明校准样本数量是 patch 分支可用性的必要条件，但不是充分条件；真实视频来源、质量噪声和目标真实域覆盖会共同影响校准分布。相应地，本文不把“更多真实视频”写成无条件提升，而将其作为带有代表性要求的校准边界。
+Patch-time AUPRC 在局部冻结、重复、闪烁、仿射抖动和时间平移上分别为 0.1558、0.0670、0.1032、0.1030 和 0.1245。K=1 在 165/300 个视频中完全未覆盖注入帧，验证了时间覆盖不足；但 K=3 只增加扰动暴露概率，并不保证正确的异常方向。该实验不支持把 patch score map 解释成通用语义伪影定位器。
 
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=\columnwidth]{alpha_gain_summary.pdf}
-  \caption{冻结 alpha 与 best/oracle alpha 相对 global-only 的宏平均 AUC 增益。不同数据集的最优融合权重差异较大，因此固定 alpha 更适合作为 release 默认设置，best/oracle alpha 只表示同一 holdout 上的诊断上限。}
-  \label{fig:alpha_gain_summary}
-\end{figure}
+\subsection{最终复杂度选择}
+最终 U0 仍只有 Global 与 Local 两个分支，且两者来自同一次冻结 DINO 前向。K=3 评测使用 787,690 个唯一帧，相对 K=1 的 342,736 个为 2.30 倍；K=5 和 all-window 分别为 3.21 倍和 4.02 倍。K=3 的 AP 增益有正向置信区间，而后两者没有，因此额外复杂度只保留到三个窗口。Residual、多尺度、中间层和 Joint 均不增加发布时推理路径。
 
-融合权重同样呈现数据集相关性。AEGIS-hard 的最佳点接近 patch 主导，ComGenVid 和 GenVideo 的最佳点偏向中等全局权重，VideoFeedback-small 则需要更强 global 主导。为降低测试集 oracle 选择的偏差，我们进一步做了 leave-one-generator-out alpha 选择：每次用其他生成器选择 alpha，再评估留出的生成器。该协议下，ComGenVid 在 $n=200$ 时仍取得 0.8703/0.8854 的 AUC/AP，GenVideo 在 $n=200$ 时取得 0.8484/0.8380，VideoFeedback-small 在 $n=200$ 时取得 0.8649/0.8729，均高于各自 global-only。相反，AIGVDBench-resplit 在 $n=300$ 的默认 region3 bottom-$k$ 设置下，固定 $\alpha=0.60$ 和 best $\alpha=0.65$ 虽分别达到 0.7033/0.7146 与 0.7038/0.7158，但 LOGO 选择降至 0.6801/0.6812，低于 global-only 的 0.6975/0.7070；其 paired bootstrap 相对 global-only 的 95\% CI 也跨 0。后续 region/aggregation 网格显示，该失败主要来自 bottom-$k$ 聚合不适合 AIGVDBench：region3 mean 在固定 $\alpha=0.60$ 下达到 0.7162/0.7278，且相对 global-only 的 paired bootstrap $\Delta$AUC/$\Delta$AP 区间均大于 0。进一步加入 Vidu 第三生成器后，Open-Sora/Pika/Vidu 三源宏平均 global-only 为 0.6994/0.7008，region3 mean 固定 $\alpha=0.60$ 为 0.7272/0.7326，其 paired bootstrap $\Delta$AUC/$\Delta$AP 区间为 [0.0116, 0.0461] 和 [0.0164, 0.0457]。继续加入 CogVideoX1.5 后，四源宏平均 global-only 为 0.6673/0.6633，固定 $\alpha=0.60$ 为 0.6782/0.6832，其 paired bootstrap $\Delta$AUC/$\Delta$AP 区间为 [0.0004, 0.0220] 和 [0.0088, 0.0292]；但 CogVideoX1.5 单源 patch-only 仅 0.4560/0.4764，LOGO alpha 也降至 0.6519/0.6519。该扩展说明 mean 聚合不是只对两源小协议有效，保守固定融合可吸收部分新源负迁移；但跨生成器 alpha 选择仍是明确边界。因此，本文将固定 alpha 视为冻结默认配置，将验证集选择 alpha 作为潜在部署适配策略；测试集 best/oracle alpha 只表示诊断上限，不写成严格部署协议。
-
-表~\ref{tab:validation_fusion_loso} 进一步区分了普通 alpha 微调和三分支权重选择。Alpha-only LOSO 只在 global-only 分数和整体 patch 分数之间选择 $\alpha$，因此对应最小的验证式部署适配；three-branch LOSO 则分别选择 global、spatial patch 和 temporal patch 的非负权重，用于检验空间 patch 与时序 patch 是否值得分开融合。在外部集合上，alpha-only LOSO 已经稳定超过 global-only；three-branch LOSO 在 global\_min\_050 约束下进一步取得 +0.0026 AUC 和 +0.0079 AP 的额外增益，且 paired bootstrap 区间为正。在更保守的 global\_min\_060 约束下，三分支相对 alpha-only 的 AP 仍为正，但 AUC 区间跨 0。原始三数据集上，alpha-only LOSO 已解释几乎全部验证式融合收益，three-branch 相对 alpha-only 的 AUC 增益只有约 +0.0005，AP 约为 0 或略负。该对照使本文的写作边界更清楚：验证式 alpha 选择是当前更稳妥的部署适配策略；三分支拆分提供外部数据集上的潜在优化线索，但尚不足以替代 alpha-only 作为默认方法。
-
-\input{tables/validation_fusion_loso}
-
-\subsection{局部二阶时序是否必要}
-局部时序设计需要同时排除三类替代解释：仅用静态 patch 外观即可、使用一阶相邻差分即可、使用更高阶差分更好。表~\ref{tab:patch_temporal_comprehensive} 因此把 ComGenVid 上的 spatial-only、D=1 lag-1、D=1 multi-lag、motion-hard/soft、D=2、D=3 和 D=4 放在同一协议下比较。D=1 lag-1 的平均 AUC/AP 为 0.8556/0.8617，相对 D=2 下降 0.0718/0.0692；D=3 和 D=4 虽高于一阶替代，但仍低于 D=2。该结果说明当前 patch 分支的主要贡献来自同网格二阶局部动态，而不是简单增加 patch 外观分支或任意提高导数阶数。
-
-\input{tables/patch_temporal_comprehensive}
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{patch_temporal_design_landscape.pdf}
-  \caption{局部 patch 证据定义的性能地形。左图按 AUC 排序展示静态、一阶、扰动、高阶和二阶分支；右图展示各变体相对 D=2 的 AUC/AP 损失。D=1 已纳入对照，结果表明二阶同网格证据是当前局部时序主线。}
-  \label{fig:patch_temporal_landscape}
-\end{figure*}
-
-关于全局分支的不同导数阶数，当前 release 不应给出未经实验支持的数值。代码层面，patch 分支在 \texttt{src/patch\_matching.py} 和 \texttt{src/eval\_patch\_fast.py} 中显式支持 D=1/2/3/4；global-only 分支则通过原 \stall 参数文件和 \texttt{src/eval.py} 打分，当前没有可直接切换 global temporal order 的命令行参数。因此，全局 D=2/D=3/D=4 不是已有 CSV 的重汇总，而需要重新定义全局时序特征、重建真实视频校准参数并重跑三数据集。本文把全局 \stall 作为固定主干 baseline，把导数阶数消融限定在新增 patch 分支；若审稿要求，可按补充计划扩展 global-order sweep。
-
-\subsection{Patch 似然统计假设诊断}
-\stall 原文验证了全局帧特征和归一化一阶帧差分在白化后近似满足高斯似然建模所需的统计条件。由于本文把同一套真实视频白化高斯似然扩展到 patch token、局部 region-pooled token 和归一化二阶 patch 差分，我们补充了对应的统计诊断。该实验使用 ComGenVid 真实视频 patch cache 抽样 256 个视频，每种表示最多抽取约 5 万行；诊断量包括坐标级 Anderson--Darling (AD) 与 D'Agostino--Pearson (DP) 正态性压力测试、白化后 covariance 与单位阵的接近程度、白化方向余弦分布，以及不同 patch/region 位置共享同一个 $\mu,W$ 时的残余差异。这里 patch token 和二阶 patch 差分使用 release 中真实视频拟合的 $\mu,W$；region-pooled token 是二阶差分前的中间表示，不作为独立最终分支，因此只使用随机 half-split diagnostic whitening 做假设审计。
-
-\input{tables/patch_likelihood_assumption_audit}
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{patch_likelihood_assumption_audit.pdf}
-  \caption{Patch 似然统计假设诊断。二阶 patch 差分在 covariance、坐标级正态性、方向余弦和位置共享残差上均最接近白化球形高斯假设；patch token 和 region-pooled token 在 covariance 与方向分布上可被白化近似球形化，但坐标级正态性和位置共享更弱。}
-  \label{fig:patch_likelihood_assumption_audit}
-\end{figure*}
-
-表~\ref{tab:patch_likelihood_assumption_audit} 和图~\ref{fig:patch_likelihood_assumption_audit} 显示，归一化二阶 patch 差分是三类表示中最符合建模假设的一类：其白化 covariance diagonal mean 为 0.975，off-diagonal RMS 为 0.009，AD pass@5\% 与 DP $p>0.01$ 分别为 0.883 和 0.906，方向余弦标准差 0.0319 接近 1024 维球面期望 0.0312。相比之下，raw patch token 和 region-pooled token 的 covariance 与方向余弦仍接近球形化目标，但坐标级正态性通过率较低，且不同位置的白化范数残差更大。该结果支持本文把主要创新落在局部二阶时序分支，而不是单纯依赖 patch 外观似然；同时也提示，若后续进一步提高 patch 空间分支权重，per-position 或分层位置校准可能比单一共享 $\mu,W$ 更稳健。
-
-\subsection{局部尺度、聚合方式与跨数据集边界}
-局部异常的空间支持域决定 patch 证据是捕获小范围纹理/运动异常，还是被较大区域的平均效应稀释。表~\ref{tab:hyperparameter_sensitivity_matrix} 汇总 region size、aggregation 和 bottom-$k$ ratio 的多数据集敏感性。ComGenVid 在 region=3 mean 下取得最高 region-family AUC，VideoFeedback 在 region=1 mean 下最好，GenVideo 的最优 mean 设置为 region=2。aggregation 也呈现同样边界：GenVideo 和 VideoFeedback 上 mean 优于 bottom-$k$，而 ComGenVid 中增大 bottom-$k$ ratio 可继续提升 patch-only AUC。
-
-\input{tables/hyperparameter_sensitivity_matrix}
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth]{hyperparameter_sensitivity_grid.pdf}
-  \caption{局部尺度与聚合方式的四面板敏感性分析。左上展示 region size 在三数据集上的不同最优点；右上比较 mean 与 bottom-$k$ aggregation；左下展示 ComGenVid bottom-$k$ ratio 曲线；右下展示 leave-one-dataset-out frozen setting 相对目标数据集 oracle 的平均 AUC gap。}
-  \label{fig:hyperparameter_grid}
-\end{figure*}
-
-跨数据集 frozen 分析进一步说明，region size 的迁移 gap 大于 patch 内部权重和 aggregation。该现象与表~\ref{tab:hyperparameter_sensitivity_matrix} 一致：局部二阶证据本身较稳定，但局部空间支持域受视频分辨率、运动尺度和生成器类型影响更强。因此，本文不把 region size 写成普适最优常数，而把它作为局部分支的主要边界条件。
-
-\subsection{时间窗口、覆盖缺口与计算代价}
-表~\ref{tab:runtime_window_boundary} 将时间窗口和计算/存储边界集中报告。为对齐 \stall 原文附录中的 temporal setting 分析，本文补充了 ComGenVid 1 秒代表性窗口实验。该实验只评测 patch-only 分支，因为当前资产没有匹配的 1 秒 global score；在同网格二阶、region=3、bottom-$k=0.20$ 的设置下，1 秒窗口取得 0.9434/0.9456 的 AUC/AP，高于 2 秒 patch-only 主线的 0.9273/0.9309。该结果说明局部二阶时序证据不严格依赖较长窗口，但由于只在 ComGenVid 上实跑，本文将其作为代表性边界证据，而不是三数据集鲁棒性结论。
-
-\input{tables/runtime_window_boundary}
-
-当前 release 还记录了 patch 覆盖缺口：VideoFeedback 的 Hotshot-XL、GenVideo 的 HotShot-XL 和 MoonValley 未纳入主线 patch baseline，原因是短视频 duration mismatch 或缺少 patch score 资产。因此，VideoFeedback 主线覆盖 10 个 2 秒来源，GenVideo 主线覆盖 8 个来源。该边界应保留在主文脚注或补充材料中，避免把主线均值误写为覆盖所有原始来源。计算代价方面，compact patch cache 是主要存储成本；debug-2 clean-cache benchmark 只代表阶段成本，不能线性外推为全数据集端到端耗时。
-
-\subsection{关键帧解释与失败模式}
-图~\ref{fig:keyframes} 给出代表性关键帧解释案例，表~\ref{tab:keyframe_case_summary} 同步报告 6 个候选案例的 global、patch、融合分数和关键帧时间。关键帧由局部二阶 patch anomaly 曲线自动选择，仅用于事后解释，不参与训练、推理或调参。主文保留残余难例和负迁移两个紧凑案例；完整 6 案例图保存在补充图资产中，包括 patch/global 分支冲突和真实视频误伤。该图表组合的作用不是证明具体语义原因，而是展示分支分数与局部 anomaly map 如何帮助定位方法边界。
-
-\input{tables/keyframe_case_summary}
-
-\begin{figure*}[!t]
-  \centering
-  \includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{keyframe_patch_anomaly_cases_main.pdf}
-  \caption{关键帧解释案例。每个案例根据局部二阶时序异常曲线选择关键帧，展示全局分数、patch 分数和融合分数之间的关系。完整 6 案例版本保留在补充图资产中。}
-  \label{fig:keyframes}
-\end{figure*}
+\input{tables/u0_compute_cost}

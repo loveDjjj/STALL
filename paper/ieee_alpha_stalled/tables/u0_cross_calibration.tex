@@ -1,0 +1,16 @@
+\begin{table*}[!t]
+  \centering
+  \caption{仅改变真实视频校准来源时的 U0 最终 AUC/real-positive AP。对角线使用目标域 200 条真实视频。}
+  \label{tab:u0_cross_calibration}
+  \begin{tabular}{lcccc}
+    \toprule
+    校准来源 & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
+    \midrule
+    ComGenVid-200 & 0.8968/0.9064 & 0.8367/0.8510 & 0.8537/0.8365 & 0.8624/0.8646 \\
+    VideoFeedback-200 & 0.8683/0.8726 & 0.8597/0.8689 & 0.8648/0.8377 & 0.8643/0.8597 \\
+    GenVideo-200 & 0.8572/0.8679 & 0.8098/0.8277 & 0.8657/0.8416 & 0.8442/0.8457 \\
+    Pooled-200 & 0.8855/0.8966 & 0.8324/0.8477 & 0.8662/0.8440 & 0.8614/0.8628 \\
+    Pooled-600 & 0.8887/0.8998 & 0.8365/0.8497 & 0.8640/0.8413 & 0.8631/0.8636 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}

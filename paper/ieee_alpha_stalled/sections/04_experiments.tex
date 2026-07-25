@@ -1,43 +1,48 @@
 \section{实验设置与主结果}
 \label{sec:experiments}
 
-\subsection{数据集与评测协议}
-本文使用三个生成视频检测 benchmark。ComGenVid 来自 \stall 原文，用于覆盖 Sora、Veo-3 等高保真生成器；VideoFeedback/VideoScore 提供多生成器视频生成质量数据~\cite{he2024videoscore}；GenVideo 是百万级生成视频检测 benchmark 的代表性子集~\cite{chen2024genvideo}。真实视频来源包括 MSVD、MSR-VTT、Panda70M 等公开视频集合~\cite{chen2011msvd,xu2016msrvtt,chen2024panda70m}。
+\subsection{数据集与固定协议}
+本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上评测，共包含 4,298、3,500 和 13,623 个视频，总计 21,421 个。每个数据集使用 200 个与评测集互斥的真实校准视频；评测真实视频与生成视频均不进入白化、经验分布、阈值或权重拟合。生成视频仅用于最终指标计算。
 
-所有主表指标采用 pairwise balanced real-vs-generator AUC/AP，即每个生成器分别与等量真实视频比较，再对生成器取平均。AP 的正类为生成视频；仓库中原始分数方向为“越大越真实”，评测脚本在计算 AUC/AP 时统一处理方向。该协议避免类别不平衡对 AP 的影响，也与 \stall 原文附录 A.3 的公平比较原则一致。
+每个生成器分别与确定性匹配的真实视频计算 AUC/AP，再在数据集内对生成器宏平均，最后对三个数据集等权得到 Macro-3。分数方向为越高越真实，主文 AP 以真实视频为正类；fake-positive AP 仅作补充，二者不混用。配对 bootstrap 在视频 ID 层面、按数据集与生成器分层重采样 1,000 次，窗口从不作为独立采样单位。
 
-当前 release 的主线实验使用已冻结的全局分数、patch 分数和融合分数 CSV。全局分支复现 \stall 的 DINOv3 全局空间--时序似然；patch 分支使用真实视频校准的局部空间和同网格二阶时序似然。需要强调的是，本文当前未重跑外部 D3、AEROBLADE、RIGID、ZED、T2VE 或 AIGVDet；相关方法只用于文献定位和协议审计，不能写成直接主表对照。
-
-\subsection{实验资产总览}
-表~\ref{tab:experiment_inventory} 汇总当前已完成实验与审计资产。该表的目的不是把所有结果都压入主文，而是明确哪些证据支撑主张，哪些结果只适合作为协议或成本边界。当前已完成的主线证据包括三数据集主结果、global/patch/fusion 消融、局部时序定义消融、二阶/高阶导数对照、超参数敏感性、跨数据集冻结超参数、paired bootstrap、D3 protocol audit、duration/window 代表实验、runtime/storage audit 和关键帧解释。尚未完成的是同协议外部 baseline、严格外部校准源消融、backbone 消融和扰动鲁棒性实验。
-
-\input{tables/experiment_inventory}
+锁定 U0 在完整允许起点区间确定性均匀选择三个 2 秒窗口。每个窗口以 8 FPS 取得 16 个互异帧，不允许 1 秒回退或复制帧；映射到相同帧索引的窗口去重。三个数据集的 effective-$K$ 分布为 $K=1/2/3$ 共 3,689/73/17,659 个视频。校准阶段先将窗口聚合为每视频一个分支值，再按 effective-$K$ 建立真实经验分布，因而每个真实视频权重相同。
 
 \subsection{主结果}
-表~\ref{tab:main_results} 给出 \method 在三个数据集上的 release baseline。ComGenVid 上平均 AUC/AP 为 0.9198/0.9211，VideoFeedback 上为 0.8628/0.8750，GenVideo 上为 0.8374/0.8283。三个数据集覆盖不同真实视频来源、生成器家族和视频长度约束，因此主结果更适合表述为跨 benchmark 的一致有效性，而不是单一数据集上的最优调参结果。
+表~\ref{tab:main_results} 给出稳定 float64 实现的锁定结果。\method 在三个数据集上分别达到 0.8968/0.9064、0.8597/0.8689 和 0.8657/0.8416，Macro-3 为 0.8741/0.8723。相对 Original STALL，Macro AUC/AP 提高 0.0353/0.0295，AP 差值的 95\% 配对 bootstrap 区间为 [0.0241,0.0358]。相对历史 clean single-window 结果提高 0.0171/0.0123；由于该历史行使用过旧的跨数据集配置选择，正式的窗口覆盖因果对照使用统一 U0 核心的 K=1 行。
 
 \input{tables/main_results}
 
-与 global-only 相比，\method 在三个数据集上均获得提升。ComGenVid 的提升最大，说明局部二阶 patch 时序证据能够捕获全局帧向量遗漏的局部异常。VideoFeedback 的提升较小，但仍为正，这与其内部生成器差异更大、局部 patch 分支存在负迁移来源一致。GenVideo 上融合分支同时优于 global-only 和 patch-only，说明全局外观/运动证据与局部时序证据在该数据集上具有互补性。
+\subsection{统一核心消融}
+表~\ref{tab:component_ablation} 显示两个分支的互补性。K=3 下，Local 加到 Global 后 Macro AP 从 0.8486 提高到 0.8723，差值为 0.0237，95\% 区间为 [0.0191,0.0285]；Global 加到 Local 后提高 0.0431，区间为 [0.0350,0.0513]。因此最终性能不是任一单分支的结果。
 
-\subsection{统计稳定性}
-为避免只报告均值带来的误导，我们采用生成器宏平均 paired bootstrap：每次 bootstrap 在每个生成器内部进行 balanced real/fake 重采样，计算 AUC/AP 后先对生成器取宏平均，再报告方法差值的 95\% 置信区间。表~\ref{tab:bootstrap_delta} 显示，\method 相对 global-only 的 $\Delta$AUC 在 ComGenVid、VideoFeedback 和 GenVideo 上分别为 +0.0669、+0.0153 和 +0.0344，且三个 95\% CI 均完全大于 0。
+\input{tables/component_ablation}
 
-\input{tables/bootstrap_delta}
+统一 region1/mean 的 K=1 Global+Local 为 0.8632/0.8636，K=3 提高到 0.8741/0.8723；Macro AP 差值为 0.0087，95\% 区间为 [0.0057,0.0120]。分数据集 AP 变化为 ComGenVid +0.0186、VideoFeedback $-0.0045$、GenVideo +0.0119，说明多窗口总体有效但不是逐数据集单调提升。相对统一 K=1，15/20 个生成器 AP 提高；相对 Original STALL，16/20 个生成器提高。
 
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=\columnwidth]{macro_average_bootstrap_alpha_delta.pdf}
-  \caption{生成器宏平均 paired bootstrap 下，\method 相对 global-only 的 $\Delta$AUC/$\Delta$AP 区间。三个 benchmark 的宏平均 $\Delta$AUC 均为正。}
-  \label{fig:macro_bootstrap}
-\end{figure}
+\input{tables/u0_generator_results}
 
-\subsection{逐生成器差异}
-均值提升并不意味着所有生成器都得到同等改善。图~\ref{fig:generator_delta} 展示了逐生成器 AUC 变化。ComGenVid 和 GenVideo 中，\method 相对 global-only 没有出现稳定负迁移生成器；VideoFeedback 中存在 Text2Video-Zero、VideoCrafter2 等负迁移来源，说明局部二阶时序证据在某些生成器上会把生成视频推向更真实的分数区间。因此，论文讨论中必须保留失败模式，而不能把 patch 分支写成无条件增益。
+\subsection{校准规模}
+为分离评测集与校准规模选择，本文从额外真实视频 reserve 中对每个数据集按五个固定 seed 抽取 25/50/100/200 个视频，并为每个 split 重新拟合 Local 白化、窗口 CDF 和 effective-$K$ 视频 CDF。表~\ref{tab:u0_calibration_stability} 显示，Macro AP 从 $n=25$ 的 0.8237 提升到 $n=200$ 的 0.8680。按保留 $n=200$ 相对 STALL 改善的 95\% 定义，200 是最小达标规模。Local 分支在四个规模下的 Macro AP 为 0.5193/0.6421/0.7699/0.8175，表明局部高维统计比 Global 更依赖校准规模。
 
-\begin{figure}[!t]
-  \centering
-  \includegraphics[width=\columnwidth]{per_generator_auc_delta_heatmap.pdf}
-  \caption{逐生成器 AUC 变化热图。正值表示 \method 相对 global-only 提升，负值表示 patch 证据对该生成器产生负迁移。}
-  \label{fig:generator_delta}
-\end{figure}
+\input{tables/u0_calibration_stability}
+
+锁定 200 视频 split 的 0.8723 高于 reserve 五 seed 均值 0.8680，但仍位于校准划分差异可解释的范围内。五 seed 下最终分数的平均视频级标准差约 0.0150；$n=200$ Macro AP 的 seed 标准差为 0.0022。该结果支持使用 200 个真实视频，但也说明校准域与划分是部署不确定性的组成部分。
+
+\subsection{跨数据集真实校准}
+表~\ref{tab:u0_cross_calibration} 保持 U0 结构与权重不变，只替换真实校准来源。目标域对角线的平均最终 AP 为 0.8723，而六个单一源跨域组合平均为 0.8489；Pooled-200/600 的 Macro AP 为 0.8628/0.8636，均未达到目标域校准。Global 的目标域/跨域 AP 为 0.8486/0.8475，Local 为 0.8292/0.7425，域依赖主要来自 Local 高维 patch 统计。因此 U0 应被定位为目标域真实视频校准方法；pooling 可缓解但不能消除这一要求。
+
+\input{tables/u0_cross_calibration}
+
+\subsection{锁定后外部确认}
+在 U0 完全锁定后，我们使用此前未参与开发的 GenVidBench 构建确认集。Local whitening 与全部 CDF 只使用 199 条互斥 VRIPT 真实视频；评测集包含 300 real、300 ModelScope 和 300 Pika，不执行任何权重、region、layer 或窗口搜索。表~\ref{tab:u0_external_validation} 显示，U0 的 AUC/AP 为 0.8410/0.8495，相对 Original STALL 的 AP 提高 0.0460，95\% 配对区间 [0.0297,0.0634]；相对 clean K1 提高 0.0126，区间 [0.0017,0.0247]。该确认性结果支持 Local 与 K=3 的增益不只存在于三个开发 benchmark。
+
+\input{tables/u0_external_validation}
+
+\subsection{锁定扰动鲁棒性}
+我们在查看扰动结果前固定 1,600 条生成器平衡评测视频和 600 条真实校准视频。表~\ref{tab:u0_robustness} 比较原始 CDF 到扰动测试（A）、同扰动 CDF 匹配（B）和扰动 CDF 到干净测试（C）；三种场景均冻结 whitening、结构和权重。CRF 23 与 10\% 丢帧的 A 场景 AP 下降均小于 0.003；CRF 35、半分辨率恢复、25\% 重复帧和 4 FPS 分别下降 0.0196、0.0097、0.0226 和 0.0085。同扰动 CDF 没有恢复严重退化，说明其不是一维分数偏移即可解决。R0 raw score 最大复现误差为 0，全部条件无评分失败。
+
+\input{tables/u0_robustness}
+
+\subsection{数值与复现检查}
+所有校准、打分和融合采用 float64 核心统计。不同 batch shape 下最终 raw 组件最大误差不超过 $2.27\times10^{-13}$，CPU/GPU 实现一致到同一数量级。固定 release 保存校准/评测清单、逐窗口帧索引、配置与 checkpoint 哈希、最终逐视频分数和复现元数据；从空缓存复算与锁定 CSV 的指标一致。

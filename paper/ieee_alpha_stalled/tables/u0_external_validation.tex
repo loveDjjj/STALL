@@ -1,0 +1,14 @@
+\begin{table}[!t]
+  \centering
+  \caption{锁定后 GenVidBench 外部确认。199 条独立真实视频校准，评测为 300 real、300 ModelScope 和 300 Pika。}
+  \label{tab:u0_external_validation}
+  \begin{tabular}{lccc}
+    \toprule
+    方法 & AUC & Real AP & Fake AP \\
+    \midrule
+    Original STALL & 0.7921 & 0.8043 & 0.7663 \\
+    Clean K1 & 0.8270 & 0.8369 & 0.8021 \\
+    \method K3 & \textbf{0.8410} & \textbf{0.8495} & \textbf{0.8203} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

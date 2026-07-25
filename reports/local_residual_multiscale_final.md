@@ -1,10 +1,14 @@
 # Alpha-STALLED local residual and multiscale final report
 
+> **Status update (2026-07-24):** the `0.8694/0.8697` R0 comparator is now
+> classified as a historical dataset-specific tuned reference, not the clean universal
+> main method. This does not change the residual rejection conclusion.
+
 Date: 2026-07-24
 
 ## Executive decision
 
-The frozen method remains K=3 MW2:
+The historical tuned comparator is K=3 MW2:
 
 ```text
 G_k = 0.5 * global_spatial_k + 0.5 * global_T1_k
@@ -176,7 +180,7 @@ embedding-distance proxy is not relabeled as annotated scene-cut evidence.
    K=3 MW2 is +0.0306/+0.0269 Macro AUC/AP over original STALL and +0.0123/+0.0096 over
    clean single-window Alpha-STALLED. It is unchanged relative to itself. R1 would be
    -0.0068/-0.0088 relative to K=3 MW2 and is rejected.
-9. **Is the complexity worthwhile?** K=3 MW2 remains worthwhile. Residual D2 is not;
+9. **Is the complexity worthwhile?** Multi-window remains worthwhile. Residual D2 is not;
    multiscale and intermediate-layer complexity is not admitted.
 10. **Are conclusions stable over five calibration seeds?** No new candidate reached the
     predeclared final-combination gate, so the five-seed final rerun was correctly not
@@ -184,9 +188,10 @@ embedding-distance proxy is not relabeled as annotated scene-cut evidence.
     1,000-bootstrap Macro CI, but it should not be mislabeled as a five-calibration-seed
     result.
 
-## Final retained method
+## Decision within this experiment
 
-Retain K=3 MW2 exactly as frozen in `configs/alpha_stalled_multi_window.yaml`. Reject R1,
-reuse the historical rejection of R2, and stop residual, new scale, intermediate-layer, and
-beta exploration under the declared gates. The valid final Macro-3 AUC/AP remains
-`0.8694/0.8697`.
+Reject R1, reuse the historical rejection of R2, and stop residual, new scale,
+intermediate-layer, and beta exploration under the declared gates. The comparator remains
+the dataset-specific tuned K=3 result `0.8694/0.8697`. The later pre-release
+temporal-unified U0 result `0.8725/0.8722` inherited historical PatchSpatial;
+the fully unified locked U0 reproduction supersedes its method-status claim.

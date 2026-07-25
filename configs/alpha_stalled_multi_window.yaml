@@ -1,7 +1,12 @@
-# Frozen leakage-free Alpha-STALLED multi-window baseline.
+# Historical K=3 MW2 dataset-specific tuned reference. Its calibration samples are disjoint,
+# but region/aggregation were selected per target dataset using fake AUC/AP.
 
 method:
   name: Alpha-STALLED-K3-MW2
+  selection_role: historical_dataset_specific_tuned_supplement
+  sample_calibration_leakage: false
+  fake_label_hyperparameter_selection: true
+  universal_main_config: configs/alpha_stalled_clean_universal.yaml
   score_direction: higher_is_real
   global_window_score: G_k = 0.5 * global_spatial + 0.5 * global_T1
   local_window_score: L_k = 0.1 * patch_spatial + 0.9 * same_grid_patch_D2
@@ -50,12 +55,13 @@ evaluation:
   metrics: [ROC-AUC, AP]
   protocol: pairwise_balanced_by_generator
   bootstrap_iterations: 1000
-  frozen_macro_auc: 0.8694
-  frozen_macro_ap: 0.8697
+  historical_tuned_macro_auc: 0.8694
+  historical_tuned_macro_ap: 0.8697
 
 evidence:
   report: reports/multi_window_joint_typicality.md
   local_audit: reports/local_residual_multiscale_audit.md
   unified_scale_layer_audit: reports/unified_multiscale_intermediate_layer_audit.md
   unified_scale_layer_report: reports/unified_multiscale_intermediate_layers.md
+  clean_universal_report: reports/clean_universal_cross_layer_final.md
   local_results: results/multi_window_joint_typicality

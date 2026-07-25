@@ -1,10 +1,14 @@
 # Local residual and multiscale audit
 
+> **Status update (2026-07-24):** references to the historical `0.8694/0.8697`
+> baseline below mean the historical dataset-specific tuned comparator. Its
+> calibration split is disjoint, but region/aggregation were fake-label selected.
+
 Date: 2026-07-24
 
 ## Decision
 
-The frozen baseline remains K=3 MW2, with Macro-3 AUC/AP `0.8694/0.8697`.
+The historical comparator is K=3 MW2, with Macro-3 AUC/AP `0.8694/0.8697`.
 This audit eliminates two proposed experiments as duplicates:
 
 - coordinate-median residual D2 was already evaluated as L2 and reduced Macro AP from
@@ -17,7 +21,7 @@ Spatial-mean residual D2 and intermediate-layer D2 have not been evaluated. Only
 spatial-mean residual is eligible for the next full experiment. Intermediate layers remain
 conditional on an earlier candidate passing its admission gate.
 
-## Frozen method and evidence
+## Historical comparator and evidence
 
 For window `k`:
 
@@ -37,7 +41,7 @@ The main existing ablations are:
 | Direction | Existing result | Decision |
 |---|---|---|
 | clean single-window Alpha-STALLED | Macro `0.8570/0.8600` | superseded by K=3 MW2 |
-| K=3 MW2 | Macro `0.8694/0.8697`, AP delta `+0.0096`, CI fully positive | frozen baseline |
+| K=3 MW2 | Macro `0.8694/0.8697`, AP delta `+0.0096`, CI fully positive | historical dataset-specific tuned comparator |
 | K=5 / all-window | Macro AP `0.8672/0.8695` | reject extra cost |
 | window bottom-2 / hybrid | K=3 AP `0.8684/0.8691` | reject lower-tail aggregation |
 | Joint J1/J2/J3 | best AP `0.8602` vs linear `0.8697` | reject joint fusion |
@@ -155,7 +159,7 @@ Checkpoint SHA-256:
 
 1. Run Stage 1 common-motion diagnostics on unpooled 196-token accelerations, clearly
    labeling them as diagnostics.
-2. In Stage 2, retain R0 from the frozen baseline, do not rerun R2, and test only new R1
+2. In Stage 2, retain the historical R0 comparator, do not rerun R2, and test only new R1
    spatial-mean residual with independent real-only whitening/CDF. R3 is permitted only if
    R1 is competitive enough to justify calibrated score fusion.
 3. Stop Stage 3 as duplicate work. Do not run new fine/coarse extraction or fusion.

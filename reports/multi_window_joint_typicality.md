@@ -1,5 +1,10 @@
 # Alpha-STALLED Multi-window 与 Joint Typicality 实验报告
 
+> **状态更新（2026-07-24）：** 本报告中的 K=3 MW2 `0.8694/0.8697`
+> 使用目标数据集 fake AUC/AP 选择 region 和 aggregation。它不存在样本校准泄漏，
+> 但只能作为 Historical dataset-specific tuned baseline，不能再作为严格统一主方法。替代 U0 协议见
+> `reports/clean_universal_cross_layer_final.md`。
+
 日期：2026-07-24
 
 ## 1. 最终结论
