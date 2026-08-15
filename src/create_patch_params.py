@@ -25,6 +25,12 @@ from dataset_utils_patch import _get_patch_cache_path
 from patch_math import bottomk_mean
 from patch_matching import patch_temporal_delta
 from stall import log_likelihood, whitening_transform as apply_whitening
+from alpha_stalled.cache_contract import (
+    cache_entry_is_complete,
+    prepare_feature_cache,
+    tensor_descriptor,
+    validate_cache_entry,
+)
 from whitening_transform import WhiteningTransform
 
 
@@ -132,11 +138,19 @@ def iter_real_patch_cache(
     duration_sec: int = 2,
     compact: bool = True,
     max_real_videos: int | None = None,
+    cache_policy: str = "auto",
 ) -> Iterator[tuple[str, dict]]:
     df = load_csv(csv_path)
     window_col = f"{duration_sec}_sec_idxs"
     reals = df[df["subset"] == "real"].reset_index(drop=True)
     cache_root = Path(patch_emb_cache_dir)
+    cache_context = prepare_feature_cache(
+        cache_root,
+        expected_contract=None,
+        policy=cache_policy,
+        create=False,
+        required_cache_kind="patch_embeddings",
+    )
 
     yielded = 0
     for _, row in reals.iterrows():
@@ -152,10 +166,31 @@ def iter_real_patch_cache(
             duration_sec,
             compact,
         )
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=cache_context.strict):
+            if cache_context.strict:
+                raise FileNotFoundError(
+                    f"strict patch cache entry or metadata missing: {cache_path}"
+                )
             continue
 
         payload = torch.load(cache_path, weights_only=True)
+        if cache_context.strict:
+            index_column = window_col if compact else "downsample_idxs"
+            if index_column not in row or _is_missing_window(row[index_column]):
+                raise ValueError(f"strict patch cache 需要索引列: {index_column}")
+            frame_indices = json.loads(row[index_column])
+            validate_cache_entry(
+                cache_context,
+                cache_path=cache_path,
+                source_video_path=row["video_path"],
+                frame_indices=frame_indices,
+                payload={
+                    "format": "torch_dict_global_patch_v1",
+                    "global": tensor_descriptor(payload["global"]),
+                    "patch": tensor_descriptor(payload["patch"]),
+                    "grid_size": [int(item) for item in payload["grid_size"]],
+                },
+            )
         yielded += 1
         yield row["video_path"], payload
         if max_real_videos is not None and yielded >= max_real_videos:
@@ -208,6 +243,7 @@ def collect_fit_samples(
     lambda_dist: float,
     patch_region_size: int,
     max_real_videos: int | None,
+    cache_policy: str,
 ) -> tuple[np.ndarray, np.ndarray, tuple[int, int]]:
     rng = np.random.RandomState(seed)
 
@@ -220,7 +256,15 @@ def collect_fit_samples(
 
     print("流式读取真实 patch cache，用于拟合采样...", flush=True)
     for video_count, (_, payload) in enumerate(
-        iter_real_patch_cache(csv_path, patch_emb_cache_dir, duration_sec, compact, max_real_videos), start=1
+        iter_real_patch_cache(
+            csv_path,
+            patch_emb_cache_dir,
+            duration_sec,
+            compact,
+            max_real_videos,
+            cache_policy,
+        ),
+        start=1,
     ):
         patch = payload["patch"].numpy().astype(np.float32)  # [T, P, D]
         this_grid = tuple(int(x) for x in payload["grid_size"])
@@ -285,13 +329,22 @@ def compute_calibration_scores(
     lambda_dist: float,
     patch_region_size: int,
     max_real_videos: int | None,
+    cache_policy: str,
 ) -> tuple[np.ndarray, np.ndarray]:
     spat_scores = []
     temp_scores = []
 
     print("流式读取真实 patch cache，用于校准打分...", flush=True)
     for i, (_, payload) in enumerate(
-        iter_real_patch_cache(csv_path, patch_emb_cache_dir, duration_sec, compact, max_real_videos), start=1
+        iter_real_patch_cache(
+            csv_path,
+            patch_emb_cache_dir,
+            duration_sec,
+            compact,
+            max_real_videos,
+            cache_policy,
+        ),
+        start=1,
     ):
         patch_np = payload["patch"].numpy().astype(np.float32)
         patch = patch_np[np.newaxis]  # [1, T, P, D]
@@ -364,7 +417,15 @@ def build_patch_params(
     lambda_dist: float = 0.01,
     patch_region_size: int = 1,
     max_real_videos: int | None = None,
+    cache_policy: str = "auto",
 ) -> dict:
+    cache_context = prepare_feature_cache(
+        Path(patch_emb_cache_dir),
+        expected_contract=None,
+        policy=cache_policy,
+        create=False,
+        required_cache_kind="patch_embeddings",
+    )
     patch_fit, temp_fit, grid_size = collect_fit_samples(
         csv_path=csv_path,
         patch_emb_cache_dir=patch_emb_cache_dir,
@@ -379,6 +440,7 @@ def build_patch_params(
         lambda_dist=lambda_dist,
         patch_region_size=patch_region_size,
         max_real_videos=max_real_videos,
+        cache_policy=cache_policy,
     )
 
     print(f"使用 {len(patch_fit)} 个 patch token 拟合 patch spatial whitening", flush=True)
@@ -409,6 +471,7 @@ def build_patch_params(
         lambda_dist=lambda_dist,
         patch_region_size=patch_region_size,
         max_real_videos=max_real_videos,
+        cache_policy=cache_policy,
     )
 
     return {
@@ -420,6 +483,9 @@ def build_patch_params(
         "calib_patch_temp_scores": calib_patch_temp_scores.astype(np.float32),
         "patch_grid_size": np.array(grid_size, dtype=np.int32),
         "duration": np.array([duration_sec], dtype=np.int32),
+        "feature_cache_contract_sha256": np.array(
+            cache_context.contract_sha256 or "legacy_uncontracted"
+        ),
         "aggregation_config": np.array(
             json.dumps(
                 {
@@ -438,6 +504,7 @@ def build_patch_params(
                     "temperature": temperature,
                     "lambda_dist": lambda_dist,
                     "patch_region_size": patch_region_size,
+                    "cache_policy": cache_context.policy,
                 }
             )
         ),
@@ -499,6 +566,11 @@ def main():
     parser.add_argument("--temperature", type=float, default=0.07)
     parser.add_argument("--lambda-dist", type=float, default=0.01)
     parser.add_argument("--patch-region-size", type=int, default=1)
+    parser.add_argument(
+        "--cache-policy",
+        choices=["auto", "strict", "legacy"],
+        default="auto",
+    )
     args = parser.parse_args()
 
     if not args.real_only:
@@ -522,6 +594,7 @@ def main():
         lambda_dist=args.lambda_dist,
         patch_region_size=args.patch_region_size,
         max_real_videos=args.max_real_videos,
+        cache_policy=args.cache_policy,
     )
 
     out_path = Path(args.output)

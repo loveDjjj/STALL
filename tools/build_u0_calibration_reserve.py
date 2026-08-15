@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,27 +14,17 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_multi_window_feasibility import uniform_windows
-from build_u0_release_manifests import resolve_video, video_id, write_json
-
-
-DATASETS = {
-    "comgenvid": (
-        ROOT / "cache/indexes/comgenvid.csv",
-        ROOT / "cache/patch_embeddings/comgenvid",
-    ),
-    "videofeedback": (
-        ROOT / "cache/indexes/videofeedback.csv",
-        ROOT / "cache/patch_embeddings/videofeedback",
-    ),
-    "genvideo": (
-        ROOT / "cache/indexes/genvideo.csv",
-        ROOT / "cache/patch_embeddings/genvideo",
-    ),
-}
-SEEDS = (17, 29, 43, 71, 101)
-SIZES = (25, 50, 100, 200)
+from alpha_stalled.release_io import resolve_video, video_id, write_json
+from alpha_stalled.sampling import uniform_windows
+from alpha_stalled.u0_calibration_experiments import (
+    CALIBRATION_RESERVE_SPECS as DATASETS,
+    SEEDS,
+    SIZES,
+)
 
 
 def stable_rank(seed: int, video_id_value: str) -> str:

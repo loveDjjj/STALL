@@ -25,15 +25,15 @@ for path in (SRC_DIR, TOOLS_DIR):
 
 from build_multi_order_baselines import (  # noqa: E402
     KEY_COLUMNS,
-    _auc_ap,
     _load_index,
     d3_statistics,
     dataset_specs,
     empirical_cdf,
-    pairwise_frames,
     two_sided_realness,
 )
-from stall import load_dinov3_model, load_video_frames  # noqa: E402
+from alpha_stalled.backbone import load_dinov3_model  # noqa: E402
+from alpha_stalled.metrics import auc_ap as _auc_ap, pairwise_frames  # noqa: E402
+from alpha_stalled.video_io import load_video_frames  # noqa: E402
 
 
 CONDITIONS = ("reference_pixels", "jpeg_q30", "resize_half")

@@ -13,14 +13,12 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
-TOOLS_DIR = REPO_ROOT / "tools"
-for directory in (SRC_DIR, TOOLS_DIR):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from eval_patch_fast import FastPatchScorer, iter_cache_jobs, load_cache_batch
-from run_local_d2_residuals import dataset_specs
-from score_multi_window import LOCAL_PARAMS
+from alpha_stalled.legacy_window_scoring import LOCAL_PARAMS
+from alpha_stalled.legacy_local_d2_protocol import dataset_specs
 from stall import STALL
 
 

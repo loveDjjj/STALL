@@ -24,7 +24,7 @@ for path in (SRC_DIR, TOOLS_DIR):
 from eval_patch_fast import FastPatchScorer
 from fit_intermediate_layer_params import LAYERS, SPECS
 from score_unified_multiscale_windows import PARAMS as REGION_PARAMS
-from score_multi_window import (
+from alpha_stalled.legacy_window_scoring import (
     KEY_COLUMNS,
     decode_manifest_row_with_retries,
     stable_shard,

@@ -1,0 +1,459 @@
+schema_version: alpha_stalled_cache_inventory_v1
+snapshot_id: cache_inventory_20260814
+
+policy:
+  cache_root: cache
+  deletion_mode: manual_approval_only
+
+groups:
+  - cache_id: protocol_indexes
+    path: cache/indexes
+    family: indexes
+    dataset_scope: all
+    purpose: Enriched video indexes, calibration subsets, and evaluation holdout manifests.
+    lifecycle: protocol_index
+    retention: keep
+    cleanup_priority: P0_keep
+    release_dependency: false
+    rebuildable: false
+    producer: src/video_index.py and protocol-specific manifest builders
+    rebuild_command: null
+    current_consumers:
+      - src/eval.py
+      - src/eval_patch.py
+      - tools/prefill_patch_cache.py
+      - tools/score_u0_locked_windows.py
+    metadata_status: external_only
+    payload_contract: CSV rows contain video identity, metadata, and deterministic frame-index columns.
+    cache_key:
+      present:
+        - video_path
+        - subset
+        - source_model
+        - fps
+        - duration
+        - frame_indices
+      missing:
+        - source_video_sha256
+        - index_builder_git_commit
+        - ffprobe_version
+    hash_contents: true
+    notes: Small protocol-bearing assets; base indexes are reproducible, but no single retained command rebuilds every derived holdout and calibration CSV exactly.
+
+  - cache_id: global_demo_compact
+    path: cache/embeddings/demo_dataset_duration2_filtered
+    family: global_embeddings
+    dataset_scope: demo
+    purpose: Small two-second global feature cache used for smoke tests and examples.
+    lifecycle: feature_cache
+    retention: keep
+    cleanup_priority: P0_keep
+    release_dependency: false
+    rebuildable: true
+    producer: src/eval.py via src/dataset_utils.py
+    rebuild_command: python src/eval.py --csv cache/indexes/demo_dataset_duration2_filtered.csv --emb-cache cache/embeddings/demo_dataset_duration2_filtered --duration 2 --output-csv <output.csv>
+    current_consumers:
+      - src/eval.py
+      - tests and smoke runs
+    metadata_status: partial
+    payload_contract: One float32 tensor per video with shape [sampled_frames, 1024].
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Retain because it is small and useful for fast integration checks.
+
+  - cache_id: global_comgenvid_compact
+    path: cache/embeddings/comgenvid
+    family: global_embeddings
+    dataset_scope: comgenvid
+    purpose: Compact global DINO features for ComGenVid experiments.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: src/eval.py via src/dataset_utils.py
+    rebuild_command: python src/eval.py --csv cache/indexes/comgenvid.csv --emb-cache cache/embeddings/comgenvid --duration 2 --output-csv <output.csv>
+    current_consumers:
+      - src/eval.py
+      - tools/build_multi_order_baselines.py
+      - tools/evaluate_d3_robustness.py
+    metadata_status: partial
+    payload_contract: One float32 tensor per video with shape [sampled_frames, 1024].
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Active research cache; reuse only after checking the missing model and preprocessing identity fields.
+
+  - cache_id: global_videofeedback_legacy
+    path: cache/embeddings/videofeedback
+    family: global_embeddings
+    dataset_scope: videofeedback
+    purpose: Historical full or variably sampled global embeddings for VideoFeedback.
+    lifecycle: feature_cache
+    retention: review_before_delete
+    cleanup_priority: P2_review
+    release_dependency: false
+    rebuildable: true
+    producer: src/eval.py via src/dataset_utils.py
+    rebuild_command: python src/eval.py --csv cache/indexes/videofeedback.csv --emb-cache cache/embeddings/videofeedback --output-csv <output.csv>
+    current_consumers:
+      - tools/build_multi_order_baselines.py
+      - tools/evaluate_d3_robustness.py
+    metadata_status: partial
+    payload_contract: Unsuffixed float32 tensors with variable frame count and feature width 1024.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+      missing:
+        - requested_duration
+        - frame_indices
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Review before reuse or deletion because unsuffixed files do not identify their sampling protocol.
+
+  - cache_id: global_genvideo_legacy
+    path: cache/embeddings/genvideo
+    family: global_embeddings
+    dataset_scope: genvideo
+    purpose: Historical full or variably sampled global embeddings used by D3 and baseline studies.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: src/eval.py via src/dataset_utils.py
+    rebuild_command: python src/eval.py --csv cache/indexes/genvideo.csv --emb-cache cache/embeddings/genvideo --output-csv <output.csv>
+    current_consumers:
+      - tools/analyze_d3_window_cache_variants.py
+      - tools/build_multi_order_baselines.py
+      - tools/evaluate_d3_robustness.py
+    metadata_status: partial
+    payload_contract: Unsuffixed float32 tensors with variable frame count and feature width 1024.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+      missing:
+        - requested_duration
+        - frame_indices
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Still consumed by historical D3 comparisons; isolate from compact two-second caches.
+
+  - cache_id: global_genvidbench_external
+    path: cache/embeddings/genvidbench_pair1_ms_vript_eval
+    family: global_embeddings
+    dataset_scope: genvidbench_external
+    purpose: Compact global features for the locked external GenVidBench evaluation pair.
+    lifecycle: feature_cache
+    retention: review_before_delete
+    cleanup_priority: P2_review
+    release_dependency: false
+    rebuildable: true
+    producer: src/eval.py via src/dataset_utils.py
+    rebuild_command: python src/eval.py --csv cache/indexes/genvidbench_pair1_ms_vript_eval.csv --emb-cache cache/embeddings/genvidbench_pair1_ms_vript_eval --duration 2 --output-csv <output.csv>
+    current_consumers: []
+    metadata_status: partial
+    payload_contract: One float32 tensor per video with shape [sampled_frames, 1024].
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: No current code consumer was found; review before deletion because the cache is small and tied to external-validation history.
+
+  - cache_id: patch_demo_compact
+    path: cache/patch_embeddings/demo_dataset_duration2_filtered
+    family: patch_embeddings
+    dataset_scope: demo
+    purpose: Small two-second patch-token cache used for smoke tests and examples.
+    lifecycle: feature_cache
+    retention: keep
+    cleanup_priority: P0_keep
+    release_dependency: false
+    rebuildable: true
+    producer: tools/prefill_patch_cache.py via src/dataset_utils_patch.py
+    rebuild_command: python tools/prefill_patch_cache.py --csv cache/indexes/demo_dataset_duration2_filtered.csv --patch-emb-cache cache/patch_embeddings/demo_dataset_duration2_filtered --duration 2 --compact --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - src/eval_patch.py
+      - tests and smoke runs
+    metadata_status: partial
+    payload_contract: Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+        - frame_indices_in_payload
+        - grid_size_in_payload
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Retain because it is small and supports cheap end-to-end checks.
+
+  - cache_id: patch_comgenvid_compact
+    path: cache/patch_embeddings/comgenvid
+    family: patch_embeddings
+    dataset_scope: comgenvid
+    purpose: Compact one- and two-second patch-token features for ComGenVid research.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: tools/prefill_patch_cache.py via src/dataset_utils_patch.py
+    rebuild_command: python tools/prefill_patch_cache.py --csv cache/indexes/comgenvid.csv --patch-emb-cache cache/patch_embeddings/comgenvid --duration 2 --compact --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - src/eval_patch.py
+      - tools/score_u0_locked_k1_cache.py
+      - tools/score_u0_local_d1_windows.py
+      - tools/fit_u0_local_d1_params.py
+    metadata_status: partial
+    payload_contract: Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+        - frame_indices_in_payload
+        - grid_size_in_payload
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Largest active ComGenVid research asset; do not infer compatibility from tensor shape alone.
+
+  - cache_id: patch_videofeedback_compact
+    path: cache/patch_embeddings/videofeedback
+    family: patch_embeddings
+    dataset_scope: videofeedback
+    purpose: Compact one- and two-second patch-token features for VideoFeedback research.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: tools/prefill_patch_cache.py via src/dataset_utils_patch.py
+    rebuild_command: python tools/prefill_patch_cache.py --csv cache/indexes/videofeedback.csv --patch-emb-cache cache/patch_embeddings/videofeedback --duration 2 --compact --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - src/eval_patch.py
+      - tools/score_u0_locked_k1_cache.py
+      - tools/score_u0_local_d1_windows.py
+      - tools/fit_u0_local_d1_params.py
+    metadata_status: partial
+    payload_contract: Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+        - frame_indices_in_payload
+        - grid_size_in_payload
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Active research cache covering both strict two-second and duration-aware one-second protocols.
+
+  - cache_id: patch_genvideo_compact
+    path: cache/patch_embeddings/genvideo
+    family: patch_embeddings
+    dataset_scope: genvideo
+    purpose: Compact one- and two-second patch-token features for GenVideo research.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: tools/prefill_patch_cache.py via src/dataset_utils_patch.py
+    rebuild_command: python tools/prefill_patch_cache.py --csv cache/indexes/genvideo.csv --patch-emb-cache cache/patch_embeddings/genvideo --duration 2 --compact --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - src/eval_patch.py
+      - tools/score_u0_locked_k1_cache.py
+      - tools/score_u0_local_d1_windows.py
+      - tools/fit_u0_local_d1_params.py
+      - duration-aware experiments
+    metadata_status: partial
+    payload_contract: Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+        - frame_indices_in_payload
+        - grid_size_in_payload
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Largest cache group and still actively reused; retain until research is archived.
+
+  - cache_id: patch_genvidbench_external
+    path: cache/patch_embeddings/genvidbench_pair1_ms_vript
+    family: patch_embeddings
+    dataset_scope: genvidbench_external
+    purpose: Compact patch-token features for external GenVidBench calibration and evaluation.
+    lifecycle: feature_cache
+    retention: keep_active
+    cleanup_priority: P1_keep_active
+    release_dependency: false
+    rebuildable: true
+    producer: tools/prefill_patch_cache.py via src/dataset_utils_patch.py
+    rebuild_command: python tools/prefill_patch_cache.py --csv cache/indexes/genvidbench_pair1_ms_vript_eval.csv --patch-emb-cache cache/patch_embeddings/genvidbench_pair1_ms_vript --duration 2 --compact --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - tools/fit_u0_external_genvidbench_params.py
+      - tools/score_u0_external_genvidbench_k1.py
+    metadata_status: partial
+    payload_contract: Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_stem
+        - requested_duration_suffix
+        - frame_indices_in_payload
+        - grid_size_in_payload
+      missing:
+        - checkpoint_sha256
+        - dinov3_commit
+        - output_layer
+        - preprocessing
+        - frame_grouping
+        - numerical_implementation
+        - source_video_fingerprint
+    hash_contents: false
+    notes: Retain while the external validation result remains in the paper evidence set.
+
+  - cache_id: patch_shards_debug
+    path: cache/patch_embedding_shards_debug
+    family: patch_embedding_debug_shards
+    dataset_scope: comgenvid_and_genvideo
+    purpose: Historical storage-throughput benchmark shards and statistics.
+    lifecycle: debug_benchmark
+    retention: safe_delete_candidate
+    cleanup_priority: P3_safe_delete_candidate
+    release_dependency: false
+    rebuildable: false
+    producer: historical producer not retained in current code
+    rebuild_command: null
+    current_consumers: []
+    metadata_status: external_only
+    payload_contract: Large debug shard files plus benchmark statistics; not part of a scoring protocol.
+    cache_key:
+      present:
+        - dataset_name
+        - shard_number
+        - benchmark_statistics
+      missing:
+        - source_cache_hashes
+        - checkpoint_sha256
+        - producer_git_commit
+        - exact_producer_command
+    hash_contents: false
+    notes: No current consumer or release dependency was found; deletion still requires explicit manual approval.
+
+  - cache_id: d3_extracted_frames
+    path: cache/d3_frames
+    family: decoded_frames
+    dataset_scope: genvideo
+    purpose: Three-second 8 FPS JPEG frame sequences for the external D3 comparison protocol.
+    lifecycle: external_method_frames
+    retention: review_before_delete
+    cleanup_priority: P2_review
+    release_dependency: false
+    rebuildable: true
+    producer: tools/extract_d3_frames_from_runlist.py
+    rebuild_command: python tools/extract_d3_frames_from_runlist.py --execute --output-summary-csv <summary.csv>
+    current_consumers:
+      - tools/eval_d3_exact_from_frames.py
+      - D3 protocol audits
+    metadata_status: external_only
+    payload_contract: Per-video directories containing sequential JPEG frames extracted at the runlist rate.
+    cache_key:
+      present:
+        - subset
+        - source_model
+        - video_directory
+        - frame_number
+      missing:
+        - extraction_runlist_sha256
+        - source_video_fingerprint
+        - ffmpeg_version
+        - decoder_configuration
+    hash_contents: false
+    notes: Rebuildable but costly; review only after the D3 comparison evidence is fully archived.

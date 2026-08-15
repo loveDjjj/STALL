@@ -1,5 +1,8 @@
 # Global--Local--D3 实现与协议审计
 
+> 状态：`diagnostic_only`。本文记录 D3 受控实验的阶段 0 审计，不是当前 U0
+> 方法定义；当前结果状态以 `docs/RESULT_STATUS.md` 为准。
+
 审计日期：2026-07-23
 
 本审计对应 Alpha-STALLED 新主线的阶段 0。结论来自当前源码、冻结配置、校准

@@ -22,10 +22,12 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from score_multi_window import decode_selected_frames
-from score_u0_locked_windows import load_raw_params, resolve_video, stable_shard
+from alpha_stalled.video_io import decode_selected_frames
+from alpha_stalled.release_io import resolve_required_video as resolve_video, video_id_shard
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.artifacts import checkpoint_completed_ids
+from alpha_stalled.local_branch import local_d2_features
 from score_u0_robustness import donor_window_id, embed_sequence, score_condition
-from stable_whitening import l2_normalized_second_order
 from stall_patch import PatchSTALL
 from u0_injections import CONDITIONS, InjectionResult, inject
 
@@ -86,7 +88,7 @@ def embeddings_from_frame_map(
 
 @torch.inference_mode()
 def patch_d2_anomaly(patch: np.ndarray, params: dict, device: str) -> np.ndarray:
-    features = l2_normalized_second_order(
+    features = local_d2_features(
         torch.from_numpy(patch[None].astype(np.float32))
     )[0]
     target = torch.device(device)
@@ -157,11 +159,8 @@ def save_heatmaps(
 
 
 def completed_ids(checkpoint: Path) -> tuple[set[str], int]:
-    paths = sorted(checkpoint.glob("part_*.csv"))
-    completed: set[str] = set()
-    for path in paths:
-        completed.update(pd.read_csv(path, usecols=["video_id"])["video_id"].astype(str))
-    return completed, len(paths)
+    completed, paths = checkpoint_completed_ids(checkpoint, cast_str=True)
+    return {str(value) for value in completed}, len(paths)
 
 
 def run(args: argparse.Namespace) -> None:
@@ -176,7 +175,10 @@ def run(args: argparse.Namespace) -> None:
     k3_all = json.loads((args.release_dir / "frame_indices.json").read_text())["videos"]
     rows = pd.DataFrame(selected_records)
     rows = rows[
-        rows["video_id"].map(lambda value: stable_shard(str(value), args.num_shards) == args.shard_index)
+        rows["video_id"].map(
+            lambda value: video_id_shard(str(value), args.num_shards)
+            == args.shard_index
+        )
     ].reset_index(drop=True)
     if args.debug_videos is not None:
         rows = rows.head(args.debug_videos)

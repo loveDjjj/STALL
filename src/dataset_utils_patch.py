@@ -22,8 +22,16 @@ import numpy as np
 import pandas as pd
 import torch
 
+from alpha_stalled.cache_contract import (
+    cache_entry_is_complete,
+    cache_policy_uses_strict_entries,
+    prepare_model_feature_cache,
+    tensor_descriptor,
+    validate_cache_entry,
+    write_cache_entry_metadata,
+)
+from alpha_stalled.video_io import decode_indexed_frames, load_video_frames
 from dataset_utils import _is_missing_window, load_csv
-from stall import load_video_frames
 
 
 def _get_patch_cache_path(
@@ -45,6 +53,7 @@ def count_patch_cache_misses(
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    cache_policy: str = "auto",
 ) -> int:
     df = load_csv(csv_path)
     window_col = f"{duration_sec}_sec_idxs"
@@ -57,6 +66,7 @@ def count_patch_cache_misses(
         )
 
     cache_root = Path(patch_emb_cache_dir)
+    strict_entries = cache_policy_uses_strict_entries(cache_root, cache_policy)
     count = 0
     for _, row in df.iterrows():
         stem = Path(row["video_path"]).stem
@@ -65,7 +75,7 @@ def count_patch_cache_misses(
         cache_path = _get_patch_cache_path(
             cache_root, row["subset"], row["source_model"], stem, duration_sec, compact
         )
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=strict_entries):
             count += 1
     return count
 
@@ -80,6 +90,7 @@ def prefill_patch_emb_cache(
     compact: bool = False,
     num_workers: int = 4,
     video_batch: int = 8,
+    cache_policy: str = "auto",
 ) -> Iterator[str]:
     df = load_csv(csv_path)
 
@@ -100,6 +111,15 @@ def prefill_patch_emb_cache(
         )
 
     cache_root = Path(patch_emb_cache_dir)
+    cache_context = prepare_model_feature_cache(
+        cache_root,
+        model=model,
+        cache_kind="patch_embeddings",
+        frame_batch_size=batch_size,
+        video_batch_size=video_batch,
+        policy=cache_policy,
+        create=True,
+    )
     misses = []  # (video_path, frame_idxs, cache_path) 元组
 
     for _, row in df.iterrows():
@@ -119,7 +139,7 @@ def prefill_patch_emb_cache(
         cache_path = _get_patch_cache_path(
             cache_root, subset, source_model, stem, duration_sec, compact
         )
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=cache_context.strict):
             misses.append((video_path, json.loads(frame_idxs_raw), cache_path))
 
     if not misses:
@@ -127,7 +147,11 @@ def prefill_patch_emb_cache(
 
     def _decode(job):
         path, frame_idxs, _ = job
-        return load_video_frames(path, frame_idxs)
+        return decode_indexed_frames(
+            path,
+            frame_idxs,
+            require_all=cache_context.strict,
+        )
 
     for chunk_start in range(0, len(misses), video_batch):
         chunk = misses[chunk_start : chunk_start + video_batch]
@@ -157,6 +181,19 @@ def prefill_patch_emb_cache(
             tmp = cache_path.with_suffix(".tmp.pt")
             torch.save(payload, tmp)
             tmp.rename(cache_path)
+            if cache_context.strict:
+                write_cache_entry_metadata(
+                    cache_context,
+                    cache_path=cache_path,
+                    source_video_path=video_path,
+                    frame_indices=frame_idxs,
+                    payload={
+                        "format": "torch_dict_global_patch_v1",
+                        "global": tensor_descriptor(payload["global"]),
+                        "patch": tensor_descriptor(payload["patch"]),
+                        "grid_size": [int(item) for item in payload["grid_size"]],
+                    },
+                )
             yield video_path
 
 
@@ -168,6 +205,8 @@ def load_csv_with_patch_cache(
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    video_batch: int = 8,
+    cache_policy: str = "auto",
 ):
     df = load_csv(csv_path)
 
@@ -188,6 +227,15 @@ def load_csv_with_patch_cache(
         )
 
     cache_root = Path(patch_emb_cache_dir)
+    cache_context = prepare_model_feature_cache(
+        cache_root,
+        model=model,
+        cache_kind="patch_embeddings",
+        frame_batch_size=batch_size,
+        video_batch_size=video_batch,
+        policy=cache_policy,
+        create=False,
+    )
 
     for _, row in df.iterrows():
         video_path = row["video_path"]
@@ -208,7 +256,25 @@ def load_csv_with_patch_cache(
 
         if cache_path.exists():
             payload = torch.load(cache_path, weights_only=True)
+            if cache_context.strict:
+                expected_indices = window_idxs if compact else downsample_idxs
+                validate_cache_entry(
+                    cache_context,
+                    cache_path=cache_path,
+                    source_video_path=video_path,
+                    frame_indices=expected_indices,
+                    payload={
+                        "format": "torch_dict_global_patch_v1",
+                        "global": tensor_descriptor(payload["global"]),
+                        "patch": tensor_descriptor(payload["patch"]),
+                        "grid_size": [int(item) for item in payload["grid_size"]],
+                    },
+                )
         else:
+            if cache_context.strict:
+                raise FileNotFoundError(
+                    f"strict patch cache entry missing after prefill: {cache_path}"
+                )
             frame_idxs = window_idxs if compact else downsample_idxs
             frames = load_video_frames(video_path, frame_idxs)
             if len(frames) == 0:

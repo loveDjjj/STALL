@@ -17,17 +17,19 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from score_multi_window import decode_selected_frames
-from score_u0_locked_windows import load_raw_params, resolve_video, stable_shard
-from stable_whitening import (
+from alpha_stalled.video_io import decode_selected_frames
+from alpha_stalled.release_io import resolve_required_video as resolve_video, video_id_shard
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.artifacts import checkpoint_completed_ids
+from alpha_stalled.global_branch import global_t1_features
+from alpha_stalled.local_branch import local_d2_features
+from alpha_stalled.whitening import (
     GaussianMeanCandidateScorerFloat64,
     StableGaussianParams,
-    l2_normalized_first_order,
-    l2_normalized_second_order,
     score_gaussian_aggregate_float64,
 )
 from stall_patch import PatchSTALL
@@ -124,7 +126,11 @@ def load_candidate_params(
 
 
 def load_rows(
-    split: str, dataset: str, release_dir: Path, reserve_manifest: Path
+    split: str,
+    dataset: str,
+    release_dir: Path,
+    reserve_manifest: Path,
+    remaining_real_manifest: Path,
 ) -> tuple[pd.DataFrame, dict[str, dict[str, list[list[int]]]]]:
     window_map: dict[str, dict[str, list[list[int]]]] = {}
     if split in {"evaluation", "locked_calibration"}:
@@ -143,7 +149,7 @@ def load_rows(
                 window_map[item["video_id"]]["k1"] = [
                     frame_payload["calibration_reference_windows"][item["video_id"]]
                 ]
-    else:
+    elif split == "reserve":
         payload = json.loads(reserve_manifest.read_text())
         records = [item for item in payload["videos"] if item["dataset"] == dataset]
         for item in records:
@@ -152,6 +158,12 @@ def load_rows(
                 "k3": item["k3_windows"],
             }
             item["protocol_split"] = "calibration_reserve"
+            item["video_path"] = item["source_path"]
+    else:
+        payload = json.loads(remaining_real_manifest.read_text())
+        records = [item for item in payload["videos"] if item["dataset"] == dataset]
+        for item in records:
+            window_map[item["video_id"]] = {"k3": item["k3_windows"]}
             item["video_path"] = item["source_path"]
     rows = pd.DataFrame(records)
     if rows["video_id"].duplicated().any() or set(rows["video_id"]) != set(window_map):
@@ -227,7 +239,7 @@ class CandidateScorers:
             device=self.device,
             compute_percentile=False,
         )
-        global_delta, zero = l2_normalized_first_order(global_batch)
+        global_delta, zero = global_t1_features(global_batch)
         global_t1, _ = score_gaussian_aggregate_float64(
             global_delta,
             self.locked["global_t1"],
@@ -237,7 +249,7 @@ class CandidateScorers:
             compute_percentile=False,
         )
         spatial = self.spatial.score(patch_batch)
-        d2 = l2_normalized_second_order(patch_batch)
+        d2 = local_d2_features(patch_batch)
         temporal = self.temporal.score(d2)
         output = {
             "global_spatial_raw": global_spatial,
@@ -270,21 +282,23 @@ class CandidateScorers:
 
 
 def completed_videos(directory: Path) -> tuple[set[str], list[Path]]:
-    parts = sorted(directory.glob("part_*.csv"))
-    completed: set[str] = set()
-    for part in parts:
-        completed.update(pd.read_csv(part, usecols=["video_id"])["video_id"].unique())
-    return completed, parts
+    completed, parts = checkpoint_completed_ids(directory, cast_str=True)
+    return {str(value) for value in completed}, parts
 
 
 def run(args: argparse.Namespace) -> None:
     config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
     rows, window_map = load_rows(
-        args.split, args.dataset, args.release_dir, args.reserve_manifest
+        args.split,
+        args.dataset,
+        args.release_dir,
+        args.reserve_manifest,
+        args.remaining_real_manifest,
     )
     rows = rows[
         rows["video_id"].map(
-            lambda value: stable_shard(str(value), args.num_shards) == args.shard_index
+            lambda value: video_id_shard(str(value), args.num_shards)
+            == args.shard_index
         )
     ].reset_index(drop=True)
     if args.debug_videos is not None:
@@ -404,7 +418,14 @@ def run(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--split", choices=("evaluation", "locked_calibration", "reserve"), required=True
+        "--split",
+        choices=(
+            "evaluation",
+            "locked_calibration",
+            "reserve",
+            "independent_remaining_real",
+        ),
+        required=True,
     )
     parser.add_argument(
         "--candidate-set",
@@ -435,6 +456,11 @@ def parse_args() -> argparse.Namespace:
         "--reserve-manifest",
         type=Path,
         default=ROOT / "release/u0/calibration_reserve_manifest.json",
+    )
+    parser.add_argument(
+        "--remaining-real-manifest",
+        type=Path,
+        default=ROOT / "release/u0/independent_remaining_real_manifest.json",
     )
     parser.add_argument(
         "--params-dir",

@@ -138,7 +138,7 @@ def load_encoder(encoder: str, device: str, local_files_only: bool):
         raise ValueError(f"未知 encoder: {encoder}. 可选: {sorted(ENCODER_TO_MODEL_ID)}")
     model_id = ENCODER_TO_MODEL_ID[encoder]
     if encoder == "DINOv3-L-local":
-        from stall import load_dinov3_model
+        from alpha_stalled.backbone import load_dinov3_model
 
         model, _ = load_dinov3_model(device)
         return LocalDINOv3VisionWrapper(model).to(device).eval()

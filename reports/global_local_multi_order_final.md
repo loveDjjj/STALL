@@ -62,7 +62,7 @@ NumPy definitions are at `src/patch_matching.py:113-162`; the GPU path, includin
 even-patch median matching NumPy semantics, is at `src/eval_patch_fast.py:135-180`.
 L3 changes only aggregation to a length-2 temporal-run bottom-20% mean
 (`src/eval_patch_fast.py:212-227`). Full audit details and tensor shapes are in
-`global_local_d3_audit.md`.
+`reports/global_local_d3_audit.md`.
 
 ## Unified protocol
 

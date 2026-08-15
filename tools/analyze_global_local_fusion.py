@@ -13,10 +13,11 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from build_multi_order_baselines import _auc_ap, paired_bootstrap, pairwise_frames
+from alpha_stalled.metrics import auc_ap as _auc_ap, paired_bootstrap, pairwise_frames
 
 
 KEY_COLUMNS = ["dataset", "subset", "source_model", "filename"]

@@ -11,7 +11,6 @@ patch-token cache is not present in this workspace.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import sys
@@ -21,7 +20,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from sklearn.metrics import average_precision_score, roc_auc_score
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -29,7 +27,13 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from metrics import _sample_balanced_real
+from alpha_stalled.metrics import (
+    auc_ap as _auc_ap,
+    metric_tables as shared_metric_tables,
+    paired_bootstrap as shared_paired_bootstrap,
+    pairwise_frames,
+)
+from alpha_stalled.calibration import empirical_cdf
 
 
 KEY_COLUMNS = ["subset", "source_model", "filename"]
@@ -304,13 +308,6 @@ def score_index(
     return pd.DataFrame(rows), skipped
 
 
-def empirical_cdf(values: np.ndarray, calibration: np.ndarray) -> np.ndarray:
-    calibration = np.sort(np.asarray(calibration, dtype=np.float64))
-    if len(calibration) == 0 or not np.isfinite(calibration).all():
-        raise ValueError("calibration must be non-empty and finite")
-    return np.searchsorted(calibration, values, side="right") / float(len(calibration))
-
-
 def two_sided_realness(values: np.ndarray, calibration: np.ndarray) -> np.ndarray:
     cdf = empirical_cdf(np.asarray(values, dtype=np.float64), calibration)
     return 2.0 * np.minimum(cdf, 1.0 - cdf)
@@ -388,63 +385,18 @@ def add_baselines(global_d3: pd.DataFrame, patch: pd.DataFrame) -> pd.DataFrame:
     return merged
 
 
-def pairwise_frames(df: pd.DataFrame, seed: int) -> dict[str, pd.DataFrame]:
-    real = df[df["subset"] == "real"]
-    frames: dict[str, pd.DataFrame] = {}
-    for generator, fake in df[df["subset"] == "annotated"].groupby("source_model", sort=True):
-        sampled_real = _sample_balanced_real(real, len(fake), seed)
-        fake = fake.head(len(sampled_real))
-        frames[str(generator)] = pd.concat([sampled_real, fake], ignore_index=True)
-    return frames
-
-
-def _auc_ap(frame: pd.DataFrame, score: str) -> tuple[float, float]:
-    label = frame["subset"].eq("real").astype(np.uint8).to_numpy()
-    value = frame[score].to_numpy(dtype=np.float64)
-    return float(roc_auc_score(label, value)), float(average_precision_score(label, value))
-
-
 def metric_tables(
     per_video: pd.DataFrame,
     seed: int,
     score_columns: list[str] | tuple[str, ...] = SCORE_COLUMNS,
     config_names: dict[str, str] = CONFIG_NAMES,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    generator_rows: list[dict] = []
-    for dataset, dataset_df in per_video.groupby("dataset", sort=False):
-        for generator, pair in pairwise_frames(dataset_df, seed).items():
-            counts = pair["subset"].value_counts()
-            for config in score_columns:
-                auc, ap = _auc_ap(pair, config)
-                generator_rows.append(
-                    {
-                        "dataset": dataset,
-                        "generator": generator,
-                        "config": config,
-                        "config_name": config_names[config],
-                        "n_real": int(counts.get("real", 0)),
-                        "n_fake": int(counts.get("annotated", 0)),
-                        "auc": auc,
-                        "ap": ap,
-                    }
-                )
-    generator_metrics = pd.DataFrame(generator_rows)
-    dataset_metrics = (
-        generator_metrics.groupby(["dataset", "config", "config_name"], as_index=False)
-        .agg(n_generators=("generator", "nunique"), auc=("auc", "mean"), ap=("ap", "mean"))
+    return shared_metric_tables(
+        per_video,
+        seed,
+        score_columns=score_columns,
+        config_names=config_names,
     )
-    macro = (
-        dataset_metrics.groupby(["config", "config_name"], as_index=False)
-        .agg(n_generators=("n_generators", "sum"), auc=("auc", "mean"), ap=("ap", "mean"))
-    )
-    macro.insert(0, "dataset", "Macro-3")
-    dataset_metrics = pd.concat([dataset_metrics, macro], ignore_index=True)
-    return dataset_metrics, generator_metrics
-
-
-def _stable_seed(seed: int, *parts: str) -> int:
-    digest = hashlib.sha256("\0".join((str(seed), *parts)).encode("utf-8")).digest()
-    return int.from_bytes(digest[:4], "little")
 
 
 def paired_bootstrap(
@@ -453,60 +405,12 @@ def paired_bootstrap(
     iterations: int,
     comparisons: tuple[tuple[str, str, str], ...] = BOOTSTRAP_COMPARISONS,
 ) -> pd.DataFrame:
-    rows: list[dict] = []
-    for dataset, dataset_df in per_video.groupby("dataset", sort=False):
-        pairs = pairwise_frames(dataset_df, seed)
-        for new, base, comparison in comparisons:
-            point_auc: list[float] = []
-            point_ap: list[float] = []
-            for pair in pairs.values():
-                new_auc, new_ap = _auc_ap(pair, new)
-                base_auc, base_ap = _auc_ap(pair, base)
-                point_auc.append(new_auc - base_auc)
-                point_ap.append(new_ap - base_ap)
-
-            rng = np.random.default_rng(_stable_seed(seed, str(dataset), comparison))
-            boot_auc = np.empty(iterations, dtype=np.float64)
-            boot_ap = np.empty(iterations, dtype=np.float64)
-            split_pairs = []
-            for pair in pairs.values():
-                real = pair[pair["subset"] == "real"].reset_index(drop=True)
-                fake = pair[pair["subset"] == "annotated"].reset_index(drop=True)
-                split_pairs.append((real, fake))
-            for iteration in range(iterations):
-                auc_deltas: list[float] = []
-                ap_deltas: list[float] = []
-                for real, fake in split_pairs:
-                    real_idx = rng.integers(0, len(real), len(real))
-                    fake_idx = rng.integers(0, len(fake), len(fake))
-                    sample = pd.concat(
-                        [real.iloc[real_idx], fake.iloc[fake_idx]], ignore_index=True
-                    )
-                    new_auc, new_ap = _auc_ap(sample, new)
-                    base_auc, base_ap = _auc_ap(sample, base)
-                    auc_deltas.append(new_auc - base_auc)
-                    ap_deltas.append(new_ap - base_ap)
-                boot_auc[iteration] = np.mean(auc_deltas)
-                boot_ap[iteration] = np.mean(ap_deltas)
-            for metric, point, samples in (
-                ("auc", float(np.mean(point_auc)), boot_auc),
-                ("ap", float(np.mean(point_ap)), boot_ap),
-            ):
-                rows.append(
-                    {
-                        "dataset": dataset,
-                        "scope": "generator_macro",
-                        "comparison": comparison,
-                        "new_config": new,
-                        "base_config": base,
-                        "metric": metric,
-                        "delta": point,
-                        "ci95_low": float(np.quantile(samples, 0.025)),
-                        "ci95_high": float(np.quantile(samples, 0.975)),
-                        "bootstrap_iterations": iterations,
-                    }
-                )
-    return pd.DataFrame(rows)
+    return shared_paired_bootstrap(
+        per_video,
+        seed,
+        iterations,
+        comparisons=comparisons,
+    )
 
 
 def _format_metric_table(dataset_metrics: pd.DataFrame) -> list[str]:

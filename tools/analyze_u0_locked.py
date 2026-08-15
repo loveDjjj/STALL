@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import platform
 import sys
@@ -19,265 +18,38 @@ import torch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from build_multi_order_baselines import metric_tables
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
-
-
-KEY_COLUMNS = [
-    "video_id",
-    "dataset",
-    "protocol_split",
-    "subset",
-    "source_model",
-    "filename",
-]
-WINDOW_KEYS = [*KEY_COLUMNS, "window_id"]
-EXPECTED_EVALUATION = {
-    "comgenvid": 4298,
-    "videofeedback": 3500,
-    "genvideo": 13623,
-}
-
-
-def sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
+from alpha_stalled.calibration import (
+    cdf_with_positive_infinity,
+)
+from alpha_stalled.u0_analysis import (
+    aggregate_and_calibrate_videos,
+    calibrate_windows,
+)
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.parameters import global_references
+from alpha_stalled.release_io import sha256_file, write_json
+from alpha_stalled.u0_protocol import (
+    EXPECTED_EVALUATION,
+    KEY_COLUMNS as U0_KEY_COLUMNS,
+    WINDOW_KEYS as U0_WINDOW_KEYS,
+    load_calibration_references,
+    load_raw_windows,
+    selected_calibration_means,
+    verify_calibration_reference_windows,
+)
 
 
-def write_json(path: Path, payload: object) -> None:
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    temporary.replace(path)
-
-
-def load_raw_windows(raw_dir: Path, num_shards: int) -> pd.DataFrame:
-    frames = []
-    for dataset in EXPECTED_EVALUATION:
-        for shard in range(num_shards):
-            path = raw_dir / f"{dataset}_shard{shard:02d}_of_{num_shards:02d}.csv"
-            if not path.is_file():
-                raise FileNotFoundError(path)
-            frames.append(pd.read_csv(path, float_precision="round_trip"))
-    windows = pd.concat(frames, ignore_index=True)
-    if windows.duplicated(WINDOW_KEYS).any():
-        raise ValueError("duplicate locked raw window keys")
-    if not np.isfinite(
-        windows[
-            [
-                "global_spatial_raw",
-                "patch_spatial_raw",
-                "patch_d2_raw",
-            ]
-        ].to_numpy()
-    ).all():
-        raise ValueError("non-finite locked raw score")
-    # Positive infinity is the declared representation for an all-zero global
-    # temporal window and is valid under right-inclusive CDF calibration.
-    if np.isnan(windows["global_t1_raw"].to_numpy()).any():
-        raise ValueError("NaN global temporal raw score")
-    return windows.sort_values(WINDOW_KEYS).reset_index(drop=True)
-
-
-def global_references(config: dict) -> tuple[np.ndarray, np.ndarray]:
-    data = np.load(ROOT / config["global_branch"]["params"], allow_pickle=True)
-    return (
-        stable_sorted(np.max(data["calib_ll_spat"].astype(np.float64), axis=1)),
-        stable_sorted(np.min(data["calib_ll_temp"].astype(np.float64), axis=1)),
-    )
-
-
-def cdf_with_positive_infinity(
-    values: np.ndarray, reference: np.ndarray
-) -> np.ndarray:
-    """Map declared +inf scores to one while rejecting NaN and -inf."""
-    scores = np.asarray(values, dtype=np.float64)
-    if np.isnan(scores).any() or np.isneginf(scores).any():
-        raise ValueError("CDF values contain NaN or negative infinity")
-    result = np.ones(len(scores), dtype=np.float64)
-    finite = np.isfinite(scores)
-    result[finite] = empirical_cdf_right_inclusive(scores[finite], reference)
-    return result
-
-
-def load_calibration_references(raw_dir: Path, num_shards: int) -> pd.DataFrame:
-    frames = []
-    for dataset in EXPECTED_EVALUATION:
-        for shard in range(num_shards):
-            path = raw_dir / f"{dataset}_shard{shard:02d}_of_{num_shards:02d}.csv"
-            if not path.is_file():
-                raise FileNotFoundError(path)
-            frames.append(pd.read_csv(path, float_precision="round_trip"))
-    references = pd.concat(frames, ignore_index=True)
-    if len(references) != 600 or references["video_id"].nunique() != 600:
-        raise ValueError(
-            f"expected 600 unique calibration references, found rows={len(references)} "
-            f"videos={references['video_id'].nunique()}"
-        )
-    if set(references["protocol_split"]) != {"calibration"}:
-        raise ValueError("local CDF references must be calibration videos")
-    if set(references["subset"]) != {"real"}:
-        raise ValueError("local CDF references must contain real videos only")
-    if set(references["effective_k"].astype(int)) != {1}:
-        raise ValueError("local CDF references must each contain exactly one K1 window")
-    return references
-
-
-def verify_calibration_reference_windows(
-    references: pd.DataFrame, release_dir: Path
-) -> None:
-    payload = json.loads((release_dir / "frame_indices.json").read_text())
-    expected = {
-        video_id: json.dumps(window, separators=(",", ":"))
-        for video_id, window in payload["calibration_reference_windows"].items()
-    }
-    actual = dict(zip(references["video_id"], references["frame_indices"]))
-    if actual != expected:
-        raise ValueError("scored local CDF references differ from locked K1 windows")
-
-
-def calibrate_windows(
-    windows: pd.DataFrame,
-    calibration_references: pd.DataFrame,
-    config: dict,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    global_spatial_ref, global_t1_ref = global_references(config)
-    output = []
-    references = []
-    for dataset, frame in windows.groupby("dataset", sort=False):
-        target = frame.copy()
-        calibration = calibration_references[
-            calibration_references["dataset"] == dataset
-        ]
-        if len(calibration) != 200:
-            raise ValueError(f"{dataset}: expected 200 local calibration windows")
-        patch_spatial_ref = stable_sorted(calibration["patch_spatial_raw"].to_numpy())
-        patch_d2_ref = stable_sorted(calibration["patch_d2_raw"].to_numpy())
-        target["global_spatial"] = empirical_cdf_right_inclusive(
-            target["global_spatial_raw"].to_numpy(), global_spatial_ref
-        )
-        target["global_t1"] = cdf_with_positive_infinity(
-            target["global_t1_raw"].to_numpy(), global_t1_ref
-        )
-        target["patch_spatial"] = empirical_cdf_right_inclusive(
-            target["patch_spatial_raw"].to_numpy(), patch_spatial_ref
-        )
-        target["patch_d2"] = empirical_cdf_right_inclusive(
-            target["patch_d2_raw"].to_numpy(), patch_d2_ref
-        )
-        target["G_k"] = 0.5 * target["global_spatial"] + 0.5 * target["global_t1"]
-        target["L_k"] = 0.1 * target["patch_spatial"] + 0.9 * target["patch_d2"]
-        target["S_k"] = 0.6 * target["G_k"] + 0.4 * target["L_k"]
-        output.append(target)
-        for branch, values in (
-            ("patch_spatial", patch_spatial_ref),
-            ("patch_d2", patch_d2_ref),
-        ):
-            references.extend(
-                {
-                    "dataset": dataset,
-                    "branch": branch,
-                    "rank": rank,
-                    "raw_score": value,
-                }
-                for rank, value in enumerate(values)
-            )
-    return pd.concat(output, ignore_index=True), pd.DataFrame(references)
-
-
-def selected_calibration_means(
-    calibration_windows: pd.DataFrame, target_k: int
-) -> pd.DataFrame:
-    rows = []
-    for video_id, frame in calibration_windows.groupby("video_id", sort=False):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.array([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) != target_k:
-            continue
-        rows.append(
-            {
-                "video_id": video_id,
-                "G_raw": float(selected["G_k"].mean()),
-                "L_raw": float(selected["L_k"].mean()),
-            }
-        )
-    result = pd.DataFrame(rows)
-    if len(result) < 2:
-        raise ValueError(f"insufficient effective-K={target_k} calibration videos")
-    return result
-
-
-def aggregate_and_calibrate_videos(windows: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    per_video = (
-        windows.groupby(KEY_COLUMNS, sort=False, observed=True)
-        .agg(
-            video_path=("video_path", "first"),
-            duration_seconds=("duration_seconds", "first"),
-            effective_k=("effective_k", "first"),
-            window_count=("window_id", "size"),
-            G_raw=("G_k", "mean"),
-            L_raw=("L_k", "mean"),
-        )
-        .reset_index()
-    )
-    if not (per_video["effective_k"] == per_video["window_count"]).all():
-        raise ValueError("effective_k does not match raw window count")
-    frames = []
-    reference_rows = []
-    for dataset, dataset_videos in per_video.groupby("dataset", sort=False):
-        dataset_windows = windows[windows["dataset"] == dataset]
-        calibration_windows = dataset_windows[
-            dataset_windows["protocol_split"] == "calibration"
-        ]
-        evaluation = dataset_videos[
-            dataset_videos["protocol_split"] == "evaluation"
-        ].copy()
-        for effective_k, target in evaluation.groupby("effective_k", sort=True):
-            reference = selected_calibration_means(
-                calibration_windows, int(effective_k)
-            )
-            g_reference = stable_sorted(reference["G_raw"].to_numpy())
-            l_reference = stable_sorted(reference["L_raw"].to_numpy())
-            target = target.copy()
-            target["G"] = empirical_cdf_right_inclusive(
-                target["G_raw"].to_numpy(), g_reference
-            )
-            target["L"] = empirical_cdf_right_inclusive(
-                target["L_raw"].to_numpy(), l_reference
-            )
-            target["S"] = 0.6 * target["G"] + 0.4 * target["L"]
-            frames.append(target)
-            reference_rows.append(
-                {
-                    "dataset": dataset,
-                    "effective_k": int(effective_k),
-                    "calibration_videos": len(reference),
-                    "global_min": float(g_reference.min()),
-                    "global_max": float(g_reference.max()),
-                    "local_min": float(l_reference.min()),
-                    "local_max": float(l_reference.max()),
-                }
-            )
-    return pd.concat(frames, ignore_index=True), pd.DataFrame(reference_rows)
+KEY_COLUMNS = list(U0_KEY_COLUMNS)
+WINDOW_KEYS = list(U0_WINDOW_KEYS)
 
 
 def run(args: argparse.Namespace) -> None:
-    config = yaml.safe_load(args.config.read_text(encoding="utf-8"))
+    config_path = args.config.resolve()
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     windows = load_raw_windows(args.raw_dir, args.num_shards)
     calibration_references = load_calibration_references(
         args.calibration_raw_dir, args.num_shards
@@ -315,7 +87,7 @@ def run(args: argparse.Namespace) -> None:
     metadata = {
         "schema_version": "u0_reproduction_v1",
         "completed_utc": datetime.now(timezone.utc).isoformat(),
-        "config": str(args.config.relative_to(ROOT)),
+        "config": str(config_path.relative_to(ROOT)),
         "raw_directory": str(args.raw_dir),
         "calibration_raw_directory": str(args.calibration_raw_dir),
         "num_shards_per_dataset": args.num_shards,

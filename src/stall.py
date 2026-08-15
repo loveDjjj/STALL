@@ -1,95 +1,33 @@
-import os
+"""Original STALL model/extraction compatibility implementation.
+
+Locked Alpha-STALLED raw Global scoring is centralized in
+``alpha_stalled.global_branch``. This module retains the original numpy STALL
+detector, DINOv3 loading, feature extraction, and historical public API.
+"""
+
 import cv2
 import numpy as np
 import torch
 from PIL import Image
-from torchvision import transforms
 
-DINO_V3_MODEL_NAME = "dinov3_vitl16"
-
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# 默认路径；可通过 DINO_V3_REPO_DIR / DINO_V3_WEIGHTS 环境变量覆盖。
-DINO_V3_REPO_DIR = os.getenv(
-    "DINO_V3_REPO_DIR", os.path.join(_REPO_ROOT, "dinov3")
+from alpha_stalled.backbone import (
+    DINOV3_GITHUB_URL,
+    DINO_V3_MODEL_NAME,
+    DINO_V3_REPO_DIR,
+    DINO_V3_WEIGHTS,
+    create_dinov3_transform,
+    dinov3_model_cache_key,
+    get_shared_dinov3_model,
+    load_dinov3_model,
+    resolve_dinov3_paths,
 )
-DINO_V3_WEIGHTS = os.getenv(
-    "DINO_V3_WEIGHTS",
-    os.path.join(_REPO_ROOT, "dinov3", "weights", "dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth"),
-)
-
-DINOV3_GITHUB_URL = "https://github.com/facebookresearch/dinov3"
+from alpha_stalled.video_io import load_video_frames
 
 AGG_STR2FN = {
     "mean": np.mean,
     "max": np.max,
     "min": np.min,
 }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DINOv3
-# ─────────────────────────────────────────────────────────────────────────────
-
-def create_dinov3_transform(resize_size: int = 224):
-    """DINOv3 LVD-1689M 预训练模型使用的标准 ImageNet eval transform。"""
-    return transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((resize_size, resize_size), antialias=True),
-        transforms.Normalize(
-            mean=(0.485, 0.456, 0.406),
-            std=(0.229, 0.224, 0.225),
-        ),
-    ])
-
-
-def load_dinov3_model(device: str, repo_dir: str = None, weights: str = None):
-    """从本地 dinov3 repo clone 加载 DINOv3 ViT-L/16 模型。
-
-    Args:
-        device:    目标设备字符串（"cuda" / "cpu"）。
-        repo_dir:  本地 dinov3 repo clone 路径；默认使用 DINO_V3_REPO_DIR。
-        weights:   .pth 权重路径；默认使用 DINO_V3_WEIGHTS。
-
-    返回：
-        (model, transform)
-    """
-    repo_dir = repo_dir or DINO_V3_REPO_DIR
-    weights = weights or DINO_V3_WEIGHTS
-
-    if not os.path.exists(repo_dir):
-        raise ValueError(
-            f"未在 '{repo_dir}' 找到 DINOv3 repo。\n"
-            f"请从 {DINOV3_GITHUB_URL} clone，并把权重放到 weights/。\n"
-            f"可通过 --dino-repo 或 DINO_V3_REPO_DIR 环境变量覆盖路径。"
-        )
-    if not os.path.exists(weights):
-        raise ValueError(
-            f"未在 '{weights}' 找到 DINOv3 权重。\n"
-            f"请从 {DINOV3_GITHUB_URL} 下载 dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth。\n"
-            f"可通过 --dino-weights 或 DINO_V3_WEIGHTS 环境变量覆盖路径。"
-        )
-
-    # 直接导入 backbone，而不通过 torch.hub.load；后者会导入 hubconf.py，
-    # 并带入依赖 torchvision.transforms.v2（torchvision >= 0.15）的
-    # detectors/segmentors。
-    import sys
-    sys.path.insert(0, repo_dir)
-    try:
-        from dinov3.hub.backbones import dinov3_vitl16
-        model = dinov3_vitl16(weights=weights)
-    finally:
-        if repo_dir in sys.path:
-            sys.path.remove(repo_dir)
-    model = model.to(device).eval()
-    if device == "cuda" and torch.cuda.device_count() > 1:
-        model = torch.nn.DataParallel(model)
-    transform = create_dinov3_transform()
-    if device == "cuda":
-        print(f"DINOv3 模型已加载到 {device} ({torch.cuda.device_count()} 个可见 GPU)")
-    else:
-        print(f"DINOv3 模型已加载到 {device}")
-    return model, transform
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -137,50 +75,6 @@ def get_percentile_score(inf_scores, sorted_calib_scores):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Video I/O
-# ─────────────────────────────────────────────────────────────────────────────
-
-def load_video_frames(video_path, frame_indices=None):
-    """Load frames from an MP4 file.
-
-    Args:
-        video_path:    Path to .mp4 file.
-        frame_indices: Optional list of 0-based frame indices to load.
-                       If None, all frames are loaded sequentially.
-
-    返回：
-        np.ndarray of shape [T, H, W, C] in BGR order.
-    """
-    # 部分 OpenCV build 使用默认 backend 时会错误处理 percent-encoded 文件名；
-    # 另一些 build 又拒绝显式 FFMPEG capture-by-name。这里两种都尝试。
-    cap = cv2.VideoCapture(video_path, cv2.CAP_FFMPEG)
-    if not cap.isOpened():
-        cap.release()
-        cap = cv2.VideoCapture(video_path)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-    if frame_indices is None:
-        frames = []
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            frames.append(frame)
-        cap.release()
-        return np.array(frames)
-
-    frame_indices_sorted = sorted(frame_indices)
-    frames_dict = {}
-    for idx in frame_indices_sorted:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = cap.read()
-        if ret:
-            frames_dict[idx] = frame
-    cap.release()
-    return np.array([frames_dict[i] for i in frame_indices if i in frames_dict])
-
-
-# ─────────────────────────────────────────────────────────────────────────────
 # STALL 检测器
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -202,6 +96,7 @@ class STALL:
     # 类级 cache，使多个 STALL 实例共享同一个已加载模型。
     _shared_model = None
     _shared_transform = None
+    _shared_model_key = None
 
     def __init__(
         self,
@@ -213,13 +108,20 @@ class STALL:
         dino_weights: str = None,
         load_dino: bool = True,
     ):
+        self.dino_repo_path, self.dino_weights_path = resolve_dinov3_paths(
+            dino_repo, dino_weights
+        )
         if load_dino:
-            if STALL._shared_model is None:
-                STALL._shared_model, STALL._shared_transform = load_dinov3_model(
-                    device, repo_dir=dino_repo, weights=dino_weights
-                )
-            self.model = STALL._shared_model
-            self.transform = STALL._shared_transform
+            handle = get_shared_dinov3_model(
+                device,
+                self.dino_repo_path,
+                self.dino_weights_path,
+            )
+            self.model = handle.model
+            self.transform = handle.transform
+            STALL._shared_model = handle.model
+            STALL._shared_transform = handle.transform
+            STALL._shared_model_key = handle.cache_key
         else:
             self.model = None
             self.transform = None

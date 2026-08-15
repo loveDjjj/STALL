@@ -32,7 +32,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from dataset_utils import _is_missing_window, load_csv
-from metrics import ScoreDirection, build_results_table
+from alpha_stalled.metrics import ScoreDirection, build_results_table
 
 
 KEY_COLUMNS = ["subset", "source_model", "filename"]

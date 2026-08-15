@@ -20,10 +20,10 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
+from alpha_stalled.release_io import write_json
 from create_patch_params import reservoir_update
 from patch_matching import patch_temporal_delta
 from whitening_transform import WhiteningTransform
-from build_u0_release_manifests import write_json
 
 
 DATASETS = ("comgenvid", "videofeedback", "genvideo")

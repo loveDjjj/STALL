@@ -18,9 +18,12 @@
 | `tools/fresh_hotshot/` | fresh validation、demo duration 和 HotShot 操作脚手架 |
 | `tools/cache_engineering/` | cache shard benchmark 和 cache 工程工具 |
 | `tools/diagnostics/` | source audit、候选决策表和报告导出 |
+| `tools/journal_experiments/` | 已产出结果的一次性journal诊断实现；`tools/`保留兼容命令 |
+| `tools/pre_release_assets/` | U0锁定前的score-CSV release资产检查；不属于当前release |
 | `src/` | 旧 patch evaluator 和 multi-aggregation 变体 |
 | `scripts/` | 历史一次性实验启动脚本 |
-| `docs/` | 已由 release-scope 和 asset-manifest 取代的早期实现计划 |
+| `docs/` | 早期实现计划和冻结的历史发布文档 |
+| `docs/pre_u0_release/` | dataset-specific score-CSV 发布阶段的结构、范围、资产和复现审计 |
 
 ## 提升回主线的规则
 

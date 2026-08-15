@@ -757,7 +757,7 @@ Global + Patch fixed alpha
 3. **重写 fallback。** 删除 subset、fake source_model 和 test-batch rank；只允许当前视频分数与独立校准分布参与计算。
 4. **重新做 persistence 消融。** 先选择一个跨数据集统一 feature，再比较是否稳定超过 fixed alpha。
 5. **扩展自动化测试与 release verifier。** 当前已覆盖融合公式、CSV one-to-one merge、统一指标入口、分数方向、二阶差分、patch region pooling、percentile 和 bottom-k，并新增 release 资产一致性检查；后续还应覆盖 patch cache 磁盘评分、DINOv3 特征提取和单样本推理独立性。
-6. **完成参数与结果归档。** 当前已生成 `docs/restructure/asset_manifest.md` 和 `precomputed/README.md`；`results/` 已收敛为主线 score、metrics、alpha sweep 和论文图表资产。debug/重复 `.npz` 仍由 `.gitignore` 排除，除非后续需要补充公开消融复现。
+6. **完成参数与结果归档。** 当时生成的资产清单现归档于 `research_archive/docs/pre_u0_release/asset_manifest.md`；`results/` 保留该阶段的 score、metrics、alpha sweep 和论文图表资产。debug/重复 `.npz` 仍由 `.gitignore` 排除，除非后续需要补充历史消融复现。
 
 ## 11. 结论
 
@@ -777,7 +777,7 @@ Persistence 异常形态进一步显示出增益潜力，但当前 fallback 的�
 | 主线 release | 组件与局部时序消融 | results/paper_tables/ablation_summary.md |
 | 主线 release | 固定 alpha sweep | results/paper_sweeps/alpha_sweep_summary.md |
 | 主线 release | 短视频 patch 覆盖缺口 | results/paper_tables/patch_coverage_gaps.md |
-| 主线 release | 资产清单 | docs/restructure/asset_manifest.md |
-| 主线 release | 复现审计 | docs/restructure/reproducibility_audit.md |
+| pre-U0 release | 资产清单 | research_archive/docs/pre_u0_release/asset_manifest.md |
+| pre-U0 release | 复现审计 | research_archive/docs/pre_u0_release/reproducibility_audit.md |
 | 历史审计 | 原版复现对照 | results/stall_repro_comparison.md |
 | 历史代码 | 非主线路径与诊断工具 | research_archive/ |

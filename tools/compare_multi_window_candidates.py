@@ -12,11 +12,11 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from analyze_multi_window_scores import macro_cluster_bootstrap
-from build_multi_order_baselines import metric_tables, paired_bootstrap
+from alpha_stalled.metrics import macro_cluster_bootstrap, metric_tables, paired_bootstrap
 
 
 KEY_COLUMNS = ["dataset", "subset", "source_model", "filename"]

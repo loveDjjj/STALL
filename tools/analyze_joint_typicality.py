@@ -17,12 +17,13 @@ from sklearn.model_selection import KFold
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_multi_window_scores import calibration_references, macro_cluster_bootstrap
-from build_multi_order_baselines import empirical_cdf, metric_tables, paired_bootstrap
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.historical_window_analysis import calibration_references
+from alpha_stalled.metrics import macro_cluster_bootstrap, metric_tables, paired_bootstrap
 
 
 KEY_COLUMNS = ["dataset", "subset", "source_model", "filename"]

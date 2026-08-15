@@ -15,17 +15,15 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from score_u0_locked_windows import (
-    KEY_COLUMNS,
-    decode_row,
-    load_raw_params,
-    score_batch,
-    stable_shard,
-)
+from alpha_stalled.u0_protocol import KEY_COLUMNS
+from alpha_stalled.u0_scoring import decode_row, score_batch
+from alpha_stalled.release_io import video_id_shard
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.artifacts import checkpoint_completed_ids, read_checkpoint_parts
 from stall_patch import PatchSTALL
 
 
@@ -41,7 +39,7 @@ def run(args: argparse.Namespace) -> None:
     manifest = manifest[
         (manifest["dataset"] == args.dataset)
         & manifest["video_id"].map(
-            lambda value: stable_shard(value, args.num_shards) == args.shard_index
+            lambda value: video_id_shard(value, args.num_shards) == args.shard_index
         )
     ].reset_index(drop=True)
     checkpoint_dir = (
@@ -51,10 +49,7 @@ def run(args: argparse.Namespace) -> None:
         / f"shard_{args.shard_index:02d}_of_{args.num_shards:02d}"
     )
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    parts = sorted(checkpoint_dir.glob("part_*.csv"))
-    completed = set()
-    for part in parts:
-        completed.update(pd.read_csv(part, usecols=["video_id"])["video_id"])
+    completed, parts = checkpoint_completed_ids(checkpoint_dir, cast_str=True)
     pending = manifest[~manifest["video_id"].isin(completed)].reset_index(drop=True)
     print(
         f"calibration-reference dataset={args.dataset} shard={args.shard_index}/{args.num_shards} "
@@ -118,10 +113,9 @@ def run(args: argparse.Namespace) -> None:
                 f"elapsed={time.perf_counter()-started:.1f}s failures={len(failures)}",
                 flush=True,
             )
-    parts = sorted(checkpoint_dir.glob("part_*.csv"))
-    merged = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in parts],
-        ignore_index=True,
+    merged, parts = read_checkpoint_parts(
+        checkpoint_dir,
+        empty_error=f"no calibration checkpoint parts: {checkpoint_dir}",
     )
     expected_ids = set(manifest["video_id"])
     if failures:

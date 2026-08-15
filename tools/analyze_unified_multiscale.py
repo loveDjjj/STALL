@@ -12,16 +12,19 @@ import pandas as pd
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_multi_window_scores import macro_cluster_bootstrap
-from build_multi_order_baselines import empirical_cdf, metric_tables, paired_bootstrap
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.historical_window_analysis import (
+    KEY_COLUMNS,
+    WINDOW_KEYS,
+    target_k_reference,
+)
+from alpha_stalled.metrics import macro_cluster_bootstrap, metric_tables, paired_bootstrap
 
 
-KEY_COLUMNS = ["dataset", "protocol_split", "subset", "source_model", "filename"]
-WINDOW_KEYS = [*KEY_COLUMNS, "window_id"]
 CONFIG_NAMES = {
     "MS0": "Dataset-specific region reference",
     "MS1": "Unified region 1",
@@ -105,39 +108,6 @@ def aggregate_videos(window_scores: pd.DataFrame) -> pd.DataFrame:
     if not (result["effective_k"] == result["windows"]).all():
         raise ValueError("effective_k does not match window count")
     return result
-
-
-def target_k_reference(
-    window_scores: pd.DataFrame, target_k: int, local_column: str
-) -> pd.DataFrame:
-    calibration = window_scores[
-        (window_scores["protocol_split"] == "calibration")
-        & (window_scores["subset"] == "real")
-    ]
-    rows = []
-    for key, frame in calibration.groupby(KEY_COLUMNS, sort=False, observed=True):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.array([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) != target_k:
-            continue
-        rows.append(
-            {
-                **dict(zip(KEY_COLUMNS, key)),
-                "G_mean_raw": float(selected["G_k"].mean()),
-                "L_raw": float(selected[local_column].mean()),
-            }
-        )
-    reference = pd.DataFrame(rows)
-    if reference.empty:
-        raise ValueError(f"no calibration reference for effective_k={target_k}")
-    return reference
 
 
 def calibrate_configs(per_video: pd.DataFrame, windows: pd.DataFrame) -> pd.DataFrame:

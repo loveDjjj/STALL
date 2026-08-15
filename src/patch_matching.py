@@ -1,3 +1,10 @@
+"""Experimental numpy patch-temporal variants retained for reproducibility.
+
+This module contains matching, region pooling, multi-lag, residual, and D3/D4
+variants explored during development. The locked U0 and controlled D1/D2
+ablation use :mod:`alpha_stalled.local_branch` instead.
+"""
+
 from __future__ import annotations
 
 import math
@@ -401,3 +408,20 @@ def patch_temporal_delta(
         deltas.append(delta_t)
 
     return l2_normalize_last_dim(np.stack(deltas, axis=0))  # [T-1, P, D]
+
+
+__all__ = [
+    "cosine_scores",
+    "l2_normalize_last_dim",
+    "local_window_indices",
+    "match_patches_local_window",
+    "matching_diagnostics_for_pair",
+    "normalized_spatial_distance",
+    "patch_id_to_rc",
+    "patch_temporal_delta",
+    "pool_patch_regions",
+    "rc_to_patch_id",
+    "same_grid_finite_difference",
+    "second_order_residual",
+    "softmax_np",
+]

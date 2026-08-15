@@ -1,0 +1,709 @@
+{
+  "groups": [
+    {
+      "cache_id": "protocol_indexes",
+      "cache_key": {
+        "missing": [
+          "source_video_sha256",
+          "index_builder_git_commit",
+          "ffprobe_version"
+        ],
+        "present": [
+          "video_path",
+          "subset",
+          "source_model",
+          "fps",
+          "duration",
+          "frame_indices"
+        ]
+      },
+      "cleanup_priority": "P0_keep",
+      "current_consumers": [
+        "src/eval.py",
+        "src/eval_patch.py",
+        "tools/prefill_patch_cache.py",
+        "tools/score_u0_locked_windows.py"
+      ],
+      "dataset_scope": "all",
+      "family": "indexes",
+      "hash_contents": true,
+      "lifecycle": "protocol_index",
+      "metadata_status": "external_only",
+      "notes": "Small protocol-bearing assets; base indexes are reproducible, but no single retained command rebuilds every derived holdout and calibration CSV exactly.",
+      "path": "cache/indexes",
+      "payload_contract": "CSV rows contain video identity, metadata, and deterministic frame-index columns.",
+      "producer": "src/video_index.py and protocol-specific manifest builders",
+      "purpose": "Enriched video indexes, calibration subsets, and evaluation holdout manifests.",
+      "rebuild_command": null,
+      "rebuildable": false,
+      "release_dependency": false,
+      "retention": "keep",
+      "stats": {
+        "content_sha256": "c61ccdfde0c5bd03bfe905ba0d2cac908b49dd3919769ae2fe74622c60aed963",
+        "extension_counts": {
+          ".csv": 39,
+          "[none]": 1
+        },
+        "file_count": 40,
+        "layout_sha256": "487c145de87b9a7cee3c2c129d8133e5ad045bbcab85094fd50dc961fc7aad63",
+        "logical_bytes": 53182192,
+        "pt_naming_counts": {}
+      }
+    },
+    {
+      "cache_id": "global_demo_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix"
+        ]
+      },
+      "cleanup_priority": "P0_keep",
+      "current_consumers": [
+        "src/eval.py",
+        "tests and smoke runs"
+      ],
+      "dataset_scope": "demo",
+      "family": "global_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Retain because it is small and useful for fast integration checks.",
+      "path": "cache/embeddings/demo_dataset_duration2_filtered",
+      "payload_contract": "One float32 tensor per video with shape [sampled_frames, 1024].",
+      "producer": "src/eval.py via src/dataset_utils.py",
+      "purpose": "Small two-second global feature cache used for smoke tests and examples.",
+      "rebuild_command": "python src/eval.py --csv cache/indexes/demo_dataset_duration2_filtered.csv --emb-cache cache/embeddings/demo_dataset_duration2_filtered --duration 2 --output-csv <output.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 34
+        },
+        "file_count": 34,
+        "layout_sha256": "d025b62b6b727d9aac37d59fc190544bcfd9f7dddc68a2405b57dfb58be33fbe",
+        "logical_bytes": 2282969,
+        "pt_naming_counts": {
+          "compact_2s": 34
+        }
+      }
+    },
+    {
+      "cache_id": "global_comgenvid_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "src/eval.py",
+        "tools/build_multi_order_baselines.py",
+        "tools/evaluate_d3_robustness.py"
+      ],
+      "dataset_scope": "comgenvid",
+      "family": "global_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Active research cache; reuse only after checking the missing model and preprocessing identity fields.",
+      "path": "cache/embeddings/comgenvid",
+      "payload_contract": "One float32 tensor per video with shape [sampled_frames, 1024].",
+      "producer": "src/eval.py via src/dataset_utils.py",
+      "purpose": "Compact global DINO features for ComGenVid experiments.",
+      "rebuild_command": "python src/eval.py --csv cache/indexes/comgenvid.csv --emb-cache cache/embeddings/comgenvid --duration 2 --output-csv <output.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 5098
+        },
+        "file_count": 5098,
+        "layout_sha256": "e2f8500b694287bae9e9208127b76f20f1610776f346685eca7889d754c8e643",
+        "logical_bytes": 343515523,
+        "pt_naming_counts": {
+          "compact_2s": 5098
+        }
+      }
+    },
+    {
+      "cache_id": "global_videofeedback_legacy",
+      "cache_key": {
+        "missing": [
+          "requested_duration",
+          "frame_indices",
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem"
+        ]
+      },
+      "cleanup_priority": "P2_review",
+      "current_consumers": [
+        "tools/build_multi_order_baselines.py",
+        "tools/evaluate_d3_robustness.py"
+      ],
+      "dataset_scope": "videofeedback",
+      "family": "global_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Review before reuse or deletion because unsuffixed files do not identify their sampling protocol.",
+      "path": "cache/embeddings/videofeedback",
+      "payload_contract": "Unsuffixed float32 tensors with variable frame count and feature width 1024.",
+      "producer": "src/eval.py via src/dataset_utils.py",
+      "purpose": "Historical full or variably sampled global embeddings for VideoFeedback.",
+      "rebuild_command": "python src/eval.py --csv cache/indexes/videofeedback.csv --emb-cache cache/embeddings/videofeedback --output-csv <output.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "review_before_delete",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 37661
+        },
+        "file_count": 37661,
+        "layout_sha256": "fffa1373d2ccaafdbf809939a8de4ab85bafbba95461bc30c3c517eb69f7df19",
+        "logical_bytes": 2789348561,
+        "pt_naming_counts": {
+          "unsuffixed_pt": 37661
+        }
+      }
+    },
+    {
+      "cache_id": "global_genvideo_legacy",
+      "cache_key": {
+        "missing": [
+          "requested_duration",
+          "frame_indices",
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "tools/analyze_d3_window_cache_variants.py",
+        "tools/build_multi_order_baselines.py",
+        "tools/evaluate_d3_robustness.py"
+      ],
+      "dataset_scope": "genvideo",
+      "family": "global_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Still consumed by historical D3 comparisons; isolate from compact two-second caches.",
+      "path": "cache/embeddings/genvideo",
+      "payload_contract": "Unsuffixed float32 tensors with variable frame count and feature width 1024.",
+      "producer": "src/eval.py via src/dataset_utils.py",
+      "purpose": "Historical full or variably sampled global embeddings used by D3 and baseline studies.",
+      "rebuild_command": "python src/eval.py --csv cache/indexes/genvideo.csv --emb-cache cache/embeddings/genvideo --output-csv <output.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 18188
+        },
+        "file_count": 18188,
+        "layout_sha256": "8fcba5d5790cfd27e0be4bb08ed8411a636986d4305a9659abdeebe5519e3dbc",
+        "logical_bytes": 5698779630,
+        "pt_naming_counts": {
+          "unsuffixed_pt": 18188
+        }
+      }
+    },
+    {
+      "cache_id": "global_genvidbench_external",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix"
+        ]
+      },
+      "cleanup_priority": "P2_review",
+      "current_consumers": [],
+      "dataset_scope": "genvidbench_external",
+      "family": "global_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "No current code consumer was found; review before deletion because the cache is small and tied to external-validation history.",
+      "path": "cache/embeddings/genvidbench_pair1_ms_vript_eval",
+      "payload_contract": "One float32 tensor per video with shape [sampled_frames, 1024].",
+      "producer": "src/eval.py via src/dataset_utils.py",
+      "purpose": "Compact global features for the locked external GenVidBench evaluation pair.",
+      "rebuild_command": "python src/eval.py --csv cache/indexes/genvidbench_pair1_ms_vript_eval.csv --emb-cache cache/embeddings/genvidbench_pair1_ms_vript_eval --duration 2 --output-csv <output.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "review_before_delete",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 900
+        },
+        "file_count": 900,
+        "layout_sha256": "5d4166879f05abefe5e05904ce2887bc19e4ea01cefb811d138dceea88b129e3",
+        "logical_bytes": 60709800,
+        "pt_naming_counts": {
+          "compact_2s": 900
+        }
+      }
+    },
+    {
+      "cache_id": "patch_demo_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix",
+          "frame_indices_in_payload",
+          "grid_size_in_payload"
+        ]
+      },
+      "cleanup_priority": "P0_keep",
+      "current_consumers": [
+        "src/eval_patch.py",
+        "tests and smoke runs"
+      ],
+      "dataset_scope": "demo",
+      "family": "patch_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Retain because it is small and supports cheap end-to-end checks.",
+      "path": "cache/patch_embeddings/demo_dataset_duration2_filtered",
+      "payload_contract": "Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.",
+      "producer": "tools/prefill_patch_cache.py via src/dataset_utils_patch.py",
+      "purpose": "Small two-second patch-token cache used for smoke tests and examples.",
+      "rebuild_command": "python tools/prefill_patch_cache.py --csv cache/indexes/demo_dataset_duration2_filtered.csv --patch-emb-cache cache/patch_embeddings/demo_dataset_duration2_filtered --duration 2 --compact --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 34
+        },
+        "file_count": 34,
+        "layout_sha256": "a7bf76923dc789727e5ce12ef0f02614ba9a5868a6b14c8e327cd9e0b93ba342",
+        "logical_bytes": 439027954,
+        "pt_naming_counts": {
+          "compact_2s": 34
+        }
+      }
+    },
+    {
+      "cache_id": "patch_comgenvid_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix",
+          "frame_indices_in_payload",
+          "grid_size_in_payload"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "src/eval_patch.py",
+        "tools/score_u0_locked_k1_cache.py",
+        "tools/score_u0_local_d1_windows.py",
+        "tools/fit_u0_local_d1_params.py"
+      ],
+      "dataset_scope": "comgenvid",
+      "family": "patch_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Largest active ComGenVid research asset; do not infer compatibility from tensor shape alone.",
+      "path": "cache/patch_embeddings/comgenvid",
+      "payload_contract": "Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.",
+      "producer": "tools/prefill_patch_cache.py via src/dataset_utils_patch.py",
+      "purpose": "Compact one- and two-second patch-token features for ComGenVid research.",
+      "rebuild_command": "python tools/prefill_patch_cache.py --csv cache/indexes/comgenvid.csv --patch-emb-cache cache/patch_embeddings/comgenvid --duration 2 --compact --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 10198
+        },
+        "file_count": 10198,
+        "layout_sha256": "a905df1bd57b7cca4ed4581033ed0ba2bf5a8ca29956a1379c65bb5de167a17a",
+        "logical_bytes": 98762917198,
+        "pt_naming_counts": {
+          "compact_1s": 5100,
+          "compact_2s": 5098
+        }
+      }
+    },
+    {
+      "cache_id": "patch_videofeedback_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix",
+          "frame_indices_in_payload",
+          "grid_size_in_payload"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "src/eval_patch.py",
+        "tools/score_u0_locked_k1_cache.py",
+        "tools/score_u0_local_d1_windows.py",
+        "tools/fit_u0_local_d1_params.py"
+      ],
+      "dataset_scope": "videofeedback",
+      "family": "patch_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Active research cache covering both strict two-second and duration-aware one-second protocols.",
+      "path": "cache/patch_embeddings/videofeedback",
+      "payload_contract": "Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.",
+      "producer": "tools/prefill_patch_cache.py via src/dataset_utils_patch.py",
+      "purpose": "Compact one- and two-second patch-token features for VideoFeedback research.",
+      "rebuild_command": "python tools/prefill_patch_cache.py --csv cache/indexes/videofeedback.csv --patch-emb-cache cache/patch_embeddings/videofeedback --duration 2 --compact --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 4500
+        },
+        "file_count": 4500,
+        "layout_sha256": "8ced5c44269ce66853962651232a6c391b9cc71d18dbb5d85072ebf930df03ee",
+        "logical_bytes": 54879074500,
+        "pt_naming_counts": {
+          "compact_1s": 500,
+          "compact_2s": 4000
+        }
+      }
+    },
+    {
+      "cache_id": "patch_genvideo_compact",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix",
+          "frame_indices_in_payload",
+          "grid_size_in_payload"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "src/eval_patch.py",
+        "tools/score_u0_locked_k1_cache.py",
+        "tools/score_u0_local_d1_windows.py",
+        "tools/fit_u0_local_d1_params.py",
+        "duration-aware experiments"
+      ],
+      "dataset_scope": "genvideo",
+      "family": "patch_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Largest cache group and still actively reused; retain until research is archived.",
+      "path": "cache/patch_embeddings/genvideo",
+      "payload_contract": "Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.",
+      "producer": "tools/prefill_patch_cache.py via src/dataset_utils_patch.py",
+      "purpose": "Compact one- and two-second patch-token features for GenVideo research.",
+      "rebuild_command": "python tools/prefill_patch_cache.py --csv cache/indexes/genvideo.csv --patch-emb-cache cache/patch_embeddings/genvideo --duration 2 --compact --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 20188
+        },
+        "file_count": 20188,
+        "layout_sha256": "245daf348c0f1a0239f3d336f58a3caa13918279bd212fcc943c0717424651c9",
+        "logical_bytes": 231211681796,
+        "pt_naming_counts": {
+          "compact_1s": 4565,
+          "compact_2s": 15623
+        }
+      }
+    },
+    {
+      "cache_id": "patch_genvidbench_external",
+      "cache_key": {
+        "missing": [
+          "checkpoint_sha256",
+          "dinov3_commit",
+          "output_layer",
+          "preprocessing",
+          "frame_grouping",
+          "numerical_implementation",
+          "source_video_fingerprint"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_stem",
+          "requested_duration_suffix",
+          "frame_indices_in_payload",
+          "grid_size_in_payload"
+        ]
+      },
+      "cleanup_priority": "P1_keep_active",
+      "current_consumers": [
+        "tools/fit_u0_external_genvidbench_params.py",
+        "tools/score_u0_external_genvidbench_k1.py"
+      ],
+      "dataset_scope": "genvidbench_external",
+      "family": "patch_embeddings",
+      "hash_contents": false,
+      "lifecycle": "feature_cache",
+      "metadata_status": "partial",
+      "notes": "Retain while the external validation result remains in the paper evidence set.",
+      "path": "cache/patch_embeddings/genvidbench_pair1_ms_vript",
+      "payload_contract": "Torch dictionary containing global and [T,196,1024] patch tensors, 14x14 grid size, and frame indices.",
+      "producer": "tools/prefill_patch_cache.py via src/dataset_utils_patch.py",
+      "purpose": "Compact patch-token features for external GenVidBench calibration and evaluation.",
+      "rebuild_command": "python tools/prefill_patch_cache.py --csv cache/indexes/genvidbench_pair1_ms_vript_eval.csv --patch-emb-cache cache/patch_embeddings/genvidbench_pair1_ms_vript --duration 2 --compact --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "keep_active",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".pt": 1099
+        },
+        "file_count": 1099,
+        "layout_sha256": "380a730194fe0061911913e644e3ae597235b1b0f2f4649e85e316b524b5377a",
+        "logical_bytes": 14191237519,
+        "pt_naming_counts": {
+          "compact_2s": 1099
+        }
+      }
+    },
+    {
+      "cache_id": "patch_shards_debug",
+      "cache_key": {
+        "missing": [
+          "source_cache_hashes",
+          "checkpoint_sha256",
+          "producer_git_commit",
+          "exact_producer_command"
+        ],
+        "present": [
+          "dataset_name",
+          "shard_number",
+          "benchmark_statistics"
+        ]
+      },
+      "cleanup_priority": "P3_safe_delete_candidate",
+      "current_consumers": [],
+      "dataset_scope": "comgenvid_and_genvideo",
+      "family": "patch_embedding_debug_shards",
+      "hash_contents": false,
+      "lifecycle": "debug_benchmark",
+      "metadata_status": "external_only",
+      "notes": "No current consumer or release dependency was found; deletion still requires explicit manual approval.",
+      "path": "cache/patch_embedding_shards_debug",
+      "payload_contract": "Large debug shard files plus benchmark statistics; not part of a scoring protocol.",
+      "producer": "historical producer not retained in current code",
+      "purpose": "Historical storage-throughput benchmark shards and statistics.",
+      "rebuild_command": null,
+      "rebuildable": false,
+      "release_dependency": false,
+      "retention": "safe_delete_candidate",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".csv": 2,
+          ".json": 2,
+          ".pt": 3
+        },
+        "file_count": 7,
+        "layout_sha256": "f683ac4a58351efecb54da6b463af6451acd31b888d4014965c7aad9fb304b99",
+        "logical_bytes": 2065858589,
+        "pt_naming_counts": {
+          "unsuffixed_pt": 3
+        }
+      }
+    },
+    {
+      "cache_id": "d3_extracted_frames",
+      "cache_key": {
+        "missing": [
+          "extraction_runlist_sha256",
+          "source_video_fingerprint",
+          "ffmpeg_version",
+          "decoder_configuration"
+        ],
+        "present": [
+          "subset",
+          "source_model",
+          "video_directory",
+          "frame_number"
+        ]
+      },
+      "cleanup_priority": "P2_review",
+      "current_consumers": [
+        "tools/eval_d3_exact_from_frames.py",
+        "D3 protocol audits"
+      ],
+      "dataset_scope": "genvideo",
+      "family": "decoded_frames",
+      "hash_contents": false,
+      "lifecycle": "external_method_frames",
+      "metadata_status": "external_only",
+      "notes": "Rebuildable but costly; review only after the D3 comparison evidence is fully archived.",
+      "path": "cache/d3_frames",
+      "payload_contract": "Per-video directories containing sequential JPEG frames extracted at the runlist rate.",
+      "producer": "tools/extract_d3_frames_from_runlist.py",
+      "purpose": "Three-second 8 FPS JPEG frame sequences for the external D3 comparison protocol.",
+      "rebuild_command": "python tools/extract_d3_frames_from_runlist.py --execute --output-summary-csv <summary.csv>",
+      "rebuildable": true,
+      "release_dependency": false,
+      "retention": "review_before_delete",
+      "stats": {
+        "content_sha256": null,
+        "extension_counts": {
+          ".jpg": 151817
+        },
+        "file_count": 151817,
+        "layout_sha256": "80665eccd25db9d08c9edf86eb57cebb0f62af602692f3b1f187d47f6bbadaf2",
+        "logical_bytes": 4048986083,
+        "pt_naming_counts": {}
+      }
+    }
+  ],
+  "policy": {
+    "cache_root": "cache",
+    "deletion_mode": "manual_approval_only"
+  },
+  "schema_version": "alpha_stalled_cache_inventory_v1",
+  "snapshot_id": "cache_inventory_20260814",
+  "summary": {
+    "by_cleanup_priority": {
+      "P0_keep": {
+        "file_count": 108,
+        "logical_bytes": 494493115
+      },
+      "P1_keep_active": {
+        "file_count": 59271,
+        "logical_bytes": 405087206166
+      },
+      "P2_review": {
+        "file_count": 190378,
+        "logical_bytes": 6899044444
+      },
+      "P3_safe_delete_candidate": {
+        "file_count": 7,
+        "logical_bytes": 2065858589
+      }
+    },
+    "file_count": 249764,
+    "group_count": 13,
+    "logical_bytes": 414546602314,
+    "registered_file_count": 249764,
+    "unregistered_file_count": 0,
+    "unregistered_file_examples": []
+  }
+}

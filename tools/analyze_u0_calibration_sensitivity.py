@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import sys
 from pathlib import Path
@@ -15,133 +14,29 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_locked import cdf_with_positive_infinity, global_references
-from build_multi_order_baselines import metric_tables
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.parameters import global_references
+from alpha_stalled.u0_calibration_experiments import (
+    DATASETS,
+    SEEDS,
+    SIZES,
+    calibrate_candidate,
+    candidate,
+    load_parts,
+)
 
 
-DATASETS = ("comgenvid", "videofeedback", "genvideo")
 DISPLAY = {
     "comgenvid": "ComGenVid",
     "videofeedback": "VideoFeedback",
     "genvideo": "GenVideo",
     "Macro-3": "Macro-3",
 }
-SEEDS = (17, 29, 43, 71, 101)
-SIZES = (25, 50, 100, 200)
 BRANCHES = ("G", "L", "S")
-
-
-def candidate(seed: int, size: int) -> str:
-    return f"s{seed}_n{size}"
-
-
-def load_parts(root: Path, split: str) -> pd.DataFrame:
-    paths = sorted(
-        Path(path)
-        for path in glob.glob(str(root / "checkpoints" / split / "*" / "shard_*" / "part_*.csv"))
-    )
-    if not paths:
-        raise FileNotFoundError(f"no {split} candidate score parts")
-    frame = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in paths],
-        ignore_index=True,
-    )
-    keys = ["video_id", "sampling", "window_id"]
-    if frame.duplicated(keys).any():
-        raise ValueError(f"duplicate {split} score keys")
-    return frame
-
-
-def selected_k_reference(
-    reserve_k3: pd.DataFrame,
-    selected_ids: set[str],
-    target_k: int,
-    column: str,
-) -> np.ndarray:
-    values = []
-    selected = reserve_k3[reserve_k3["video_id"].isin(selected_ids)]
-    for _, frame in selected.groupby("video_id", sort=False):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.array([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        chosen = ordered.iloc[np.unique(positions)]
-        if len(chosen) == target_k:
-            values.append(float(chosen[column].mean()))
-    if len(values) < 2:
-        raise ValueError(f"insufficient K={target_k} reference values for {column}")
-    return stable_sorted(np.asarray(values, dtype=np.float64))
-
-
-def calibrate_candidate(
-    evaluation: pd.DataFrame,
-    reserve: pd.DataFrame,
-    selected_ids: set[str],
-    name: str,
-    global_spatial_ref: np.ndarray,
-    global_t1_ref: np.ndarray,
-) -> pd.DataFrame:
-    reserve_k1 = reserve[
-        reserve["sampling"].eq("k1") & reserve["video_id"].isin(selected_ids)
-    ]
-    if len(reserve_k1) != len(selected_ids):
-        raise ValueError(f"{name}: K1 reserve count mismatch")
-    patch_spatial_ref = stable_sorted(reserve_k1[f"patch_spatial__{name}"].to_numpy())
-    patch_d2_ref = stable_sorted(reserve_k1[f"patch_d2__{name}"].to_numpy())
-
-    def calibrate_windows(frame: pd.DataFrame) -> pd.DataFrame:
-        output = frame.copy()
-        output["global_spatial"] = empirical_cdf_right_inclusive(
-            output["global_spatial_raw"].to_numpy(), global_spatial_ref
-        )
-        output["global_t1"] = cdf_with_positive_infinity(
-            output["global_t1_raw"].to_numpy(), global_t1_ref
-        )
-        output["patch_spatial"] = empirical_cdf_right_inclusive(
-            output[f"patch_spatial__{name}"].to_numpy(), patch_spatial_ref
-        )
-        output["patch_d2"] = empirical_cdf_right_inclusive(
-            output[f"patch_d2__{name}"].to_numpy(), patch_d2_ref
-        )
-        output["G_k"] = 0.5 * output["global_spatial"] + 0.5 * output["global_t1"]
-        output["L_k"] = 0.1 * output["patch_spatial"] + 0.9 * output["patch_d2"]
-        return output
-
-    evaluation_scored = calibrate_windows(evaluation)
-    reserve_k3 = calibrate_windows(reserve[reserve["sampling"].eq("k3")])
-    evaluation_video = (
-        evaluation_scored.groupby("video_id", sort=False)
-        .agg(effective_k=("window_id", "size"), G_raw=("G_k", "mean"), L_raw=("L_k", "mean"))
-        .reset_index()
-    )
-    pieces = []
-    for effective_k, target in evaluation_video.groupby("effective_k", sort=True):
-        target = target.copy()
-        for branch in ("G", "L"):
-            reference = selected_k_reference(
-                reserve_k3,
-                selected_ids,
-                int(effective_k),
-                f"{branch}_k",
-            )
-            target[branch] = empirical_cdf_right_inclusive(
-                target[f"{branch}_raw"].to_numpy(), reference
-            )
-        target["S"] = 0.6 * target["G"] + 0.4 * target["L"]
-        pieces.append(target)
-    output = pd.concat(pieces, ignore_index=True)
-    if len(output) != evaluation["video_id"].nunique() or output["video_id"].duplicated().any():
-        raise ValueError(f"{name}: incomplete candidate video scores")
-    return output[["video_id", "effective_k", "G", "L", "S"]]
 
 
 def locked_raw_audit(evaluation: pd.DataFrame, locked_windows: Path) -> dict[str, float]:

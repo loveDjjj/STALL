@@ -1,6 +1,11 @@
 # Historical pre-release U0 result. The locked correction is
 # configs/alpha_stalled_u0_locked.yaml.
 
+config_identity:
+  protocol_id: strict20_prerelease_temporal_unified_v1
+  lifecycle: historical_frozen
+  current_authority: false
+
 method:
   name: Alpha-STALLED-U0
   selection_role: pre_release_temporal_unified_result

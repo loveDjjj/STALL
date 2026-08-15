@@ -13,61 +13,16 @@ import argparse
 import sys
 from pathlib import Path
 
-import pandas as pd
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from metrics import ScoreDirection, build_results_table
-
-
-KEY_COLUMNS = ["subset", "source_model", "filename"]
-
-
-def _read_scores(path: Path, score_col: str, prefix: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    missing = [c for c in KEY_COLUMNS + [score_col] if c not in df.columns]
-    if missing:
-        raise ValueError(f"{path} 缺少列: {missing}")
-    out = df[KEY_COLUMNS + [score_col]].copy()
-    for col in KEY_COLUMNS:
-        out[col] = out[col].astype(str)
-    return out.rename(columns={score_col: f"{prefix}_score"})
-
-
-def fuse_scores(
-    global_csv: Path,
-    patch_csv: Path,
-    alpha: float,
-    global_score_col: str,
-    patch_score_col: str,
-) -> pd.DataFrame:
-    if not 0.0 <= alpha <= 1.0:
-        raise ValueError(f"alpha 必须位于 [0,1]，当前为 {alpha}")
-
-    global_df = _read_scores(global_csv, global_score_col, "global")
-    patch_df = _read_scores(patch_csv, patch_score_col, "patch")
-    merged = global_df.merge(patch_df, on=KEY_COLUMNS, how="inner", validate="one_to_one")
-    if len(merged) != len(global_df) or len(merged) != len(patch_df):
-        raise ValueError(
-            f"Global/patch CSV 交集不一致: merged={len(merged)}, "
-            f"global={len(global_df)}, patch={len(patch_df)}"
-        )
-    merged["alpha"] = float(alpha)
-    merged["final_score"] = alpha * merged["global_score"] + (1.0 - alpha) * merged["patch_score"]
-    return merged
-
-
-def compute_metrics(df: pd.DataFrame, seed: int) -> pd.DataFrame:
-    return build_results_table(
-        df[["subset", "source_model", "final_score"]],
-        {"final_score": ScoreDirection.HIGHER_IS_REAL},
-        seed=seed,
-        skip_global_compare=True,
-        verbose=False,
-    )
+from alpha_stalled.score_csv import (
+    KEY_COLUMNS,
+    compute_fused_metrics as compute_metrics,
+    fuse_score_csvs as fuse_scores,
+)
 
 
 def main() -> None:

@@ -23,11 +23,10 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from alpha_stalled.backbone import load_dinov3_model
+from alpha_stalled.video_io import load_video_frames
 from stall import (
-    create_dinov3_transform,
     diff_normalized_embeddings,
-    load_dinov3_model,
-    load_video_frames,
     log_likelihood,
     whitening_transform as apply_whitening,
 )

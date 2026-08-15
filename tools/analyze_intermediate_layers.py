@@ -12,17 +12,17 @@ import pandas as pd
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_multi_window_scores import macro_cluster_bootstrap
-from analyze_unified_multiscale import (
+from alpha_stalled.historical_window_analysis import (
     KEY_COLUMNS,
     WINDOW_KEYS,
     target_k_reference,
 )
-from build_multi_order_baselines import empirical_cdf, metric_tables, paired_bootstrap
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.metrics import macro_cluster_bootstrap, metric_tables, paired_bootstrap
 
 
 CONFIG_NAMES = {

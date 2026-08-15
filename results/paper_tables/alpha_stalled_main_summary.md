@@ -14,5 +14,5 @@ metrics = src/metrics.py pairwise balanced AUC/AP
 | VideoFeedback | `results/paper_scores/videofeedback_alpha_stalled.csv` | `results/paper_tables/videofeedback_alpha_stalled_metrics.csv` | 0.8628 | 0.8750 |
 | GenVideo | `results/paper_scores/genvideo_alpha_stalled.csv` | `results/paper_tables/genvideo_alpha_stalled_metrics.csv` | 0.8374 | 0.8283 |
 
-这些数值是当前已验证的 release baseline。若更新手稿表格，
-应使用同一组命令重新生成本文件和 `docs/restructure/reproducibility_audit.md`。
+这些数值属于 pre-U0 score-CSV release，不是当前 locked U0。
+历史审计见 `research_archive/docs/pre_u0_release/reproducibility_audit.md`。

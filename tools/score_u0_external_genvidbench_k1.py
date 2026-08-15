@@ -15,12 +15,14 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from score_u0_locked_k1_cache import KEY_COLUMNS, score_raw_batch
-from score_u0_locked_windows import load_raw_params, stable_shard
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.release_io import video_id_shard
+from alpha_stalled.u0_protocol import KEY_COLUMNS
+from alpha_stalled.u0_scoring import score_raw_batch
 
 
 DATASET = "genvidbench_pair1"
@@ -37,7 +39,7 @@ def load_manifest(release_dir: Path, num_shards: int, shard: int) -> tuple[pd.Da
     )["calibration_reference_windows"]
     frame = pd.DataFrame(records)
     frame = frame[
-        frame["video_id"].map(lambda value: stable_shard(value, num_shards) == shard)
+        frame["video_id"].map(lambda value: video_id_shard(value, num_shards) == shard)
     ].reset_index(drop=True)
     return frame, references
 

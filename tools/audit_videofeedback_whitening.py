@@ -13,15 +13,18 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
-TOOLS_DIR = REPO_ROOT / "tools"
-for path in (SRC_DIR, TOOLS_DIR):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_clean_universal import KEY_COLUMNS, WINDOW_KEYS, target_k_reference
-from build_multi_order_baselines import empirical_cdf, metric_tables
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.historical_window_analysis import (
+    KEY_COLUMNS,
+    WINDOW_KEYS,
+    target_k_reference,
+)
+from alpha_stalled.metrics import metric_tables
 from patch_matching import patch_temporal_delta
-from score_multi_window import decode_manifest_row_with_retries
+from alpha_stalled.legacy_window_scoring import decode_manifest_row_with_retries
 from stall_patch import PatchSTALL
 
 

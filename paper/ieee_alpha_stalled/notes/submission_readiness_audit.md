@@ -1,34 +1,126 @@
-# 投稿准备度审计
+# U0 投稿准备度审计
 
-当前 `paper/ieee_alpha_stalled/` 已经具备中文双栏论文初稿、图表、参考文献、实验总览和核心参考文献 PDF，但还不是最终投稿包。以下项目需要在确定目标期刊后补齐。
+日期：2026-07-25
 
-## 已完成
+## 结论
 
-- IEEE 双栏 LaTeX 工作区。
-- 中文正文：摘要、引言、相关工作、方法、实验、消融、讨论、结论。
-- 主图和结果图：方法流程、bootstrap、逐生成器热图、temporal order、cross-dataset frozen hyperparameter、关键帧解释。
-- 参考文献：核心 BibTeX 条目与 `2603.15026v2.pdf`。
-- 实验总结：主线结果、消融、敏感性、D3 protocol audit、duration/window、runtime/storage、coverage gaps、failure/keyframe cases。
-- 静态检查：input、figure、citation key、label 重复检查通过。
+当前证据已经满足一篇**限定论点的方法增量论文**的基本条件：可以严格声称 U0
+相对 Original STALL、同核心 Unified K1 和单分支消融有稳定提升；不能声称 U0
+优于全部现有生成视频检测器或达到 SOTA。
 
-## 需要作者提供或确认
+两种投稿目标必须分开判断：
 
-| 项目 | 当前状态 | 为什么需要 |
+| 目标论点 | 当前状态 | 判断 |
 |---|---|---|
-| 作者姓名、单位、邮箱 | `main.tex` 中仍为占位符 | 投稿必需 |
-| 目标期刊或会议 | 未指定 | 决定摘要格式、页数、参考文献格式、图表数量和是否需要声明页 |
-| 论文题名 | 当前为工作题名 | 需根据目标期刊和作者偏好定稿 |
-| 外部 baseline 是否必须补跑 | 当前只做 D3 protocol audit | 若目标期刊要求 SOTA 表，需要重跑 D3/AEROBLADE/RIGID/ZED/T2VE/AIGVDet |
-| 校准源策略 | 当前 patch release 使用 target benchmark real-only 统计 | 若目标期刊强调严格外部校准，需要补 calibration source 消融 |
-| 数据/代码可用性声明 | 已写入 `sections/08_declarations.tex`，但链接、许可证和 release tag 仍待作者确认 | 期刊投稿通常必需 |
-| 伦理/滥用声明 | 已写入 `sections/08_declarations.tex` | 生成视频检测论文建议补充 |
-| 利益冲突与作者贡献 | 已写入占位声明 | 需要作者确认，不能由工具推断 |
-| 基金和致谢 | `main.tex` 中为占位符 | 投稿必需 |
+| 相对 STALL 的训练自由 Global--Local 扩展有效 | 完整 | 可以投稿 |
+| K=3 覆盖相对同核心 K1 有独立增益 | 完整 | 可以投稿 |
+| Local 与 Global 有统计互补性 | 完整 | 可以投稿 |
+| 新域生成器上的锁定确认 | 有 2 个生成器 | 支持但范围有限 |
+| 优于当前所有检测方法/SOTA | 缺同协议外部 baseline | 不成立 |
+| 通用语义伪影定位或因果解释 | 注入结果混合/负向 | 不成立 |
+| 无目标域数据的通用检测 | 依赖约 200 条目标域 real | 不成立 |
 
-## 建议下一步
+因此，若稿件定位为“STALL 的严格、可复现 Global--Local 与 multi-window
+扩展”，实验条件充分；若目标 venue 要求竞争性 SOTA 表，当前投稿条件尚未满足。
 
-1. 在 Overleaf 使用 XeLaTeX 编译，记录所有报错和版面问题。
-2. 作者确认目标期刊和页数限制。
-3. 若目标期刊需要英文稿，将当前中文结构作为底稿，再进行英文重写，而不是逐句翻译。
-4. 若先投中文期刊，优先补齐作者信息、声明、图表脚注和外部 baseline 边界说明。
-5. 若审稿预期强，优先补 D3-DINOv3 同协议重跑，其次补 calibration source 代表实验。
+## 已满足的学术条件
+
+### 1. 公平主比较
+
+- 固定评测交集为 21,421 个视频、3 个数据集、20 个生成器。
+- 每数据集 200 条独立真实校准视频；评测 real 和全部 fake 不参与 whitening、
+  CDF、阈值、融合权重或候选选择。
+- 正式 U0 为完全统一的 region1/mean、layer23、alpha=0.6、beta=0.1、K=3。
+- Unified K1 使用相同核心定义和样本交集，只有窗口数不同，是 K=3 的公平对照。
+- 历史 clean K1 只作审计参考；历史 leakage-affected 0.8737/0.8750 已排除。
+
+### 2. 效应量与不确定性
+
+| 主要比较 | Macro AUC delta | Macro AP delta | AP 95% CI |
+|---|---:|---:|---:|
+| U0 - Original STALL | +0.0353 | +0.0295 | [+0.0241,+0.0358] |
+| U0 K3 - Unified K1 | +0.0109 | +0.0087 | [+0.0057,+0.0120] |
+| U0 - K3 Global-only | +0.0256 | +0.0237 | [+0.0191,+0.0285] |
+| U0 - K3 Local-only | +0.0384 | +0.0431 | [+0.0350,+0.0513] |
+
+Bootstrap 在视频 ID 层面配对并按数据集/生成器分层；窗口从不作为独立样本。
+主结果不只依赖单个点估计。
+
+### 3. 消融隔离
+
+- GlobalSpatial、GlobalT1、PatchSpatial、PatchD2、完整 Global、完整 Local、K1、K3
+  均有独立行。
+- Local 加到 Global、Global 加到 Local、K3 加到 K1 均有独立配对区间。
+- K5/all-window、bottom-2/hybrid、residual、multiscale、intermediate layer、Joint、
+  OAS 均按预先设定准入门槛单独判断；失败组件没有堆叠后继续调权重。
+- PatchSpatial 的负贡献已公开：K1 中加入该项 AP 为 -0.0070，CI 全负；保留它
+  是锁定 release 决策，不被描述成有效创新点。
+
+### 4. 稳定性与外部证据
+
+- 校准规模 25/50/100/200 和 5 个 seed 已完成；N=200 Macro AP seed std=0.0022。
+- 跨数据集校准显示 Local 域依赖，避免了“通用校准”过度结论。
+- 锁定后的 GenVidBench 使用 199 条新域 real 校准和 900 条评测视频：U0 相对
+  STALL AP +0.0460，CI [+0.0297,+0.0634]；相对 K1 +0.0126，CI
+  [+0.0017,+0.0247]。
+- 锁定扰动实验现已补充 1,000 次配对 cluster bootstrap。CRF35、resize、drop25、
+  repeat25 和 4fps 的 AP 区间全负；CRF23/drop10 的小损失区间跨 0，但不作
+  等效性声明。
+
+### 5. 复现性
+
+- float64 核心消除了 batch-shape 数值漂移，最大差约 2.27e-13。
+- 空缓存复算、清单、帧索引、配置与 checkpoint hash 均已固定。
+- release validator 61/61，通过 117/117 测试。
+- headline AP 明确为 real-positive；fake-positive AP 单独报告。
+
+## 当前最重要的缺口
+
+### 1. 同协议外部基线
+
+主表目前只有 Original STALL、历史审计行、Unified K1 和 U0。D3、AEROBLADE、
+RIGID、ZED、T2VE、AIGVDet 等没有在同一视频交集、帧预算、校准数据和指标方向下
+重跑。不同论文中的公开数字不能直接拼表，因为样本交集、正类方向和校准资源不同。
+
+这是竞争性强 venue 的最大实验缺口。在补齐前，摘要、引言和结论均不得出现
+“SOTA”“优于现有方法”或“全面领先”。
+
+### 2. 外部确认范围
+
+GenVidBench 的锁定确认是有效正证据，但只有 ModelScope 和 Pika 两个生成器，且仍
+使用新域真实校准。它证明结构能向两个新生成器迁移，不证明无目标域 real 的广泛迁移。
+
+### 3. 方法边界
+
+- VideoFeedback 中 K3 相对 Unified K1 AP 下降 0.0045。
+- target/off-domain Local AP 为 0.8292/0.7425，Local 明显依赖域匹配。
+- 严重压缩、重复帧和低 FPS 有可靠退化。
+- 合成注入不能支持单调异常响应或语义定位。
+- K3 需要 K1 的 2.30 倍帧数；延迟敏感场景应报告这一成本。
+
+这些不是需要隐藏的失败，而是稿件可信度的重要组成部分。
+
+## 本次审计已修正
+
+1. 主表加入 Unified K1 公平对照，并将历史 clean K1 明确标为 audit。
+2. 新增协议角色表，排除 leakage-affected 结果进入正式比较。
+3. 明确主要终点、两个主要比较、次要终点和探索性分析。
+4. 将“预注册式消融”改为“运行前设定准入门槛”，避免未经公开注册的表述。
+5. 收紧 D2 贡献表述：三数据集统一消融支持 D2 为 Local 主项；高阶/lag 历史结果
+   只称代表性对照。
+6. 鲁棒性补充 1,000 次配对 bootstrap，并避免把区间跨 0 写成等效。
+7. 局限性明确加入缺失同协议 SOTA baseline，不允许跨协议数字拼表。
+
+## 投稿前仍需作者完成
+
+- 指定目标会议/期刊及页数，以决定是否必须补同协议竞争方法。
+- 填写作者、单位、邮箱、基金、贡献、利益冲突、许可证和 release URL。
+- 在有 XeLaTeX/完整字体环境中完成最终 PDF 编译和逐页版面检查。
+- 若要使用 SOTA 定位，先制定并锁定外部 baseline 协议，再运行；不得依据 U0 结果
+  为不同 baseline 单独调整样本或帧预算。
+
+## 最终判定
+
+**指标提升和内部消融满足“相对 STALL 的可复现方法改进”论文条件；尚不满足
+“相对当前全部方法达到 SOTA”的论文条件。** 最合适的当前写法是报告受控效应量、
+外部锁定确认和明确失败边界，而不是扩大性能主张。

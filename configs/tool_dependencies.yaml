@@ -1,0 +1,450 @@
+schema_version: alpha_stalled_tool_dependencies_v4
+tool_root: tools
+
+# These are executable boundaries, never shared libraries. They may import src/, but not tools/.
+isolated_entrypoints:
+  - analyze_duration_aware_23source
+  - analyze_duration_aware_k1_factorial
+  - analyze_full_coverage_protocol
+  - analyze_independent_real_complement
+  - analyze_intermediate_layers
+  - analyze_joint_typicality
+  - analyze_multi_window_feasibility
+  - analyze_multi_window_scores
+  - analyze_clean_universal
+  - analyze_u0_calibration_sensitivity
+  - analyze_u0_cross_dataset_calibration
+  - analyze_u0_injections
+  - analyze_u0_locked
+  - analyze_u0_oas_candidate
+  - analyze_u0_robustness
+  - analyze_unified_multiscale
+  - audit_videofeedback_whitening
+  - build_u0_calibration_reserve
+  - build_duration_aware_23source_protocol
+  - build_cache_inventory
+  - build_data_catalog
+  - build_run_manifest
+  - build_tool_dependency_inventory
+  - capture_experiment_run
+  - fit_duration_aware_local_params
+  - fit_u0_calibration_sensitivity
+  - score_duration_aware_23source
+  - score_duration_aware_real_curve
+  - score_duration_aware_size_candidates
+  - score_k1_calibration_from_cache
+  - score_u0_locked_calibration_reference
+  - score_u0_external_genvidbench_k1
+  - score_u0_locked_k1_cache
+  - score_u0_locked_windows
+  - score_multi_window
+  - run_local_d2_residuals
+  - select_duration_aware_calibration_size
+  - verify_cache_inventory
+  - verify_config_registry
+  - verify_data_catalog
+  - verify_experiment_registry
+  - verify_environment_lock
+  - verify_feature_cache_contract
+  - verify_parameter_assets
+  - verify_project_documentation
+  - verify_run_capture
+  - verify_run_manifest
+  - verify_tool_dependencies
+  - verify_u0_locked_release
+  - verify_u0_pipeline_reconstruction
+
+lifecycle_classes:
+  - lifecycle: formal_release
+    description: Canonical locked-U0 release, public inference, and exact reproduction entrypoints.
+    new_work_policy: Bug fixes require locked-result regression evidence; behavior changes require a new protocol and release ID.
+    archive_policy: Never archive while u0_locked_v1 is the current release; preserve public command paths.
+    tools:
+      - analyze_u0_locked
+      - build_u0_release_manifests
+      - eval_alpha_stalled
+      - finalize_u0_locked_calibration_reference
+      - finalize_u0_locked_shard
+      - score_u0_locked_calibration_reference
+      - score_u0_locked_k1_cache
+      - score_u0_locked_windows
+      - verify_u0_locked_release
+      - verify_u0_pipeline_reconstruction
+  - lifecycle: paper_evidence
+    description: Controlled ablations, extensions, robustness studies, and paper asset builders supporting the current manuscript.
+    new_work_policy: New runs require frozen factors, an experiment ID, leakage declarations, and registration before manuscript use.
+    archive_policy: Retain through review and artifact release; archive only with result manifests and stable compatibility commands.
+    tools:
+      - analyze_duration_aware_23source
+      - analyze_duration_aware_k1_factorial
+      - analyze_full_coverage_protocol
+      - analyze_independent_real_complement
+      - analyze_second_order_independent_calibration
+      - analyze_u0_calibration_sensitivity
+      - analyze_u0_core_ablation
+      - analyze_u0_cross_dataset_calibration
+      - analyze_u0_external_genvidbench
+      - analyze_u0_injections
+      - analyze_u0_oas_candidate
+      - analyze_u0_robustness
+      - assemble_duration_aware_k1_reuse
+      - audit_runtime_storage_costs
+      - audit_u0_metric_protocol
+      - audit_u0_numerical_stability
+      - bootstrap_u0_core_ablation
+      - bootstrap_u0_oas_candidate
+      - bootstrap_u0_robustness
+      - build_duration_aware_23source_protocol
+      - build_duration_aware_k1_protocol
+      - build_independent_remaining_real_manifest
+      - build_manuscript_rich_evidence
+      - build_u0_calibration_reserve
+      - build_u0_external_genvidbench_manifests
+      - build_u0_robustness_manifests
+      - build_u0_robustness_plan
+      - collect_partial_k1_checkpoints
+      - create_keyframe_case_explanations
+      - create_patch_case_visualizations
+      - fit_duration_aware_local_params
+      - fit_u0_calibration_sensitivity
+      - fit_u0_cross_and_oas_params
+      - fit_u0_external_genvidbench_params
+      - fit_u0_local_d1_params
+      - score_duration_aware_23source
+      - score_duration_aware_original_k1
+      - score_duration_aware_real_curve
+      - score_duration_aware_size_candidates
+      - score_u0_calibration_candidates
+      - score_u0_external_genvidbench_k1
+      - score_u0_injections
+      - score_u0_local_d1_windows
+      - score_u0_robustness
+      - select_duration_aware_calibration_size
+  - lifecycle: governance
+    description: Deterministic repository catalogs, manifests, provenance capture, and consistency verifiers.
+    new_work_policy: May evolve only with schema tests, deterministic generated artifacts, and documentation checks.
+    archive_policy: Keep active while the governed asset exists; governance entrypoints must remain independent of other CLIs.
+    tools:
+      - build_cache_inventory
+      - build_data_catalog
+      - build_run_manifest
+      - build_tool_dependency_inventory
+      - capture_experiment_run
+      - verify_cache_inventory
+      - verify_config_registry
+      - verify_data_catalog
+      - verify_experiment_registry
+      - verify_environment_lock
+      - verify_feature_cache_contract
+      - verify_parameter_assets
+      - verify_project_documentation
+      - verify_run_capture
+      - verify_run_manifest
+      - verify_tool_dependencies
+  - lifecycle: historical_frozen
+    description: Superseded, rejected, or protocol-specific experiment entrypoints retained only for exact historical reproduction.
+    new_work_policy: Do not use for new parameter searches or main claims; changes are limited to compatibility and verified refactors.
+    archive_policy: Move only as a complete retained family or with explicit evidence and compatibility-path preservation.
+    tools:
+      - analyze_clean_universal
+      - analyze_d3_window_cache_variants
+      - analyze_global_d3_variants
+      - analyze_global_local_fusion
+      - analyze_intermediate_layers
+      - analyze_joint_typicality
+      - analyze_local_residual
+      - analyze_multi_window_feasibility
+      - analyze_multi_window_scores
+      - analyze_unified_multiscale
+      - audit_d3_exact_readiness
+      - audit_d3_protocol
+      - audit_videofeedback_whitening
+      - build_multi_order_baselines
+      - compare_d3_smoke_with_existing_scores
+      - compare_multi_window_candidates
+      - eval_d3_exact_from_frames
+      - eval_genvideo_d3_comparable_protocol
+      - eval_global_second_order_volatility
+      - evaluate_d3_pixel_robustness
+      - evaluate_d3_robustness
+      - extract_d3_frames_from_runlist
+      - fit_clean_universal_layer17
+      - fit_clean_universal_params
+      - fit_intermediate_layer_params
+      - prepare_genvideo_d3_exact_protocol
+      - run_d3_exact_genvideo_batch
+      - run_local_d2_residuals
+      - score_clean_universal_windows
+      - score_intermediate_layer_windows
+      - score_k1_calibration_from_cache
+      - score_local_residual_windows
+      - score_multi_window
+      - score_multi_window_incremental
+      - score_unified_multiscale_windows
+      - summarize_d3_exact_genvideo_metrics
+      - summarize_temporal_derivative_order
+      - summarize_unified_multiscale_layers
+  - lifecycle: research_utility
+    description: Exploratory audits, benchmarks, token inspection, and generic summaries that are not authoritative claim sources.
+    new_work_policy: Results remain diagnostic until promoted through a registered protocol and evidence review.
+    archive_policy: May be archived independently after confirming that no active script, report command, or cache workflow references it.
+    tools:
+      - prefill_patch_cache
+  - lifecycle: compatibility
+    description: Legacy generic command surfaces retained for existing callers but not used as current protocol authorities.
+    new_work_policy: Do not add new method logic; route reusable behavior through src/alpha_stalled and preserve command compatibility.
+    archive_policy: Remove only after repository-wide reference checks and a documented replacement command.
+    tools:
+      - analyze_cross_dataset_frozen_hyperparams
+      - analyze_duration_window_feasibility
+      - analyze_journal_experiments
+      - audit_failure_cases
+      - audit_patch_likelihood_assumptions
+      - audit_reference_experiment_alignment
+      - benchmark_csv_stage_runtime
+      - benchmark_video_stage_runtime
+      - bootstrap_macro_average_delta
+      - eval_score_csv
+      - fuse_scores
+      - inspect_dinov3_tokens
+      - summarize_duration_window_representative
+      - summarize_journal_experiments
+      - summarize_metrics_average_rows
+      - verify_alpha_stalled_release
+
+maintenance_decisions:
+  - tool: analyze_cross_dataset_frozen_hyperparams
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/analyze_cross_dataset_frozen_hyperparams.py
+    original_sha256: 97d0064a53fdd702501f90348b2ea5f2aecc78a97a28446f2ec0b129cc5858d1
+    evidence_paths:
+      - results/journal_experiments/cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md
+      - results/journal_experiments/cross_dataset_frozen_hyperparams/alpha_leave_one_out.csv
+  - tool: analyze_journal_experiments
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/analyze_journal_experiments.py
+    original_sha256: 7594a16da983924974a5b2fef90d1d8461923d7b0076337f80274a3eea9eca2a
+    evidence_paths:
+      - results/paper_sensitivity/journal_experiment_gap_analysis.md
+      - results/paper_sensitivity/beta_sensitivity_summary.csv
+  - tool: audit_failure_cases
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/audit_failure_cases.py
+    original_sha256: 0feceb8eb0524729e228900d8f59c21caaad409b27fcddf98f7c07ccb2e14e09
+    evidence_paths:
+      - results/journal_experiments/failure_case_audit/failure_case_audit.md
+      - results/journal_experiments/failure_case_audit/failure_case_audit.csv
+  - tool: audit_patch_likelihood_assumptions
+    decision: compatibility_wrapper
+    reason: The superseded region-3 diagnostic is archived because its assets are not part of the current U0 manuscript; the original command remains for historical reproduction.
+    archive_target: research_archive/tools/journal_experiments/audit_patch_likelihood_assumptions.py
+    original_sha256: f6d1eae85a6c45ab6bf75665afb573dce4547a9e22ef392d4618fe00e2a22958
+    evidence_paths:
+      - results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_audit.md
+      - results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_summary.csv
+      - paper/ieee_alpha_stalled/tables/patch_likelihood_assumption_audit.tex
+  - tool: benchmark_video_stage_runtime
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/benchmark_video_stage_runtime.py
+    original_sha256: 48e844730488cd59074ec7cf824c3bd02c20b24c3aa11a94669789720ee1cce5
+    evidence_paths:
+      - results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md
+      - results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.csv
+  - tool: bootstrap_macro_average_delta
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/bootstrap_macro_average_delta.py
+    original_sha256: 99091cb46daa21827e288ccda56d0458eeca9963a4d18635f8e9559ca661935f
+    evidence_paths:
+      - results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md
+      - results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv
+  - tool: summarize_duration_window_representative
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/summarize_duration_window_representative.py
+    original_sha256: 3b986751ff13a73d0be17983e3158d5991024a1d13b611b7148794457a40c71d
+    evidence_paths:
+      - results/journal_experiments/duration_window_representative/comgenvid_duration_window_representative.md
+      - results/journal_experiments/duration_window_representative/comgenvid_duration_window_comparison.csv
+  - tool: analyze_duration_window_feasibility
+    decision: compatibility_wrapper
+    reason: The implementation is archived with its journal runtime workflow; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/analyze_duration_window_feasibility.py
+    original_sha256: b134e1ae69ddfea84bc11a2d01695bad90dfa6f9175f07471764f565be9c6693
+    evidence_paths:
+      - results/journal_experiments/duration_window_feasibility/duration_window_feasibility.md
+  - tool: audit_reference_experiment_alignment
+    decision: compatibility_wrapper
+    reason: The implementation is archived with its journal runtime workflow; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/audit_reference_experiment_alignment.py
+    original_sha256: e59604846309b249f0f9c49aa4f5c114bc023c1c20e08568e91f892dc764bbaf
+    evidence_paths:
+      - results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.md
+  - tool: benchmark_csv_stage_runtime
+    decision: compatibility_wrapper
+    reason: The implementation is archived beside the video-stage benchmark; the original command remains as a thin compatibility wrapper.
+    archive_target: research_archive/tools/journal_experiments/benchmark_csv_stage_runtime.py
+    original_sha256: 3395b357a500827f418c6d249425c87a1d60f62bd2e5b737774e2f606fe522bf
+    evidence_paths:
+      - results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.md
+  - tool: summarize_journal_experiments
+    decision: compatibility_wrapper
+    reason: The implementation is archived; the original command remains as a thin compatibility wrapper for the historical sensitivity workflow.
+    archive_target: research_archive/tools/journal_experiments/summarize_journal_experiments.py
+    original_sha256: 3242b7a63c6efe60d4b47750d121fd2b97b77764ffc603438e62c795918ba7a9
+    evidence_paths:
+      - results/journal_experiments/region_sensitivity/region_sensitivity_summary.md
+  - tool: inspect_dinov3_tokens
+    decision: compatibility_wrapper
+    reason: The implementation is archived after the backbone contract and tests superseded this one-off token-layout probe; the original command remains available.
+    archive_target: research_archive/tools/journal_experiments/inspect_dinov3_tokens.py
+    original_sha256: 96e870cbf79e7eb7d346a5945435bac19ad848928777022e795f61df93f02909
+    evidence_paths:
+      - reports/backbone_code_boundary.md
+      - research_archive/docs/patch_stall_implementation_plan.md
+  - tool: prefill_patch_cache
+    decision: retain_referenced
+    reason: This is the active producer recorded by five cache groups, strict cache documentation, runtime tooling, and rebuild commands.
+  - tool: summarize_metrics_average_rows
+    decision: compatibility_wrapper
+    reason: The implementation is archived because current metric tables have governed builders; the original generic summary command remains available for historical staging workflows.
+    archive_target: research_archive/tools/journal_experiments/summarize_metrics_average_rows.py
+    original_sha256: 1d955dc8dee4b37712e77ce1b7727bcba10d50cbc15d3acc3bbe4531df6811e8
+    evidence_paths:
+      - research_archive/docs/pre_u0_release/FILE_STRUCTURE.md
+      - research_archive/docs/pre_u0_release/release_staging_manifest.md
+  - tool: eval_score_csv
+    decision: retain_referenced
+    reason: Ablation and paper-asset reproduction scripts actively invoke this compatibility CLI; its reusable evaluation API now lives in src/alpha_stalled/score_csv.py.
+  - tool: fuse_scores
+    decision: retain_referenced
+    reason: Paper-asset reproduction, ablation documentation, archived sweeps, and runtime benchmarks still invoke this compatibility CLI; shared CSV and metric operations live in src/alpha_stalled/score_csv.py.
+  - tool: verify_alpha_stalled_release
+    decision: compatibility_wrapper
+    reason: The pre-U0 score-CSV release verifier is archived because it does not validate locked manifests or raw reproduction; the historical rebuild command remains available.
+    archive_target: research_archive/tools/pre_release_assets/verify_alpha_stalled_release.py
+    original_sha256: 3f03f58905ec76399592f17790232d71b46079d0b22b14cd759abcc76398f965
+    evidence_paths:
+      - research_archive/docs/pre_u0_release/reproducibility_audit.md
+      - results/paper_tables/alpha_stalled_main_summary.md
+      - scripts/reproduce/rebuild_paper_assets.sh
+
+retained_families:
+  - family_id: d3_operator_controls
+    status: frozen_historical
+    tools:
+      - analyze_global_d3_variants
+      - build_multi_order_baselines
+      - evaluate_d3_pixel_robustness
+      - evaluate_d3_robustness
+    evidence_paths:
+      - reports/global_local_multi_order_final.md
+      - results/multi_order_baselines/global_d3_dataset_metrics.csv
+      - results/multi_order_baselines/d3_robustness_dataset_metrics.csv
+      - results/multi_order_baselines/d3_pixel_robustness_dataset_metrics.csv
+    archive_target: research_archive/tools/d3_operator_controls
+    reason: These scripts reproduce the rejected DINOv3 operator-controlled D3 family and share its exact historical cache and calibration semantics.
+    archive_gate: Move only with a compatibility wrapper, the registered result files, and a command manifest that reproduces all three dataset-metric tables.
+  - family_id: keyframe_case_visualization
+    status: frozen_supplement
+    tools:
+      - create_keyframe_case_explanations
+      - create_patch_case_visualizations
+    evidence_paths:
+      - reports/u0_localization_and_injection.md
+      - paper/ieee_alpha_stalled/figures/results/keyframe_patch_anomaly_cases_main.png
+      - paper/ieee_alpha_stalled/tables/keyframe_case_summary.tex
+    archive_target: research_archive/tools/keyframe_case_visualization
+    reason: The explanation generator is a thin second stage of the paper's frozen qualitative patch-visualization workflow.
+    archive_gate: Move only after the paper figure and table have a standalone source-data manifest and their current paths remain available through wrappers.
+  - family_id: multiscale_intermediate_layers
+    status: frozen_historical
+    tools:
+      - fit_clean_universal_layer17
+      - fit_intermediate_layer_params
+      - score_intermediate_layer_windows
+      - score_unified_multiscale_windows
+    evidence_paths:
+      - reports/unified_multiscale_intermediate_layers.md
+      - reports/clean_universal_cross_layer_final.md
+      - results/unified_multiscale_layers/layer_dataset_metrics.csv
+      - results/clean_universal/cross_layer_dataset_metrics.csv
+    archive_target: research_archive/tools/multiscale_intermediate_layers
+    reason: These fitters and scorers form the rejected multiscale and DINO intermediate-layer experiment family with shared frozen registries.
+    archive_gate: Move only after parameter files, raw score shards, checkpoint identity, and the four registered result files are captured by an archival run manifest.
+  - family_id: u0_robustness_injection
+    status: frozen_supplement
+    tools:
+      - score_u0_injections
+      - score_u0_robustness
+    evidence_paths:
+      - reports/u0_robustness.md
+      - reports/u0_localization_and_injection.md
+      - results/u0_robustness/analysis/dataset_metrics.csv
+      - results/u0_injection/analysis/score_response.csv
+    archive_target: research_archive/tools/u0_robustness_injection
+    reason: Synthetic injection scoring intentionally reuses the frozen robustness perturbation and raw U0 scoring implementation.
+    archive_gate: Keep in place while robustness and localization are paper supplements; move only with wrapper commands and manifests for both result directories.
+
+# Every remaining tools -> tools edge is explicit. New code must use src/alpha_stalled instead.
+allowed_edges:
+  - source: analyze_global_d3_variants
+    target: build_multi_order_baselines
+    imported_symbols: [GLOBAL_D3_CONFIG_NAMES]
+    category: historical_d3
+    migration_status: retain_historical
+    family_id: d3_operator_controls
+    reason: Shares names for the frozen historical D3 variant family.
+  - source: create_keyframe_case_explanations
+    target: create_patch_case_visualizations
+    imported_symbols: [FastPatchScorer, compute_anomaly_fields]
+    category: research_visualization
+    migration_status: retain_historical
+    family_id: keyframe_case_visualization
+    reason: Both scripts form one frozen qualitative visualization workflow.
+  - source: evaluate_d3_pixel_robustness
+    target: build_multi_order_baselines
+    imported_symbols: [KEY_COLUMNS, _load_index, d3_statistics, dataset_specs, empirical_cdf, two_sided_realness]
+    category: historical_d3
+    migration_status: retain_historical
+    family_id: d3_operator_controls
+    reason: Reuses the exact historical D3 protocol, including its private index loader.
+  - source: evaluate_d3_robustness
+    target: build_multi_order_baselines
+    imported_symbols: [KEY_COLUMNS, _load_index, d3_statistics, dataset_specs, empirical_cdf, load_strict_window, two_sided_realness]
+    category: historical_d3
+    migration_status: retain_historical
+    family_id: d3_operator_controls
+    reason: Reuses the exact historical D3 protocol and cache semantics.
+  - source: fit_clean_universal_layer17
+    target: fit_intermediate_layer_params
+    imported_symbols: [cache_name, checkpoint_hash]
+    category: historical_experiment_family
+    migration_status: retain_historical
+    family_id: multiscale_intermediate_layers
+    reason: Layer-17 fitting is a thin specialization of the frozen layer pilot.
+  - source: score_intermediate_layer_windows
+    target: fit_intermediate_layer_params
+    imported_symbols: [LAYERS, SPECS]
+    category: historical_experiment_family
+    migration_status: retain_historical
+    family_id: multiscale_intermediate_layers
+    reason: Scoring consumes the frozen layer pilot specification.
+  - source: score_intermediate_layer_windows
+    target: score_unified_multiscale_windows
+    imported_symbols: [PARAMS]
+    category: historical_experiment_family
+    migration_status: retain_historical
+    family_id: multiscale_intermediate_layers
+    reason: Scoring consumes the frozen multiscale parameter registry.
+  - source: score_u0_injections
+    target: score_u0_robustness
+    imported_symbols: [donor_window_id, embed_sequence, score_condition]
+    category: u0_extension
+    migration_status: retain_historical
+    family_id: u0_robustness_injection
+    reason: Injection scoring extends the frozen robustness perturbation scorer.

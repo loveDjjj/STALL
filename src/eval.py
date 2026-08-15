@@ -29,7 +29,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from metrics import Score, ScoreDirection, get_results_df, print_results
+from alpha_stalled.metrics import Score, ScoreDirection, get_results_df, print_results
 from stall import STALL
 
 STALL_PARAMS_DEFAULT = "precomputed/stall_params_vatex_dino_v3.npz"
@@ -140,6 +140,7 @@ def run_csv(args) -> pd.DataFrame:
             duration_sec=duration_sec,
             debug_n=debug_n,
             compact=args.compact,
+            cache_policy=args.cache_policy,
         )
         print(f"Phase 1/2 — Extracting DINOv3 embeddings ({_n_misses} cache misses, {_total - _n_misses} cached)")
         for _ in tqdm(
@@ -152,6 +153,7 @@ def run_csv(args) -> pd.DataFrame:
                 compact=args.compact,
                 num_workers=args.workers,
                 video_batch=args.video_batch,
+                cache_policy=args.cache_policy,
             ),
             desc="Extracting", unit=" video", dynamic_ncols=True, total=_n_misses,
         ):
@@ -169,6 +171,8 @@ def run_csv(args) -> pd.DataFrame:
                 duration_sec=duration_sec,
                 debug_n=debug_n,
                 compact=args.compact,
+                video_batch=args.video_batch,
+                cache_policy=args.cache_policy,
             ),
             desc="Scoring", unit="video", dynamic_ncols=True, total=_total,
         ):
@@ -333,6 +337,15 @@ def main():
     parser.add_argument(
         "--video-batch", type=int, default=8, metavar="N",
         help="Phase 1 单次 GPU pass 合并处理的视频数（默认: 8）",
+    )
+    parser.add_argument(
+        "--cache-policy",
+        choices=["auto", "strict", "legacy"],
+        default="auto",
+        help=(
+            "feature cache 身份策略：auto 对新目录启用 contract、对现有无 contract "
+            "目录发出 legacy 警告；strict 禁止无元数据缓存；legacy 显式使用历史缓存。"
+        ),
     )
 
     args = parser.parse_args()

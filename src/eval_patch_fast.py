@@ -17,15 +17,27 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
+from alpha_stalled.cache_contract import (
+    cache_entry_is_complete,
+    prepare_feature_cache,
+    tensor_descriptor,
+    validate_cache_entry,
+)
 from dataset_utils import _is_missing_window, load_csv
 from dataset_utils_patch import _get_patch_cache_path
-from metrics import Score, ScoreDirection, get_results_df, print_results
+from alpha_stalled.metrics import Score, ScoreDirection, get_results_df, print_results
 
 
 def _load_agg_config(npz_value) -> dict:
     if isinstance(npz_value, np.ndarray):
         npz_value = npz_value.item()
     return json.loads(str(npz_value))
+
+
+def _load_scalar_string(npz_value) -> str:
+    if isinstance(npz_value, np.ndarray):
+        npz_value = npz_value.item()
+    return str(npz_value)
 
 
 def _as_tensor(data, key: str, device: torch.device) -> torch.Tensor:
@@ -53,6 +65,11 @@ class FastPatchScorer:
         self.calib_spat = np.sort(data["calib_patch_spat_scores"].astype(np.float32))
         self.calib_temp = np.sort(data["calib_patch_temp_scores"].astype(np.float32))
         self.patch_grid_size = tuple(int(x) for x in data["patch_grid_size"].tolist())
+        self.feature_cache_contract_sha256 = (
+            _load_scalar_string(data["feature_cache_contract_sha256"])
+            if "feature_cache_contract_sha256" in data
+            else "legacy_uncontracted"
+        )
 
         self.aggregation_config = _load_agg_config(data["aggregation_config"])
         self.params_mode = self.aggregation_config.get("patch_temp_mode", "same_grid")
@@ -64,6 +81,27 @@ class FastPatchScorer:
         if self.temporal_feature_version != "l2_normalized_delta_v1":
             raise ValueError(
                 f"参数由不支持的 temporal feature version 创建: {self.temporal_feature_version!r}"
+            )
+
+    def validate_cache_contract(self, cache_context) -> None:
+        """Require scoring parameters and feature tensors to share one cache identity."""
+
+        params_contract = self.feature_cache_contract_sha256
+        if cache_context.strict:
+            if params_contract == "legacy_uncontracted":
+                raise ValueError(
+                    "strict feature cache cannot be scored with legacy/unbound patch params"
+                )
+            if params_contract != cache_context.contract_sha256:
+                raise ValueError(
+                    "patch params feature-cache contract mismatch: "
+                    f"params={params_contract}, cache={cache_context.contract_sha256}"
+                )
+            return
+
+        if params_contract != "legacy_uncontracted":
+            raise ValueError(
+                "contract-bound patch params cannot be scored with a legacy feature cache"
             )
 
     def validate(self, patch_temp_mode: str):
@@ -457,7 +495,14 @@ class FastPatchScorer:
         }
 
 
-def iter_cache_jobs(csv_path: str, patch_cache_root: str, duration: int, compact: bool, debug_n: int | None):
+def iter_cache_jobs(
+    csv_path: str,
+    patch_cache_root: str,
+    duration: int,
+    compact: bool,
+    debug_n: int | None,
+    cache_policy: str = "auto",
+):
     df = load_csv(csv_path)
     window_col = f"{duration}_sec_idxs"
     if debug_n is not None:
@@ -468,6 +513,13 @@ def iter_cache_jobs(csv_path: str, patch_cache_root: str, duration: int, compact
         )
 
     root = Path(patch_cache_root)
+    cache_context = prepare_feature_cache(
+        root,
+        expected_contract=None,
+        policy=cache_policy,
+        create=False,
+        required_cache_kind="patch_embeddings",
+    )
     for _, row in df.iterrows():
         if compact and _is_missing_window(row.get(window_col)):
             continue
@@ -476,14 +528,23 @@ def iter_cache_jobs(csv_path: str, patch_cache_root: str, duration: int, compact
         cache_path = _get_patch_cache_path(
             root, row["subset"], row["source_model"], stem, duration, compact
         )
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=cache_context.strict):
             raise FileNotFoundError(f"缺少 patch cache: {cache_path}")
+        if cache_context.strict:
+            index_column = window_col if compact else "downsample_idxs"
+            if index_column not in row or _is_missing_window(row[index_column]):
+                raise ValueError(f"strict patch cache 需要索引列: {index_column}")
+            frame_indices = json.loads(row[index_column])
+        else:
+            frame_indices = None
         yield {
             "subset": row["subset"],
             "source_model": row["source_model"],
             "filename": Path(video_path).name,
             "video_path": video_path,
             "cache_path": cache_path,
+            "frame_indices": frame_indices,
+            "cache_context": cache_context,
         }
 
 
@@ -497,6 +558,20 @@ def load_cache_batch(
     shape = None
     for job in jobs:
         payload = torch.load(job["cache_path"], weights_only=True, map_location="cpu")
+        cache_context = job.get("cache_context")
+        if cache_context is not None and cache_context.strict:
+            validate_cache_entry(
+                cache_context,
+                cache_path=job["cache_path"],
+                source_video_path=job["video_path"],
+                frame_indices=job["frame_indices"],
+                payload={
+                    "format": "torch_dict_global_patch_v1",
+                    "global": tensor_descriptor(payload["global"]),
+                    "patch": tensor_descriptor(payload["patch"]),
+                    "grid_size": [int(item) for item in payload["grid_size"]],
+                },
+            )
         patch = payload["patch"]
         if patch.dtype != torch.float32:
             patch = patch.float()
@@ -539,7 +614,19 @@ def run(args) -> pd.DataFrame:
             f"实际为 {patch_region_size}"
         )
 
-    jobs = list(iter_cache_jobs(args.csv, args.patch_emb_cache, args.duration, args.compact, args.debug_n))
+    jobs = list(
+        iter_cache_jobs(
+            args.csv,
+            args.patch_emb_cache,
+            args.duration,
+            args.compact,
+            args.debug_n,
+            cache_policy=args.cache_policy,
+        )
+    )
+    if not jobs:
+        raise ValueError("没有可评分的 patch cache 条目")
+    scorer.validate_cache_contract(jobs[0]["cache_context"])
     rows = []
     print(
         f"快速 patch 打分: {len(jobs)} 个 cached videos, devices={','.join(str(d) for d in scorer.devices)}, "
@@ -602,6 +689,11 @@ def main():
     parser.add_argument("--duration", type=int, default=2, choices=[1, 2, 3, 4])
     parser.add_argument("--compact", action="store_true", default=False)
     parser.add_argument("--debug-n", type=int, default=None)
+    parser.add_argument(
+        "--cache-policy",
+        choices=["auto", "strict", "legacy"],
+        default="auto",
+    )
     parser.add_argument("--score-device", choices=["cuda", "cpu"], default="cuda")
     parser.add_argument("--score-batch-size", type=int, default=16)
     parser.add_argument("--patch-spat-weight", type=float, default=0.7)

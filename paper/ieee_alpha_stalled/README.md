@@ -34,9 +34,11 @@
 ## 当前写作边界
 
 - 主结果是固定 21,421 视频交集上的 U0：Macro-3 AUC/real-positive AP `0.8741/0.8723`。
+- 23-source 扩展审计覆盖全部 45,185 条生成视频；当前 K3 Alpha 相对原窗口 K1 STALL 的 All-23 AUC/AP_fake/AP_real 增益为 `+0.0338/+0.0383/+0.0288`。
 - 方法固定 `G_k=0.5G_s+0.5G_{t1}`、`L_k=0.1L_s+0.9L_{D2}`、K=3 分支均值、effective-K 真实重校准和 `S=0.6G+0.4L`。
-- 生成视频和测试真实视频不得用于 whitening、CDF、阈值、权重或模型选择；历史 leakage-affected `0.8737/0.8750` 只能作为审计记录。
+- 生成视频和测试真实视频不得进入 whitening、CDF 或阈值拟合，locked run 不再据此调参；但 `alpha/beta/K` 和总体结构曾在三个开发基准上查看生成结果后冻结，因此它们不是 untouched confirmation sets。历史 leakage-affected `0.8737/0.8750` 只能作为审计记录。
 - K=5/all-window、bottom-2/hybrid、residual、多尺度、中间层、Joint Typicality、三分支和动态融合均不是正式方法。
 - 历史 clean single-window `0.8570/0.8600` 只用于方法演进展示；正式 K=3 增益以统一核心 K1 `0.8632/0.8636` 为因果对照。
+- 原论文规模复现、原窗口 K1/K3 因子分解和全 fake 覆盖分别见 `reports/original_k1_full23_factorial.md`、`tables/original_k1_factorial.tex` 与 `tables/full23_coverage.tex`；Macro-3 与 All-23、AP_fake 与 AP_real 不得互换。
 - 外部集、鲁棒性和可控注入只按预锁定协议报告，不允许据此回调 U0。
 - 数据/代码/伦理/利益冲突/作者贡献声明位于 `sections/08_declarations.tex`，未知事实保留为 `AUTHOR_INPUT_NEEDED`。

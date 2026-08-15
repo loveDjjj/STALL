@@ -15,16 +15,16 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_cross_dataset_calibration import calibrate_cross, load_parts
-from analyze_u0_locked import global_references
-from build_multi_order_baselines import metric_tables
-from stable_whitening import (
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.parameters import global_references
+from alpha_stalled.local_branch import local_d2_features
+from alpha_stalled.u0_calibration_experiments import calibrate_cross, load_parts
+from alpha_stalled.whitening import (
     StableGaussianParams,
-    l2_normalized_second_order,
     score_gaussian_aggregate_float64,
 )
 
@@ -51,7 +51,7 @@ def batch_invariance(
             cache = ROOT / item["cache_path"]
             data = torch.load(cache, weights_only=True, map_location="cpu")
             patches.append(data["patch"].float())
-        features = l2_normalized_second_order(torch.stack(patches))
+        features = local_d2_features(torch.stack(patches))
         params = load_oas(params_dir / f"{dataset}_locked200.npz")
         reference = None
         for batch_size in (1, 4, 8, 16):

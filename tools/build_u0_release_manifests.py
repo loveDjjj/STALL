@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -14,50 +14,27 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-IDENTITY_COLUMNS = ["dataset", "subset", "source_model", "filename"]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from alpha_stalled.release_io import (
+    IDENTITY_COLUMNS as CANONICAL_IDENTITY_COLUMNS,
+    repository_relative,
+    resolve_video,
+    sha256_file,
+    video_id,
+    write_json,
+)
+
+
+IDENTITY_COLUMNS = list(CANONICAL_IDENTITY_COLUMNS)
 EXPECTED_EVALUATION = {
     "comgenvid": 4298,
     "videofeedback": 3500,
     "genvideo": 13623,
 }
 EXPECTED_CALIBRATION = {name: 200 for name in EXPECTED_EVALUATION}
-
-
-def sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def video_id(row: pd.Series) -> str:
-    identity = "|".join(str(row[column]) for column in IDENTITY_COLUMNS)
-    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
-
-
-def repository_relative(value: str) -> str:
-    path = Path(value)
-    if path.is_absolute():
-        try:
-            return str(path.relative_to(ROOT.parent))
-        except ValueError:
-            return str(path)
-    return str(path)
-
-
-def resolve_video(value: str) -> Path:
-    path = Path(value)
-    candidates = (
-        path,
-        ROOT / path,
-        ROOT.parent / path,
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate.resolve()
-    return (ROOT.parent / path).resolve()
-
 
 def manifest_payload(frame: pd.DataFrame, split: str) -> dict:
     videos = []
@@ -83,16 +60,6 @@ def manifest_payload(frame: pd.DataFrame, split: str) -> dict:
         "dataset_counts": counts,
         "videos": videos,
     }
-
-
-def write_json(path: Path, payload: object) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    temporary.replace(path)
-
 
 def git_value(args: list[str], cwd: Path = ROOT) -> str:
     return subprocess.check_output(["git", *args], cwd=cwd, text=True).strip()

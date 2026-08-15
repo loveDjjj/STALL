@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,8 +14,12 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from stable_whitening import (
+import stable_whitening as legacy_whitening
+from alpha_stalled import whitening
+from alpha_stalled.whitening import (
     StableGaussianParams,
+    l2_normalized_patch_first_order,
+    l2_normalized_second_order,
     score_gaussian_aggregate_float64,
     score_gaussian_mean_candidates_float64,
     score_mean_gaussian_float64,
@@ -22,6 +27,40 @@ from stable_whitening import (
 
 
 class WhiteningBatchInvarianceTests(unittest.TestCase):
+    def test_legacy_module_reexports_shared_numerical_core(self) -> None:
+        self.assertEqual(legacy_whitening.__all__, whitening.__all__)
+        for name in whitening.__all__:
+            self.assertIs(getattr(legacy_whitening, name), getattr(whitening, name))
+
+    def test_gaussian_params_npz_loader_normalizes_dtype_and_cdf_order(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "params.npz"
+            np.savez(
+                path,
+                mu_patch_temp=np.array([1.0, 2.0], dtype=np.float32),
+                W_patch_temp=np.eye(2, dtype=np.float32),
+                calib_patch_temp_scores=np.array([3.0, 1.0, 2.0], dtype=np.float32),
+            )
+            params = StableGaussianParams.from_npz(str(path))
+
+        self.assertEqual(params.mean.dtype, np.float64)
+        self.assertEqual(params.whitening.dtype, np.float64)
+        self.assertEqual(params.calibration_raw.dtype, np.float64)
+        np.testing.assert_array_equal(params.calibration_raw, [1.0, 2.0, 3.0])
+
+    def test_patch_d1_and_d2_match_explicit_same_grid_formulas(self) -> None:
+        patch = torch.arange(2 * 5 * 3 * 4, dtype=torch.float32).reshape(2, 5, 3, 4)
+        d1 = patch[:, 1:] - patch[:, :-1]
+        d2 = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
+        expected_d1 = torch.nn.functional.normalize(d1, p=2, dim=-1, eps=1e-12)
+        expected_d2 = torch.nn.functional.normalize(d2, p=2, dim=-1, eps=1e-12)
+        torch.testing.assert_close(
+            l2_normalized_patch_first_order(patch), expected_d1, rtol=0, atol=0
+        )
+        torch.testing.assert_close(
+            l2_normalized_second_order(patch), expected_d2, rtol=0, atol=0
+        )
+
     def test_outer_batch_size_cannot_change_float64_window_score(self) -> None:
         rng = np.random.RandomState(7)
         features = rng.normal(size=(17, 3, 5, 8)).astype(np.float32)

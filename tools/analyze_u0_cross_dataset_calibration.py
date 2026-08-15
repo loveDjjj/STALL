@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import sys
 from pathlib import Path
@@ -16,17 +15,20 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_locked import cdf_with_positive_infinity, global_references
-from build_multi_order_baselines import metric_tables
-from score_u0_locked_windows import resolve_video
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.parameters import global_references
+from alpha_stalled.release_io import resolve_required_video as resolve_video
+from alpha_stalled.u0_calibration_experiments import (
+    DATASETS,
+    calibrate_cross,
+    load_parts,
+)
 
 
-DATASETS = ("comgenvid", "videofeedback", "genvideo")
 SOURCES = ("comgenvid", "videofeedback", "genvideo", "pooled200", "pooled600")
 DISPLAY = {
     "comgenvid": "ComGenVid",
@@ -36,106 +38,6 @@ DISPLAY = {
     "pooled600": "Pooled-600",
     "Macro-3": "Macro-3",
 }
-
-
-def load_parts(root: Path, split: str) -> pd.DataFrame:
-    paths = sorted(
-        Path(path)
-        for path in glob.glob(str(root / "checkpoints" / split / "*" / "shard_*" / "part_*.csv"))
-    )
-    if not paths:
-        raise FileNotFoundError(f"no {split} score parts")
-    frame = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in paths],
-        ignore_index=True,
-    )
-    if frame.duplicated(["video_id", "sampling", "window_id"]).any():
-        raise ValueError(f"duplicate {split} score keys")
-    return frame
-
-
-def selected_k_reference(
-    calibration_k3: pd.DataFrame,
-    selected_ids: set[str],
-    target_k: int,
-    column: str,
-) -> np.ndarray:
-    values = []
-    selected = calibration_k3[calibration_k3["video_id"].isin(selected_ids)]
-    for _, frame in selected.groupby("video_id", sort=False):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.array([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        chosen = ordered.iloc[np.unique(positions)]
-        if len(chosen) == target_k:
-            values.append(float(chosen[column].mean()))
-    if len(values) < 2:
-        raise ValueError(f"insufficient K={target_k} reference for {column}")
-    return stable_sorted(np.asarray(values, dtype=np.float64))
-
-
-def calibrate_cross(
-    evaluation: pd.DataFrame,
-    calibration: pd.DataFrame,
-    selected_ids: set[str],
-    candidate_name: str,
-    global_spatial_ref: np.ndarray,
-    global_t1_ref: np.ndarray,
-) -> pd.DataFrame:
-    k1 = calibration[
-        calibration["sampling"].eq("k1") & calibration["video_id"].isin(selected_ids)
-    ]
-    if len(k1) != len(selected_ids):
-        raise ValueError(f"{candidate_name}: K1 bank count mismatch")
-    spatial_ref = stable_sorted(k1[f"patch_spatial__{candidate_name}"].to_numpy())
-    d2_ref = stable_sorted(k1[f"patch_d2__{candidate_name}"].to_numpy())
-
-    def window_scores(frame: pd.DataFrame) -> pd.DataFrame:
-        output = frame.copy()
-        output["global_spatial"] = empirical_cdf_right_inclusive(
-            output["global_spatial_raw"].to_numpy(), global_spatial_ref
-        )
-        output["global_t1"] = cdf_with_positive_infinity(
-            output["global_t1_raw"].to_numpy(), global_t1_ref
-        )
-        output["patch_spatial"] = empirical_cdf_right_inclusive(
-            output[f"patch_spatial__{candidate_name}"].to_numpy(), spatial_ref
-        )
-        output["patch_d2"] = empirical_cdf_right_inclusive(
-            output[f"patch_d2__{candidate_name}"].to_numpy(), d2_ref
-        )
-        output["G_k"] = 0.5 * output["global_spatial"] + 0.5 * output["global_t1"]
-        output["L_k"] = 0.1 * output["patch_spatial"] + 0.9 * output["patch_d2"]
-        return output
-
-    evaluation = window_scores(evaluation)
-    calibration_k3 = window_scores(calibration[calibration["sampling"].eq("k3")])
-    video = (
-        evaluation.groupby("video_id", sort=False)
-        .agg(effective_k=("window_id", "size"), G_raw=("G_k", "mean"), L_raw=("L_k", "mean"))
-        .reset_index()
-    )
-    pieces = []
-    for effective_k, target in video.groupby("effective_k", sort=True):
-        target = target.copy()
-        for branch in ("G", "L"):
-            reference = selected_k_reference(
-                calibration_k3, selected_ids, int(effective_k), f"{branch}_k"
-            )
-            target[branch] = empirical_cdf_right_inclusive(
-                target[f"{branch}_raw"].to_numpy(), reference
-            )
-        target["S"] = 0.6 * target["G"] + 0.4 * target["L"]
-        pieces.append(target)
-    result = pd.concat(pieces, ignore_index=True)
-    if len(result) != evaluation["video_id"].nunique() or result["video_id"].duplicated().any():
-        raise ValueError(f"{candidate_name}: incomplete cross calibration")
-    return result[["video_id", "G", "L", "S"]]
 
 
 def probe_calibration_videos(release_dir: Path) -> pd.DataFrame:

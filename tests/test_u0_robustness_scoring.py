@@ -18,7 +18,7 @@ from score_u0_robustness import (
     score_condition,
     temporal_embeddings,
 )
-from stable_whitening import StableGaussianParams
+from alpha_stalled.whitening import StableGaussianParams
 
 
 class U0RobustnessScoringTests(unittest.TestCase):

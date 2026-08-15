@@ -12,7 +12,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.whitening import empirical_cdf_right_inclusive, stable_sorted
 
 
 class CdfTiePolicyTests(unittest.TestCase):

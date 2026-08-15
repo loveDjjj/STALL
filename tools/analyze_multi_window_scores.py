@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 from pathlib import Path
 
@@ -14,15 +13,25 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from build_multi_order_baselines import KEY_COLUMNS as SCORE_KEYS
-from build_multi_order_baselines import empirical_cdf, metric_tables, pairwise_frames, paired_bootstrap
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.historical_window_analysis import (
+    KEY_COLUMNS,
+    bottom2_mean,
+    calibration_references,
+)
+from alpha_stalled.metrics import (
+    macro_cluster_bootstrap,
+    metric_tables,
+    paired_bootstrap,
+    pairwise_frames,
+)
 
 
-KEY_COLUMNS = ["dataset", "protocol_split", "subset", "source_model", "filename"]
+SCORE_KEYS = ["subset", "source_model", "filename"]
 BASELINE_KEYS = ["dataset", *SCORE_KEYS]
 CONFIG_NAMES = {
     "MW0": "Frozen single-window baseline",
@@ -44,10 +53,6 @@ def config_names_for_sampling(sampling: str) -> dict[str, str]:
         config: name.replace("K=3", label)
         for config, name in CONFIG_NAMES.items()
     }
-
-
-def bottom2_mean(values: pd.Series) -> float:
-    return float(values.nsmallest(min(2, len(values))).mean())
 
 
 def aggregate_window_scores(window_scores: pd.DataFrame) -> pd.DataFrame:
@@ -72,43 +77,6 @@ def aggregate_window_scores(window_scores: pd.DataFrame) -> pd.DataFrame:
         aggregated["L_mean_raw"] + aggregated["L_bottom2_raw"]
     )
     return aggregated
-
-
-def calibration_references(window_scores: pd.DataFrame, target_k: int) -> pd.DataFrame:
-    """Create one target-K aggregate per eligible real calibration video."""
-    calibration = window_scores[
-        (window_scores["protocol_split"] == "calibration")
-        & (window_scores["subset"] == "real")
-    ]
-    rows: list[dict] = []
-    for key, frame in calibration.groupby(KEY_COLUMNS, sort=False, observed=True):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        if target_k == 1:
-            positions = np.array([(len(ordered) - 1) // 2], dtype=int)
-        else:
-            positions = np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) != target_k:
-            continue
-        local = selected["L_k"]
-        rows.append(
-            {
-                **dict(zip(KEY_COLUMNS, key)),
-                "target_k": target_k,
-                "G_mean_raw": float(selected["G_k"].mean()),
-                "L_mean_raw": float(local.mean()),
-                "L_bottom2_raw": bottom2_mean(local),
-            }
-        )
-    reference = pd.DataFrame(rows)
-    if reference.empty:
-        raise ValueError(f"no calibration videos support target_k={target_k}")
-    reference["L_hybrid_raw"] = 0.5 * (
-        reference["L_mean_raw"] + reference["L_bottom2_raw"]
-    )
-    return reference
 
 
 def add_recalibrated_scores(
@@ -203,85 +171,6 @@ def _auc_ap(frame: pd.DataFrame, score: str) -> tuple[float, float]:
     return float(roc_auc_score(labels, values)), float(average_precision_score(labels, values))
 
 
-def _stable_seed(seed: int, *parts: str) -> int:
-    digest = hashlib.sha256("\0".join((str(seed), *parts)).encode("utf-8")).digest()
-    return int.from_bytes(digest[:4], "little")
-
-
-def macro_cluster_bootstrap(
-    per_video: pd.DataFrame,
-    candidates: list[str],
-    seed: int,
-    iterations: int,
-    base_config: str = "MW0",
-) -> pd.DataFrame:
-    dataset_pairs: list[list[pd.DataFrame]] = []
-    for _, dataset_frame in per_video.groupby("dataset", sort=False):
-        pairs = list(pairwise_frames(dataset_frame, seed).values())
-        if pairs:
-            dataset_pairs.append(pairs)
-    if not dataset_pairs:
-        raise ValueError("macro bootstrap requires at least one dataset with generator pairs")
-    rows: list[dict] = []
-    for candidate in candidates:
-        point = {"auc": [], "ap": []}
-        split_datasets: list[list[tuple[pd.DataFrame, pd.DataFrame]]] = []
-        for pairs in dataset_pairs:
-            dataset_point = {"auc": [], "ap": []}
-            split_pairs: list[tuple[pd.DataFrame, pd.DataFrame]] = []
-            for pair in pairs:
-                new_auc, new_ap = _auc_ap(pair, candidate)
-                old_auc, old_ap = _auc_ap(pair, base_config)
-                dataset_point["auc"].append(new_auc - old_auc)
-                dataset_point["ap"].append(new_ap - old_ap)
-                split_pairs.append(
-                    (
-                        pair[pair["subset"] == "real"].reset_index(drop=True),
-                        pair[pair["subset"] == "annotated"].reset_index(drop=True),
-                    )
-                )
-            point["auc"].append(float(np.mean(dataset_point["auc"])))
-            point["ap"].append(float(np.mean(dataset_point["ap"])))
-            split_datasets.append(split_pairs)
-        rng = np.random.default_rng(_stable_seed(seed, "Macro-3", candidate))
-        samples = {"auc": np.empty(iterations), "ap": np.empty(iterations)}
-        for iteration in range(iterations):
-            macro_deltas = {"auc": [], "ap": []}
-            for split_pairs in split_datasets:
-                dataset_deltas = {"auc": [], "ap": []}
-                for real, fake in split_pairs:
-                    sampled = pd.concat(
-                        [
-                            real.iloc[rng.integers(0, len(real), len(real))],
-                            fake.iloc[rng.integers(0, len(fake), len(fake))],
-                        ],
-                        ignore_index=True,
-                    )
-                    new_auc, new_ap = _auc_ap(sampled, candidate)
-                    old_auc, old_ap = _auc_ap(sampled, base_config)
-                    dataset_deltas["auc"].append(new_auc - old_auc)
-                    dataset_deltas["ap"].append(new_ap - old_ap)
-                macro_deltas["auc"].append(float(np.mean(dataset_deltas["auc"])))
-                macro_deltas["ap"].append(float(np.mean(dataset_deltas["ap"])))
-            samples["auc"][iteration] = np.mean(macro_deltas["auc"])
-            samples["ap"][iteration] = np.mean(macro_deltas["ap"])
-        for metric in ("auc", "ap"):
-            rows.append(
-                {
-                    "dataset": "Macro-3",
-                    "comparison": f"{candidate}-{base_config}",
-                    "new_config": candidate,
-                    "base_config": base_config,
-                    "metric": metric,
-                    "delta": float(np.mean(point[metric])),
-                    "ci95_low": float(np.quantile(samples[metric], 0.025)),
-                    "ci95_high": float(np.quantile(samples[metric], 0.975)),
-                    "bootstrap_iterations": iterations,
-                }
-            )
-    return pd.DataFrame(rows)
-
-
 def generator_deltas(generator_metrics: pd.DataFrame) -> pd.DataFrame:
     pivot = generator_metrics.pivot(index=["dataset", "generator"], columns="config", values=["auc", "ap"])
     rows: list[dict] = []
@@ -338,14 +227,35 @@ def stratified_metric_tables(
 
 
 def read_shards(score_root: Path, sampling: str, num_shards: int) -> pd.DataFrame:
-    frames: list[pd.DataFrame] = []
-    for dataset in ("comgenvid", "videofeedback", "genvideo"):
-        for shard in range(num_shards):
-            path = score_root / f"{dataset}_{sampling}_shard{shard}.csv"
-            if not path.exists():
-                raise FileNotFoundError(path)
-            frames.append(pd.read_csv(path, float_precision="round_trip"))
-    scores = pd.concat(frames, ignore_index=True)
+    if score_root.is_file():
+        scores = pd.read_csv(score_root, float_precision="round_trip")
+    else:
+        shard_paths = [
+            score_root / f"{dataset}_{sampling}_shard{shard}.csv"
+            for dataset in ("comgenvid", "videofeedback", "genvideo")
+            for shard in range(num_shards)
+        ]
+        existing_shards = [path for path in shard_paths if path.exists()]
+        if existing_shards and len(existing_shards) != len(shard_paths):
+            missing = next(path for path in shard_paths if not path.exists())
+            raise FileNotFoundError(f"incomplete score shards; first missing file: {missing}")
+        if existing_shards:
+            scores = pd.concat(
+                [pd.read_csv(path, float_precision="round_trip") for path in shard_paths],
+                ignore_index=True,
+            )
+        else:
+            merged_candidates = (
+                score_root / f"{sampling}_window_scores.csv",
+                score_root.parent / f"{sampling}_window_scores.csv",
+            )
+            merged = next((path for path in merged_candidates if path.exists()), None)
+            if merged is None:
+                raise FileNotFoundError(
+                    "no complete score shards or merged window-score artifact found; "
+                    f"checked {shard_paths[0]} and {merged_candidates}"
+                )
+            scores = pd.read_csv(merged, float_precision="round_trip")
     if scores.duplicated(KEY_COLUMNS + ["window_id"]).any():
         raise ValueError("duplicate window-score keys across shards")
     return scores

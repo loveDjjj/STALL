@@ -1,0 +1,142 @@
+schema_version: alpha_stalled_run_manifest_v1
+
+identity:
+  experiment_id: alpha_stalled_u0_locked
+  protocol_id: u0_locked_v1
+  parent_experiment_id: u0_unified_k1
+  status: main_method_locked
+
+purpose: >-
+  Clean-from-empty reproduction of the fully unified Alpha-STALLED U0 release,
+  with PatchSpatial and PatchD2 both recomputed using region1 mean.
+
+provenance:
+  mode: reconstructed
+  code_git_commit: 794f7e087398f436abea2cea38820d8708022c7c
+  worktree_dirty: true
+  environment: conda:stall
+  commands_kind: canonical_reproduction
+  commands:
+    - bash scripts/run_u0_locked_shard.sh 0 0 results/u0_locked_reproduction
+    - bash scripts/run_u0_locked_shard.sh 1 1 results/u0_locked_reproduction
+    - bash scripts/run_u0_locked_calibration_shard.sh 0 0 results/u0_locked_reproduction
+    - bash scripts/run_u0_locked_calibration_shard.sh 1 1 results/u0_locked_reproduction
+    - >-
+      conda run --no-capture-output -n stall python tools/analyze_u0_locked.py
+      --raw-dir results/u0_locked_reproduction/raw --calibration-raw-dir
+      results/u0_locked_reproduction/calibration_raw --num-shards 2
+      --output-dir results/u0_locked_reproduction/analysis --release-dir
+      results/u0_locked_reproduction/release
+    - >-
+      conda run --no-capture-output -n stall python
+      tools/verify_u0_locked_release.py --config
+      configs/alpha_stalled_u0_locked.yaml --release-dir release/u0 --raw-dir
+      results/u0_locked_reproduction/raw --calibration-raw-dir
+      results/u0_locked_reproduction/calibration_raw --num-shards 2
+  started_at_utc: null
+  completed_at_utc: "2026-07-24T11:39:05.236362+00:00"
+  provenance_gaps:
+    - Exact original process command lines and run start timestamp were not retained.
+    - Canonical reproduction commands were reconstructed from the release report and scripts.
+
+factors:
+  changed:
+    - PatchSpatial was recomputed with region1 mean instead of inherited dataset-specific scores.
+    - PatchD2 and PatchSpatial now share the same universal region and aggregation definition.
+  frozen:
+    - DINOv3 ViT-L/16 checkpoint and final layer 23
+    - deterministic uniform K3 two-second sampling at 8 FPS with 16 distinct frames
+    - GlobalSpatial and GlobalT1 definitions and equal window fusion
+    - same-grid Local PatchD2 and beta 0.1
+    - effective-K real-only video calibration and alpha 0.6
+
+selection:
+  uses_generated_for_fit: false
+  uses_generated_for_selection: true
+  selection_scope: >-
+    No generated video entered fitting or calibration and the locked reproduction
+    performed no retuning. Alpha, beta, K, and the architecture had previously
+    been developed after inspecting generated-video results on the three benchmarks.
+
+data:
+  calibration_real_count: 600
+  generated_calibration_count: 0
+  evaluation_video_count: 21421
+  calibration_evaluation_overlap_count: 0
+  score_direction: higher_is_real
+  ap_positive_class: real
+  macro_definition: >-
+    Pairwise-balanced AUC and real-positive AP are averaged equally across
+    generators within each dataset and then equally across the three datasets.
+
+metrics:
+  macro_auc: 0.8740724396350226
+  macro_ap: 0.8722992273320395
+
+artifacts:
+  inputs:
+    - role: run_manifest_spec
+      path: configs/run_manifests/alpha_stalled_u0_locked.yaml
+    - role: locked_config
+      path: configs/alpha_stalled_u0_locked.yaml
+    - role: dino_checkpoint
+      path: dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
+    - role: source_manifest
+      path: results/multi_window_joint_typicality/multi_window_manifest.csv
+    - role: sampling_exclusions
+      path: configs/multi_window_exclusions.csv
+    - role: global_parameters
+      path: precomputed/stall_params_vatex_dino_v3.npz
+    - role: local_parameters_comgenvid
+      path: release/u0/params/comgenvid_region1_mean.npz
+    - role: local_parameters_videofeedback
+      path: release/u0/params/videofeedback_region1_mean.npz
+    - role: local_parameters_genvideo
+      path: release/u0/params/genvideo_region1_mean.npz
+    - role: calibration_manifest
+      path: release/u0/calibration_manifest.json
+    - role: evaluation_manifest
+      path: release/u0/evaluation_manifest.json
+    - role: frame_indices
+      path: release/u0/frame_indices.json
+  intermediates:
+    - role: calibration_raw_comgenvid_0
+      path: results/u0_locked_reproduction/calibration_raw/comgenvid_shard00_of_02.csv
+    - role: calibration_raw_comgenvid_1
+      path: results/u0_locked_reproduction/calibration_raw/comgenvid_shard01_of_02.csv
+    - role: calibration_raw_videofeedback_0
+      path: results/u0_locked_reproduction/calibration_raw/videofeedback_shard00_of_02.csv
+    - role: calibration_raw_videofeedback_1
+      path: results/u0_locked_reproduction/calibration_raw/videofeedback_shard01_of_02.csv
+    - role: calibration_raw_genvideo_0
+      path: results/u0_locked_reproduction/calibration_raw/genvideo_shard00_of_02.csv
+    - role: calibration_raw_genvideo_1
+      path: results/u0_locked_reproduction/calibration_raw/genvideo_shard01_of_02.csv
+    - role: evaluation_raw_comgenvid_0
+      path: results/u0_locked_reproduction/raw/comgenvid_shard00_of_02.csv
+    - role: evaluation_raw_comgenvid_1
+      path: results/u0_locked_reproduction/raw/comgenvid_shard01_of_02.csv
+    - role: evaluation_raw_videofeedback_0
+      path: results/u0_locked_reproduction/raw/videofeedback_shard00_of_02.csv
+    - role: evaluation_raw_videofeedback_1
+      path: results/u0_locked_reproduction/raw/videofeedback_shard01_of_02.csv
+    - role: evaluation_raw_genvideo_0
+      path: results/u0_locked_reproduction/raw/genvideo_shard00_of_02.csv
+    - role: evaluation_raw_genvideo_1
+      path: results/u0_locked_reproduction/raw/genvideo_shard01_of_02.csv
+  outputs:
+    - role: final_video_scores
+      path: release/u0/final_video_scores.csv
+    - role: reproduction_metadata
+      path: release/u0/reproduction_metadata.json
+    - role: integrity_index
+      path: release/u0/config_and_checkpoint_hashes.json
+    - role: release_validation
+      path: release/u0/validation.json
+
+outcome:
+  state: completed_with_recovered_exit
+  failures:
+    - >-
+      Several CUDA scorer processes exited with code 139 only after all
+      checkpoints were written; Torch-free finalizers verified complete shards.

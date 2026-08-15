@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -15,26 +14,18 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_locked import (
+from alpha_stalled.u0_protocol import (
     EXPECTED_EVALUATION,
     load_calibration_references,
     load_raw_windows,
     verify_calibration_reference_windows,
 )
-from build_multi_order_baselines import metric_tables
-
-
-def sha256_file(path: Path, chunk_size: int = 8 * 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(chunk_size):
-            digest.update(chunk)
-    return digest.hexdigest()
-
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.release_io import sha256_file
 
 def require(condition: bool, message: str, checks: list[dict]) -> None:
     checks.append({"check": message, "passed": bool(condition)})

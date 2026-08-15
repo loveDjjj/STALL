@@ -15,18 +15,20 @@ import pandas as pd
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
 SRC_DIR = REPO_ROOT / "src"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from build_multi_order_baselines import metric_tables, paired_bootstrap
+from alpha_stalled.metrics import metric_tables, paired_bootstrap
+from alpha_stalled.legacy_local_d2_protocol import (
+    KEY_COLUMNS,
+    LocalDatasetSpec,
+    build_strict_eval_index,
+    dataset_specs,
+)
 from eval_patch_fast import FastPatchScorer, iter_cache_jobs, load_cache_batch
 
 
-KEY_COLUMNS = ["subset", "source_model", "filename"]
 LOCAL_NAMES = {
     "Ls": "Local spatial",
     "L0": "Same-grid D2",
@@ -45,53 +47,10 @@ COMPARISONS = (
 
 
 @dataclass(frozen=True)
-class LocalDatasetSpec:
-    name: str
-    calib_index: Path
-    eval_index: Path
-    patch_cache: Path
-    aggregation: str
-    bottomk_ratio: float
-    patch_region_size: int
-
-
-@dataclass(frozen=True)
 class LocalVariant:
     name: str
     mode: str
     persistent: bool = False
-
-
-def dataset_specs(root: Path) -> tuple[LocalDatasetSpec, ...]:
-    return (
-        LocalDatasetSpec(
-            "comgenvid",
-            root / "cache/indexes/comgenvid_calib_real200.csv",
-            root / "cache/indexes/comgenvid_eval_holdout_real900_all_fake.csv",
-            root / "cache/patch_embeddings/comgenvid",
-            "bottomk_mean",
-            0.2,
-            3,
-        ),
-        LocalDatasetSpec(
-            "videofeedback",
-            root / "cache/indexes/videofeedback_small_calib_real200.csv",
-            root / "cache/indexes/videofeedback_small_eval_holdout_real500_fake300permodel.csv",
-            root / "cache/patch_embeddings/videofeedback",
-            "mean",
-            0.5,
-            1,
-        ),
-        LocalDatasetSpec(
-            "genvideo",
-            root / "cache/indexes/genvideo_calib_real200.csv",
-            root / "cache/indexes/genvideo_eval_holdout_real7984_all_fake.csv",
-            root / "cache/patch_embeddings/genvideo",
-            "mean",
-            0.5,
-            2,
-        ),
-    )
 
 
 VARIANTS = (
@@ -100,23 +59,6 @@ VARIANTS = (
     LocalVariant("L2", "spatial_median_residual_second_order"),
     LocalVariant("L3", "same_grid_second_order", persistent=True),
 )
-
-
-def _with_filename(frame: pd.DataFrame) -> pd.DataFrame:
-    out = frame.copy()
-    out["filename"] = out["video_path"].map(lambda value: Path(str(value)).name)
-    for column in KEY_COLUMNS:
-        out[column] = out[column].astype(str)
-    return out
-
-
-def build_strict_eval_index(spec: LocalDatasetSpec, stage1_scores: pd.DataFrame) -> pd.DataFrame:
-    index = _with_filename(pd.read_csv(spec.eval_index))
-    keys = stage1_scores[stage1_scores["dataset"] == spec.name][KEY_COLUMNS]
-    merged = index.merge(keys, on=KEY_COLUMNS, how="inner", validate="one_to_one")
-    if len(merged) != len(keys):
-        raise ValueError(f"{spec.name}: failed to recover every Stage-1 protocol row")
-    return merged.drop(columns=["filename"])
 
 
 def _run(command: list[str], cwd: Path) -> None:

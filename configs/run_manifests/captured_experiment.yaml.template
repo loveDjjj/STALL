@@ -1,0 +1,49 @@
+schema_version: alpha_stalled_run_manifest_v1
+
+identity:
+  experiment_id: replace_with_experiment_id
+  protocol_id: replace_with_protocol_id
+  parent_experiment_id: alpha_stalled_u0_locked
+  status: diagnostic_only
+
+purpose: Replace with the scientific question answered by this run.
+
+provenance:
+  capture_path: results/runs/replace_with_experiment_id/run_capture.json
+
+factors:
+  changed:
+    - Replace with the single experimental factor changed from the parent.
+  frozen:
+    - Replace with the protocol components held fixed.
+
+selection:
+  uses_generated_for_fit: false
+  uses_generated_for_selection: false
+  selection_scope: Replace with the exact data and parameter-selection boundary.
+
+data:
+  calibration_real_count: 0
+  generated_calibration_count: 0
+  evaluation_video_count: 0
+  calibration_evaluation_overlap_count: 0
+  score_direction: higher_is_real
+  ap_positive_class: real
+  macro_definition: Replace with the exact aggregation and class-prior definition.
+
+metrics:
+  macro_auc: 0.0
+  macro_ap: 0.0
+
+artifacts:
+  inputs:
+    - role: locked_config
+      path: configs/alpha_stalled_u0_locked.yaml
+  intermediates: []
+  outputs:
+    - role: dataset_metrics
+      path: results/runs/replace_with_experiment_id/dataset_metrics.csv
+
+outcome:
+  state: completed
+  failures: []

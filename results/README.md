@@ -1,12 +1,61 @@
 # `results/` 数据说明
 
-本目录只保留 Alpha-STALLED release 需要的轻量论文资产。历史调参、fallback、
-persistence、source/rank selector、debug run 等结果已经删除或归档，不属于当前
-主线。
+当前 locked U0 的权威逐视频分数和协议资产位于 `release/u0/`，不是本目录的
+`paper_scores/`。本目录同时包含当前实验输出、轻量结论索引和历史 K1 论文资产；
+不同子目录不能默认视为同一协议。
+
+结论级入口是 `results/research_summary/`。协议身份和结果有效性分别见
+`docs/CURRENT_PROTOCOL.md` 与 `docs/RESULT_STATUS.md`。历史调参、fallback、
+persistence、source/rank selector 和 debug run 不属于当前主线。
+
+跨实验的稳定 ID、协议、父子关系、生命周期状态和证据路径登记在
+`reports/u0_experiment_registry.csv`，并由
+`python tools/verify_experiment_registry.py` 校验。`results/` 中存在目录或高分
+本身不代表它具有论文证据资格。
 
 新实验默认不直接提交到 `journal_experiments/`。先保留在本地输出目录，确认协议
 和结论后，再把机器可读指标与决策摘要汇总到 `research_summary/`。这样可以避免
 把逐视频融合网格、bootstrap 抽样明细、prefill 清单和 smoke 输出混入 release。
+
+新运行统一使用 `results/runs/<experiment_id>/`，并由
+`tools/capture_experiment_run.py` 在启动前创建；不得复用已有目录。每个目录至少
+保留 `run_capture.json`，成功产出完整指标后再生成 `run_manifest.json`。失败运行
+保留 capture/日志即可，不能用占位指标伪装成 completed manifest。
+
+运行日志统一写入 `logs/<experiment_id>/`，不再散落在 `results/` 树中。日志只用于
+排障和运行时线索，可能包含中途失败或重试，不能替代完整 artifact、run manifest
+或 release verifier 作为成功证据。
+
+## 结论级实验输出目录
+
+下表覆盖当前 `results/` 顶层的正式、扩展、诊断和历史实验目录。目录存在只说明
+本机保留了输出；是否允许写入论文由注册表状态和对应报告决定。
+
+| 目录 | 生命周期 | 作用/权威报告 |
+|---|---|---|
+| `u0_locked_reproduction/` | `main_method_locked` | U0 原始窗口、校准和聚合输出；`reports/u0_release_reproduction.md` |
+| `u0_core_ablation/` | `valid_ablation` | Original STALL、统一 K1、Global/Local 组件消融；`reports/u0_core_ablation.md` |
+| `second_order_independent_calibration/` | `valid_ablation` / `diagnostic_only` | D1/D2 唯一变量对照和三 seed 校准诊断 |
+| `u0_external_genvidbench/` | `external_confirmation` | 锁定后 GenVidBench 外部确认 |
+| `duration_aware_23source/` | `coverage_extension` | 1 秒/2 秒兼容的 23-source 覆盖扩展 |
+| `full_coverage_paper_protocol/` | `coverage_extension` | 全 fake、paper-count和平衡 cohort 指标 |
+| `u0_calibration_sensitivity/` | `diagnostic_only` | 真实校准规模与 seed 敏感性 |
+| `u0_cross_dataset_calibration/` | `diagnostic_only` | target/off-domain/pooled real calibration |
+| `u0_cross_and_oas/` | `diagnostic_only` / `rejected` | cross-domain 与 OAS 参数、分片中间资产 |
+| `u0_metric_protocol/` | `diagnostic_only` | AP 正类、Macro 和 bootstrap 口径审计 |
+| `u0_numerical_stability/` | `diagnostic_only` | whitening、batch、CDF 和 CPU/GPU 数值审计 |
+| `u0_injection/` | `diagnostic_only` | 合成注入响应和定位解释边界 |
+| `u0_robustness/` | `diagnostic_only` | 编码、resize、帧扰动和低帧率鲁棒性 |
+| `u0_oas_candidate/` | `rejected` | OAS covariance 候选的准入结果 |
+| `multi_window_joint_typicality/` | `rejected` / historical | K5/all/lower-tail/Joint Typicality 输出 |
+| `local_residual/` | `rejected` | common-motion residual D2 输出 |
+| `unified_multiscale_layers/` | `rejected` | coarse token 与中间层组合输出 |
+| `clean_universal/` | `superseded` / `rejected` | pre-U0 temporal-unified 和 cross-layer 历史输出 |
+| `multi_order_baselines/` | `rejected` / historical | Global D3、高阶 patch 和 operator controls |
+
+其中 `u0_locked_reproduction/` 是 locked release 的本地重建工作区，权威可发布副本
+仍是 `release/u0/`。大体量逐窗口/逐视频文件默认由 `.gitignore` 排除；只将稳定、
+不可替代的轻量指标提升到 `research_summary/` 或显式 allowlist。
 
 ## `research_summary/`
 
@@ -14,6 +63,10 @@ persistence、source/rank selector、debug run 等结果已经删除或归档，
 |---|---|
 | `README.md` | 当前研究结果、失败方向、协议边界和保留工具的统一索引 |
 | `experiment_metrics.csv` | 关键数据集/协议的 AUC、AP 与结论级状态 |
+| `run_manifests/` | 结论级运行的配置、命令、选择边界和 artifact 哈希索引 |
+| `cache_inventory.json` | 当前 cache 全覆盖、生命周期和只读布局指纹快照 |
+| `data_catalog.json` | 三个canonical index、60,949个身份及locked U0成员覆盖快照 |
+| `tool_dependency_inventory.json` | 顶层Python工具AST依赖、分类和迁移状态快照 |
 
 `journal_experiments/` 中已经提交的历史证据仍保留；新增文件只有在成为稳定、
 不可由其他资产替代的证据后才应显式纳入版本控制。
@@ -27,9 +80,10 @@ persistence、source/rank selector、debug run 等结果已经删除或归档，
 | `alpha_stalled_full_pipeline_flow_zh.svg` | Alpha-STALLED 完整方法流程图 SVG 源文件 | 是 |
 | `stall_repro_comparison.md` | 原版 STALL 复现对照说明；该文件历史上已修改，提交前需单独审查 | 视 diff 决定 |
 
-## `paper_scores/`
+## `paper_scores/`（Legacy K1）
 
-逐视频分数 CSV。该目录是主实验和消融指标的直接输入。
+历史逐视频分数 CSV。该目录是旧 K1 表格和消融的输入，不能重建 locked U0。
+当前权威逐视频分数为 `release/u0/final_video_scores.csv`。
 
 | 文件模式 | 含义 |
 |---|---|
@@ -68,7 +122,8 @@ persistence、source/rank selector、debug run 等结果已经删除或归档，
 | `comgenvid_patch_*_metrics.csv` | ComGenVid 各局部消融指标 |
 | `patch_coverage_gaps.md` / `.csv` | 短视频来源未纳入当前 baseline 的原因 |
 
-指标口径统一为 `src/metrics.py` 的 pairwise balanced AUC/AP。
+指标口径统一为 `src/alpha_stalled/metrics.py` 的 pairwise-balanced AUC/AP；
+`src/metrics.py` 仅保留为历史导入兼容层。
 
 ## `paper_sweeps/`
 
@@ -196,7 +251,7 @@ best-alpha 仅作为诊断性 oracle sweep。论文主线 baseline 仍使用
 - `component_ablation.*`
 - `temporal_ablation.*`
 
-## 历史 release baseline 数值
+## 历史 K1 结果（非当前 release）
 
 | 数据集 | 平均 AUC | 平均 AP | 覆盖范围 |
 |---|---:|---:|---|
@@ -220,14 +275,14 @@ ComGenVid `0.8968/0.9064`、VideoFeedback `0.8597/0.8689`、GenVideo
 
 ## 重建命令
 
-从当前 `paper_scores/` 重建融合分数、metrics 和 markdown 汇总：
+从 legacy `paper_scores/` 重建旧融合分数、metrics 和 markdown 汇总：
 
 ```bash
 bash scripts/reproduce/rebuild_paper_assets.sh
 ```
 
-验证 release 资产：
+验证 locked U0 release 资产：
 
 ```bash
-conda run --no-capture-output -n stall python tools/verify_alpha_stalled_release.py
+conda run --no-capture-output -n stall python tools/verify_u0_locked_release.py
 ```

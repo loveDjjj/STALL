@@ -18,7 +18,7 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from build_u0_release_manifests import sha256_file, write_json
+from alpha_stalled.release_io import sha256_file, write_json
 from u0_perturbations import CONDITIONS
 
 

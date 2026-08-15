@@ -7,7 +7,11 @@ from pathlib import Path
 import pandas as pd
 
 
-TOOLS = Path(__file__).resolve().parents[1] / "tools"
+ROOT = Path(__file__).resolve().parents[1]
+TOOLS = ROOT / "tools"
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
@@ -15,13 +19,62 @@ from analyze_multi_window_scores import (
     add_frozen_baseline,
     add_recalibrated_scores,
     aggregate_window_scores,
-    calibration_references,
     macro_cluster_bootstrap,
+    read_shards,
     stratified_metric_tables,
 )
+from alpha_stalled.historical_window_analysis import calibration_references
 
 
 class MultiWindowAnalysisTests(unittest.TestCase):
+    @staticmethod
+    def _window_score_row(filename: str = "v.mp4") -> dict[str, object]:
+        return {
+            "dataset": "comgenvid",
+            "protocol_split": "evaluation",
+            "subset": "real",
+            "source_model": "real",
+            "filename": filename,
+            "window_id": 0,
+            "G_k": 0.6,
+            "L_k": 0.5,
+            "S_k": 0.56,
+        }
+
+    def test_read_shards_accepts_explicit_merged_artifact(self) -> None:
+        path = Path(self.id().replace(".", "_") + ".csv")
+        try:
+            pd.DataFrame([self._window_score_row()]).to_csv(path, index=False)
+            result = read_shards(path, "K3_uniform", num_shards=2)
+            self.assertEqual(result.filename.tolist(), ["v.mp4"])
+        finally:
+            path.unlink(missing_ok=True)
+
+    def test_read_shards_falls_back_to_adjacent_merged_artifact(self) -> None:
+        root = Path(self.id().replace(".", "_"))
+        shard_dir = root / "window_scores"
+        merged = root / "K3_uniform_window_scores.csv"
+        try:
+            root.mkdir()
+            pd.DataFrame([self._window_score_row()]).to_csv(merged, index=False)
+            result = read_shards(shard_dir, "K3_uniform", num_shards=2)
+            self.assertEqual(result.filename.tolist(), ["v.mp4"])
+        finally:
+            merged.unlink(missing_ok=True)
+            root.rmdir()
+
+    def test_read_shards_rejects_partial_shard_set(self) -> None:
+        root = Path(self.id().replace(".", "_"))
+        try:
+            root.mkdir()
+            partial = root / "comgenvid_K3_uniform_shard0.csv"
+            pd.DataFrame([self._window_score_row()]).to_csv(partial, index=False)
+            with self.assertRaisesRegex(FileNotFoundError, "incomplete score shards"):
+                read_shards(root, "K3_uniform", num_shards=2)
+        finally:
+            partial.unlink(missing_ok=True)
+            root.rmdir()
+
     def test_branch_aggregations_are_video_weighted(self) -> None:
         rows = []
         for window_id, local in enumerate((0.1, 0.5, 0.9)):

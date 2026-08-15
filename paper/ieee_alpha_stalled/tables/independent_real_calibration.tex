@@ -1,0 +1,17 @@
+\begin{table*}[!t]
+  \centering
+  \caption{Independent-real calibration stability over three fixed splits. Values are AUC/real-positive AP; independent rows report mean $\pm$ sample standard deviation. Fixed evaluation identities isolate calibration-bank variation, while the all-remaining-real diagnostic changes the test-real pool.}
+  \label{tab:independent_real_calibration}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lcccc}
+    \toprule
+    Protocol & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
+    \midrule
+    Locked original calibration & 0.8968/0.9064 & 0.8597/0.8689 & 0.8657/0.8416 & 0.8741/0.8723 \\
+    Independent, fixed evaluation & 0.8980$\pm$0.0019/0.9076$\pm$0.0015 & 0.8502$\pm$0.0028/0.8589$\pm$0.0019 & 0.8674$\pm$0.0042/0.8385$\pm$0.0041 & 0.8718$\pm$0.0024/0.8684$\pm$0.0021 \\
+    $\Delta$ independent--locked & +0.0011/+0.0012 & -0.0095/-0.0100 & +0.0017/-0.0030 & -0.0022/-0.0039 \\
+    Independent, all remaining real & 0.9045$\pm$0.0026/0.9106$\pm$0.0023 & 0.8256$\pm$0.0037/0.8430$\pm$0.0026 & 0.8589$\pm$0.0032/0.8342$\pm$0.0034 & 0.8630$\pm$0.0020/0.8626$\pm$0.0023 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}

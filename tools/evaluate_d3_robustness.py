@@ -15,9 +15,11 @@ from sklearn.metrics import average_precision_score, roc_auc_score
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
+from alpha_stalled.metrics import auc_ap as _auc_ap, pairwise_frames
 from build_multi_order_baselines import (
     KEY_COLUMNS,
     _load_index,
@@ -25,8 +27,6 @@ from build_multi_order_baselines import (
     d3_statistics,
     empirical_cdf,
     load_strict_window,
-    _auc_ap,
-    pairwise_frames,
     two_sided_realness,
 )
 

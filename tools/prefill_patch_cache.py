@@ -16,6 +16,12 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from alpha_stalled.cache_contract import (
+    cache_entry_is_complete,
+    cache_policy_uses_strict_entries,
+    prepare_feature_cache,
+)
+
 def _is_missing_window(value: object) -> bool:
     if value is None:
         return True
@@ -31,7 +37,14 @@ def _cache_path(cache_root: Path, subset: str, source_model: str, stem: str, dur
     return cache_root / subset / source_model / f"{stem}.pt"
 
 
-def _count_misses(csv_path: str, cache_root: str, duration: int, compact: bool, debug_n: int | None) -> int:
+def _count_misses(
+    csv_path: str,
+    cache_root: str,
+    duration: int,
+    compact: bool,
+    debug_n: int | None,
+    cache_policy: str,
+) -> int:
     df = pd.read_csv(csv_path)
     if debug_n is not None:
         df = (
@@ -41,6 +54,17 @@ def _count_misses(csv_path: str, cache_root: str, duration: int, compact: bool, 
         )
     window_col = f"{duration}_sec_idxs"
     cache_root_path = Path(cache_root)
+    strict_entries = cache_policy_uses_strict_entries(
+        cache_root_path, cache_policy
+    )
+    if not strict_entries:
+        prepare_feature_cache(
+            cache_root_path,
+            expected_contract=None,
+            policy=cache_policy,
+            create=False,
+            required_cache_kind="patch_embeddings",
+        )
     misses = 0
     for _, row in df.iterrows():
         if compact and _is_missing_window(row.get(window_col)):
@@ -54,7 +78,7 @@ def _count_misses(csv_path: str, cache_root: str, duration: int, compact: bool, 
             duration,
             compact,
         )
-        misses += int(not path.exists())
+        misses += int(not cache_entry_is_complete(path, strict=strict_entries))
     return misses
 
 
@@ -69,6 +93,11 @@ def main() -> None:
     parser.add_argument("--video-batch", type=int, default=4)
     parser.add_argument("--frame-batch", type=int, default=32)
     parser.add_argument("--device", default="cuda")
+    parser.add_argument(
+        "--cache-policy",
+        choices=["auto", "strict", "legacy"],
+        default="auto",
+    )
     parser.add_argument("--execute", action="store_true", help="实际加载 DINO 并写入缺失的 cache 文件。")
     parser.add_argument("--output-summary-csv", type=Path, required=True)
     args = parser.parse_args()
@@ -79,10 +108,14 @@ def main() -> None:
         duration=args.duration,
         compact=args.compact,
         debug_n=args.debug_n,
+        cache_policy=args.cache_policy,
     )
     written = 0
     status = "DRY_RUN"
-    if args.execute and misses:
+    strict_entries = cache_policy_uses_strict_entries(
+        Path(args.patch_emb_cache), args.cache_policy
+    )
+    if args.execute and (misses or strict_entries):
         from dataset_utils_patch import prefill_patch_emb_cache  # noqa: WPS433
         from stall_patch import PatchSTALL  # noqa: WPS433
 
@@ -98,6 +131,7 @@ def main() -> None:
                 compact=args.compact,
                 num_workers=args.num_workers,
                 video_batch=args.video_batch,
+                cache_policy=args.cache_policy,
             ),
             total=misses,
             desc="Patch cache",
@@ -105,7 +139,7 @@ def main() -> None:
             dynamic_ncols=True,
         ):
             written += 1
-        status = "EXECUTED"
+        status = "EXECUTED" if written else "EXECUTED_NO_MISSES"
     elif args.execute:
         status = "EXECUTED_NO_MISSES"
 
@@ -121,6 +155,7 @@ def main() -> None:
                 "video_batch": args.video_batch,
                 "frame_batch": args.frame_batch,
                 "device": args.device,
+                "cache_policy": args.cache_policy,
                 "execute": args.execute,
                 "status": status,
                 "misses_before": int(misses),

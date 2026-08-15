@@ -15,7 +15,7 @@ for directory in (ROOT / "src", ROOT / "tools"):
 
 from score_u0_injections import d2_labels, localization_metrics, patch_d2_anomaly
 from analyze_u0_injections import reproduction_errors
-from stable_whitening import StableGaussianParams
+from alpha_stalled.whitening import StableGaussianParams
 from u0_injections import inject
 
 

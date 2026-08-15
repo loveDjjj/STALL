@@ -16,7 +16,8 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from analyze_u0_locked import cdf_with_positive_infinity, selected_calibration_means
+from alpha_stalled.calibration import cdf_with_positive_infinity
+from alpha_stalled.u0_protocol import selected_calibration_means
 from verify_u0_locked_release import sha256_file
 
 

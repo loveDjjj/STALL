@@ -20,8 +20,16 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from analyze_u0_locked import cdf_with_positive_infinity, global_references
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.calibration import (
+    U0VideoReferences,
+    U0WindowReferences,
+    calibrate_u0_video_branches,
+    calibrate_u0_window_components,
+)
+from alpha_stalled.aggregation import selected_video_means
+from alpha_stalled.artifacts import read_expected_shards
+from alpha_stalled.parameters import global_references
+from alpha_stalled.whitening import stable_sorted
 
 
 DATASET = "genvidbench_pair1"
@@ -41,17 +49,7 @@ KEY_COLUMNS = [
 
 
 def load_shards(directory: Path, prefix: str, num_shards: int) -> pd.DataFrame:
-    paths = [
-        directory / f"{prefix}_shard{shard:02d}_of_{num_shards:02d}.csv"
-        for shard in range(num_shards)
-    ]
-    missing = [path for path in paths if not path.is_file()]
-    if missing:
-        raise FileNotFoundError(missing[0])
-    return pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in paths],
-        ignore_index=True,
-    )
+    return read_expected_shards(directory, (prefix,), num_shards)
 
 
 def calibrate_windows(
@@ -62,40 +60,27 @@ def calibrate_windows(
     global_t1_ref: np.ndarray,
 ) -> pd.DataFrame:
     output = frame.copy()
-    output["global_spatial"] = empirical_cdf_right_inclusive(
-        output["global_spatial_raw"].to_numpy(), global_spatial_ref
+    calibrated = calibrate_u0_window_components(
+        output["global_spatial_raw"].to_numpy(),
+        output["global_t1_raw"].to_numpy(),
+        output["patch_spatial_raw"].to_numpy(),
+        output["patch_d2_raw"].to_numpy(),
+        U0WindowReferences(
+            global_spatial_ref, global_t1_ref, patch_spatial_ref, patch_d2_ref
+        ),
     )
-    output["global_t1"] = cdf_with_positive_infinity(
-        output["global_t1_raw"].to_numpy(), global_t1_ref
-    )
-    output["patch_spatial"] = empirical_cdf_right_inclusive(
-        output["patch_spatial_raw"].to_numpy(), patch_spatial_ref
-    )
-    output["patch_d2"] = empirical_cdf_right_inclusive(
-        output["patch_d2_raw"].to_numpy(), patch_d2_ref
-    )
-    output["G_k"] = 0.5 * output["global_spatial"] + 0.5 * output["global_t1"]
-    output["L_k"] = 0.1 * output["patch_spatial"] + 0.9 * output["patch_d2"]
+    for column, values in calibrated.items():
+        if column == "S_k":
+            continue
+        output["patch_d2" if column == "patch_temporal" else column] = values
     return output
 
 
 def selected_reference(calibration: pd.DataFrame, target_k: int, column: str) -> np.ndarray:
-    values = []
-    for _, frame in calibration.groupby("video_id", sort=False):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.asarray([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) == target_k:
-            values.append(float(selected[column].mean()))
+    values = selected_video_means(calibration, target_k, {"score": column})
     if len(values) < 2:
         raise ValueError(f"insufficient external effective-K={target_k} reference")
-    return stable_sorted(np.asarray(values, dtype=np.float64))
+    return stable_sorted(values["score"].to_numpy())
 
 
 def build_scores(
@@ -128,18 +113,21 @@ def build_scores(
         global_spatial_ref,
         global_t1_ref,
     )
-    for branch in ("G", "L"):
-        reference = stable_sorted(calibration_k1[f"{branch}_k"].to_numpy())
-        evaluation_k1[branch] = empirical_cdf_right_inclusive(
-            evaluation_k1[f"{branch}_k"].to_numpy(), reference
-        )
+    k1_calibrated = calibrate_u0_video_branches(
+        evaluation_k1["G_k"].to_numpy(),
+        evaluation_k1["L_k"].to_numpy(),
+        U0VideoReferences(
+            stable_sorted(calibration_k1["G_k"].to_numpy()),
+            stable_sorted(calibration_k1["L_k"].to_numpy()),
+        ),
+    )
+    evaluation_k1["G"] = k1_calibrated["G"]
+    evaluation_k1["L"] = k1_calibrated["L"]
     evaluation = evaluation_k1[
         [*KEY_COLUMNS, "video_path", "duration_seconds", "mean_global_motion"]
     ].copy()
     evaluation["original_stall"] = evaluation_k1["G_k"].to_numpy()
-    evaluation["clean_k1"] = (
-        0.6 * evaluation_k1["G"].to_numpy() + 0.4 * evaluation_k1["L"].to_numpy()
-    )
+    evaluation["clean_k1"] = k1_calibrated["S"]
 
     calibrated_k3 = calibrate_windows(
         k3_raw,
@@ -166,12 +154,17 @@ def build_scores(
         per_video["protocol_split"].eq("evaluation")
     ].groupby("effective_k", sort=True):
         target = target.copy()
-        for branch in ("G", "L"):
-            reference = selected_reference(calibration_k3, int(effective_k), f"{branch}_k")
-            target[branch] = empirical_cdf_right_inclusive(
-                target[f"{branch}_raw"].to_numpy(), reference
-            )
-        target["locked_u0"] = 0.6 * target["G"] + 0.4 * target["L"]
+        calibrated = calibrate_u0_video_branches(
+            target["G_raw"].to_numpy(),
+            target["L_raw"].to_numpy(),
+            U0VideoReferences(
+                selected_reference(calibration_k3, int(effective_k), "G_k"),
+                selected_reference(calibration_k3, int(effective_k), "L_k"),
+            ),
+        )
+        target["G"] = calibrated["G"]
+        target["L"] = calibrated["L"]
+        target["locked_u0"] = calibrated["S"]
         parts.append(target[["video_id", "effective_k", "G", "L", "locked_u0"]])
     u0 = pd.concat(parts, ignore_index=True)
     evaluation = evaluation.merge(u0, on="video_id", validate="one_to_one")

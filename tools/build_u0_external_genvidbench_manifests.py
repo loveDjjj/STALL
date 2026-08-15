@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 
 import cv2
@@ -13,9 +14,12 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+for directory in (ROOT / "src", ROOT / "tools"):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from analyze_multi_window_feasibility import uniform_windows
-from build_u0_release_manifests import resolve_video, sha256_file, write_json
+from alpha_stalled.release_io import resolve_video, sha256_file, write_json
+from alpha_stalled.sampling import uniform_windows
 
 
 DATASET = "genvidbench_pair1"

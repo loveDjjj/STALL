@@ -26,12 +26,12 @@ for path in (SRC_DIR, TOOLS_DIR):
 from create_patch_params import _fit_whitening, _get_mu_W, reservoir_update
 from eval_patch_fast import FastPatchScorer
 from patch_matching import patch_temporal_delta
-from score_multi_window import (
+from alpha_stalled.legacy_window_scoring import (
     KEY_COLUMNS,
     decode_manifest_row_with_retries,
     video_key,
 )
-from stall import DINO_V3_WEIGHTS
+from alpha_stalled.backbone import DINO_V3_WEIGHTS
 from stall_patch import PatchSTALL
 
 

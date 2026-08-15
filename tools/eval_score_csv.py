@@ -19,40 +19,12 @@ import argparse
 import sys
 from pathlib import Path
 
-import pandas as pd
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from metrics import ScoreDirection, build_results_table
-
-
-def evaluate_score_csv(
-    csv_path: Path,
-    score_col: str,
-    seed: int = 42,
-    higher_is: str = "real",
-    skip_global_compare: bool = True,
-) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
-    required = ["subset", "source_model", score_col]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        raise ValueError(f"{csv_path} 缺少列: {missing}")
-
-    direction = {
-        "real": ScoreDirection.HIGHER_IS_REAL,
-        "fake": ScoreDirection.HIGHER_IS_FAKE,
-    }[higher_is]
-    return build_results_table(
-        df[["subset", "source_model", score_col]].copy(),
-        {score_col: direction},
-        seed=seed,
-        skip_global_compare=skip_global_compare,
-        verbose=False,
-    )
+from alpha_stalled.score_csv import evaluate_score_csv
 
 
 def main() -> None:

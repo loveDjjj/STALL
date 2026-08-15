@@ -11,17 +11,23 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
 from build_multi_order_baselines import (
+    _auc_ap,
     add_baselines,
     conditional_two_sided_realness,
     d3_statistics,
     empirical_cdf,
+    metric_tables as legacy_metric_tables,
+    paired_bootstrap as legacy_paired_bootstrap,
+    pairwise_frames,
     two_sided_realness,
     window_positions,
 )
+from alpha_stalled import metrics as shared_metrics
 from evaluate_d3_robustness import transformed_windows
 from evaluate_d3_pixel_robustness import perturb_frames, select_eval_rows
 from prepare_genvideo_d3_exact_protocol import select_planned_rows
@@ -29,6 +35,49 @@ from summarize_d3_exact_genvideo_metrics import load_current_reference, load_d3_
 
 
 class MultiOrderBaselineTest(unittest.TestCase):
+    def test_historical_metric_entry_preserves_shared_semantics(self) -> None:
+        self.assertIs(_auc_ap, shared_metrics.auc_ap)
+        self.assertIs(pairwise_frames, shared_metrics.pairwise_frames)
+        rows = []
+        for subset, source, score in (
+            ("real", "Real", 0.9),
+            ("annotated", "Gen", 0.1),
+        ):
+            rows.extend(
+                {
+                    "dataset": "demo",
+                    "subset": subset,
+                    "source_model": source,
+                    "S": score + index * 0.01,
+                    "B": score - index * 0.01,
+                }
+                for index in range(4)
+            )
+        frame = pd.DataFrame(rows)
+        legacy_tables = legacy_metric_tables(
+            frame,
+            42,
+            score_columns=("S",),
+            config_names={"S": "score"},
+        )
+        shared_tables = shared_metrics.metric_tables(
+            frame,
+            42,
+            score_columns=("S",),
+            config_names={"S": "score"},
+        )
+        for legacy, shared in zip(legacy_tables, shared_tables):
+            pd.testing.assert_frame_equal(legacy, shared)
+        comparison = (("S", "B", "S-vs-B"),)
+        pd.testing.assert_frame_equal(
+            legacy_paired_bootstrap(
+                frame, 42, 10, comparisons=comparison
+            ),
+            shared_metrics.paired_bootstrap(
+                frame, 42, 10, comparisons=comparison
+            ),
+        )
+
     def test_window_positions_maps_native_indices(self) -> None:
         downsample = [0, 4, 8, 11, 15, 19]
         self.assertEqual(window_positions(downsample, [8, 11, 15]), [2, 3, 4])

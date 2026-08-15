@@ -9,31 +9,25 @@ import sys
 import time
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import torch
 import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_locked import (
-    cdf_with_positive_infinity,
-    global_references,
-    load_calibration_references,
+from alpha_stalled.global_branch import score_global_raw
+from alpha_stalled.local_branch import score_local_raw
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.release_io import video_id, video_id_shard
+from alpha_stalled.u0_analysis import (
+    calibrate_raw,
+    calibration_raw_references,
 )
-from build_u0_release_manifests import video_id
-from score_u0_locked_windows import load_raw_params, stable_shard
-from stable_whitening import (
-    empirical_cdf_right_inclusive,
-    l2_normalized_first_order,
-    l2_normalized_second_order,
-    score_gaussian_aggregate_float64,
-    stable_sorted,
-)
+from alpha_stalled.u0_scoring import score_raw_batch
 
 
 CACHE_ROOTS = {
@@ -67,7 +61,7 @@ def load_manifest(source_path: Path, dataset: str, num_shards: int, shard: int) 
     ].copy()
     source["video_id"] = source.apply(video_id, axis=1)
     source = source[
-        source["video_id"].map(lambda value: stable_shard(value, num_shards) == shard)
+        source["video_id"].map(lambda value: video_id_shard(value, num_shards) == shard)
     ].reset_index(drop=True)
     return source
 
@@ -94,89 +88,6 @@ def load_batch(rows: list[pd.Series]) -> tuple[torch.Tensor, torch.Tensor]:
         global_features.append(payload["global"].float())
         patch_features.append(payload["patch"].float())
     return torch.stack(global_features), torch.stack(patch_features)
-
-
-def score_raw_batch(
-    global_batch: torch.Tensor,
-    patch_batch: torch.Tensor,
-    params: dict,
-    device: str,
-) -> dict[str, np.ndarray]:
-    global_spatial, _ = score_gaussian_aggregate_float64(
-        global_batch,
-        params["global_spatial"],
-        aggregation="max",
-        device=device,
-        compute_percentile=False,
-    )
-    global_delta, zero = l2_normalized_first_order(global_batch)
-    global_t1, _ = score_gaussian_aggregate_float64(
-        global_delta,
-        params["global_t1"],
-        aggregation="min",
-        device=device,
-        invalid_mask=zero,
-        compute_percentile=False,
-    )
-    patch_spatial, _ = score_gaussian_aggregate_float64(
-        patch_batch,
-        params["patch_spatial"],
-        aggregation="mean",
-        device=device,
-        compute_percentile=False,
-    )
-    patch_d2, _ = score_gaussian_aggregate_float64(
-        l2_normalized_second_order(patch_batch),
-        params["patch_d2"],
-        aggregation="mean",
-        device=device,
-        compute_percentile=False,
-    )
-    return {
-        "global_spatial_raw": global_spatial,
-        "global_t1_raw": global_t1,
-        "patch_spatial_raw": patch_spatial,
-        "patch_d2_raw": patch_d2,
-    }
-
-
-def calibration_raw_references(
-    calibration_raw_dir: Path, num_shards: int, dataset: str, config: dict
-) -> dict[str, np.ndarray]:
-    calibration = load_calibration_references(calibration_raw_dir, num_shards)
-    calibration = calibration[calibration["dataset"] == dataset]
-    if len(calibration) != 200:
-        raise ValueError(f"{dataset}: expected 200 K1 calibration references")
-    global_spatial, global_t1 = global_references(config)
-    return {
-        "global_spatial": global_spatial,
-        "global_t1": global_t1,
-        "patch_spatial": stable_sorted(calibration["patch_spatial_raw"].to_numpy()),
-        "patch_d2": stable_sorted(calibration["patch_d2_raw"].to_numpy()),
-    }
-
-
-def calibrate_raw(raw: dict[str, np.ndarray], references: dict[str, np.ndarray]) -> dict:
-    global_spatial = empirical_cdf_right_inclusive(
-        raw["global_spatial_raw"], references["global_spatial"]
-    )
-    global_t1 = cdf_with_positive_infinity(
-        raw["global_t1_raw"], references["global_t1"]
-    )
-    patch_spatial = empirical_cdf_right_inclusive(
-        raw["patch_spatial_raw"], references["patch_spatial"]
-    )
-    patch_d2 = empirical_cdf_right_inclusive(
-        raw["patch_d2_raw"], references["patch_d2"]
-    )
-    return {
-        "global_spatial": global_spatial,
-        "global_t1": global_t1,
-        "patch_spatial": patch_spatial,
-        "patch_d2": patch_d2,
-        "G_k": 0.5 * global_spatial + 0.5 * global_t1,
-        "L_k": 0.1 * patch_spatial + 0.9 * patch_d2,
-    }
 
 
 def run(args: argparse.Namespace) -> None:

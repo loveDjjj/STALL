@@ -1,0 +1,17 @@
+\begin{table*}[!t]
+  \centering
+  \caption{Local first- versus second-order temporal ablation under the locked LSTL protocol. All entries are AUC/real-positive AP; only the Local temporal derivative order changes.}
+  \label{tab:local_d1_d2_ablation}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{lccccc}
+    \toprule
+    Variant & ComGenVid & VideoFeedback & GenVideo & Macro-3 & Macro $\Delta$AUC/$\Delta$AP \\
+    \midrule
+    Local first-order only & 0.8846/0.8848 & 0.7675/0.7712 & 0.8188/0.7952 & 0.8237/0.8171 & -- \\
+    Local second-order only & 0.8907/0.8908 & 0.7783/0.7870 & 0.8279/0.8066 & 0.8323/0.8281 & +0.0086/+0.0111 \\
+    Full model with first-order & 0.8966/0.9055 & 0.8563/0.8645 & 0.8635/0.8385 & 0.8721/0.8695 & -- \\
+    LSTL & 0.8968/0.9064 & 0.8597/0.8689 & 0.8657/0.8416 & 0.8741/0.8723 & +0.0019/+0.0028 \\
+    \bottomrule
+  \end{tabular}%
+  }
+\end{table*}

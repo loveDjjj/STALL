@@ -4,26 +4,27 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    average_precision_score,
-    auc,
-    roc_curve,
-)
+from sklearn.metrics import roc_curve
 
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
+for directory in (ROOT / "src", TOOLS):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from build_multi_order_baselines import pairwise_frames
+from alpha_stalled.metrics import (
+    binary_metrics,
+    pairwise_frames,
+    repeat_by_count,
+    stable_seed,
+)
 
 
 METRICS = (
@@ -37,11 +38,6 @@ METRICS = (
 )
 
 
-def stable_seed(seed: int, *parts: str) -> int:
-    digest = hashlib.sha256("\0".join((str(seed), *parts)).encode()).digest()
-    return int.from_bytes(digest[:8], "little")
-
-
 def tpr_at_fpr(fake_label: np.ndarray, anomaly_score: np.ndarray, target: float) -> float:
     fpr, tpr, _ = roc_curve(fake_label, anomaly_score)
     return tpr_from_curve(fpr, tpr, target)
@@ -50,30 +46,6 @@ def tpr_at_fpr(fake_label: np.ndarray, anomaly_score: np.ndarray, target: float)
 def tpr_from_curve(fpr: np.ndarray, tpr: np.ndarray, target: float) -> float:
     eligible = tpr[fpr <= target]
     return float(eligible.max()) if len(eligible) else 0.0
-
-
-def binary_metrics(frame: pd.DataFrame, score_column: str = "S") -> dict[str, float]:
-    real_label = frame["subset"].eq("real").to_numpy(dtype=np.uint8)
-    if real_label.min() == real_label.max():
-        raise ValueError("metrics require both real and fake videos")
-    realness = frame[score_column].to_numpy(dtype=np.float64)
-    fake_label = 1 - real_label
-    anomaly = 1.0 - realness
-    fpr, tpr, _ = roc_curve(fake_label, anomaly)
-    fnr = 1.0 - tpr
-    index = int(np.argmin(np.abs(fpr - fnr)))
-    predicted_real = realness >= 0.5
-    real_recall = float(predicted_real[real_label == 1].mean())
-    fake_recall = float((~predicted_real[real_label == 0]).mean())
-    return {
-        "auc": float(auc(fpr, tpr)),
-        "fake_positive_ap": float(average_precision_score(fake_label, anomaly)),
-        "real_positive_ap": float(average_precision_score(real_label, realness)),
-        "balanced_accuracy_at_0p5": 0.5 * (real_recall + fake_recall),
-        "fake_tpr_at_1pct_real_fpr": tpr_from_curve(fpr, tpr, 0.01),
-        "fake_tpr_at_5pct_real_fpr": tpr_from_curve(fpr, tpr, 0.05),
-        "eer": float(0.5 * (fpr[index] + fnr[index])),
-    }
 
 
 def metric_row(scope: str, dataset: str, frame: pd.DataFrame, **extra: object) -> dict:
@@ -145,17 +117,6 @@ def point_metrics(scores: pd.DataFrame, seed: int) -> tuple[pd.DataFrame, dict]:
         [table, pd.DataFrame([macro, pooled_macro, generator_macro])], ignore_index=True
     )
     return table, pairs_by_dataset
-
-
-def repeat_by_count(frame: pd.DataFrame, counts: dict[str, int]) -> pd.DataFrame:
-    pieces = [
-        frame.loc[[index] * counts[str(video_id)]]
-        for index, video_id in zip(frame.index, frame["video_id"])
-        if counts.get(str(video_id), 0)
-    ]
-    if not pieces:
-        raise ValueError("cluster bootstrap produced an empty class")
-    return pd.concat(pieces, ignore_index=True)
 
 
 def bootstrap_sample_chunk(
@@ -318,11 +279,13 @@ def write_report(metrics: pd.DataFrame, bootstrap: pd.DataFrame, path: Path) -> 
     lines.extend(
         [
             "",
-            "The paper's historical STALL protocol labels real as positive, so the main-table AP "
-            "remains real-positive AP for direct comparison. Fake-positive AP is reported alongside "
-            "it as the anomaly-detection orientation. AUC is unchanged when both score and label "
-            "orientation are reversed. Pooled AP is prevalence-sensitive and must not be compared "
-            "numerically with balanced pairwise AP.",
+            "The original STALL paper states that generated video is the positive class for AP. "
+            "This repository's frozen Alpha-STALLED main table instead uses real-positive AP for "
+            "continuity with its historical evaluation scripts. Fake-positive AP is therefore the "
+            "orientation aligned with STALL Table 1; real-positive AP is an internal endpoint, and "
+            "the two must be named explicitly. AUC is unchanged when both score and label orientation "
+            "are reversed. Pooled AP is prevalence-sensitive and must not be compared numerically "
+            "with balanced pairwise AP.",
             "",
             "| Bootstrap scope | Metric | Mean | Std | 95% CI |",
             "|---|---|---:|---:|---:|",

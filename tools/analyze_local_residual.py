@@ -13,11 +13,13 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from analyze_multi_window_scores import macro_cluster_bootstrap
-from build_multi_order_baselines import empirical_cdf, metric_tables, paired_bootstrap
+from alpha_stalled.aggregation import selected_video_means
+from alpha_stalled.calibration import empirical_cdf
+from alpha_stalled.metrics import macro_cluster_bootstrap, metric_tables, paired_bootstrap
 
 
 KEY_COLUMNS = ["dataset", "protocol_split", "subset", "source_model", "filename"]
@@ -108,26 +110,12 @@ def target_k_reference(window_scores: pd.DataFrame, target_k: int) -> pd.DataFra
         (window_scores["protocol_split"] == "calibration")
         & (window_scores["subset"] == "real")
     ]
-    rows = []
-    for key, frame in calibration.groupby(KEY_COLUMNS, sort=False, observed=True):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        if target_k == 1:
-            positions = np.array([(len(ordered) - 1) // 2], dtype=int)
-        else:
-            positions = np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) != target_k:
-            continue
-        rows.append(
-            {
-                **dict(zip(KEY_COLUMNS, key)),
-                "G_mean_raw": float(selected["G_k"].mean()),
-                "R1_L_mean_raw": float(selected["R1_L_k"].mean()),
-            }
-        )
-    reference = pd.DataFrame(rows)
+    reference = selected_video_means(
+        calibration,
+        target_k,
+        {"G_mean_raw": "G_k", "R1_L_mean_raw": "R1_L_k"},
+        group_columns=KEY_COLUMNS,
+    )
     if reference.empty:
         raise ValueError(f"no calibration reference supports effective_k={target_k}")
     return reference

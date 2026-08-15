@@ -7,12 +7,12 @@ import numpy as np
 import torch
 from PIL import Image
 
-from stall import (
-    STALL,
-    create_dinov3_transform,
-    load_dinov3_model,
-    load_video_frames,
+from alpha_stalled.backbone import (
+    get_shared_dinov3_model,
+    resolve_dinov3_paths,
 )
+from alpha_stalled.video_io import load_video_frames
+from stall import STALL
 
 
 class PatchSTALL(STALL):
@@ -24,6 +24,7 @@ class PatchSTALL(STALL):
 
     _shared_patch_model = None
     _shared_patch_transform = None
+    _shared_patch_model_key = None
 
     def __init__(
         self,
@@ -35,13 +36,20 @@ class PatchSTALL(STALL):
         dino_weights: str | None = None,
         load_dino: bool = True,
     ):
+        self.dino_repo_path, self.dino_weights_path = resolve_dinov3_paths(
+            dino_repo, dino_weights
+        )
         if load_dino:
-            if PatchSTALL._shared_patch_model is None:
-                PatchSTALL._shared_patch_model, PatchSTALL._shared_patch_transform = load_dinov3_model(
-                    device, repo_dir=dino_repo, weights=dino_weights
-                )
-            self.model = PatchSTALL._shared_patch_model
-            self.transform = PatchSTALL._shared_patch_transform
+            handle = get_shared_dinov3_model(
+                device,
+                self.dino_repo_path,
+                self.dino_weights_path,
+            )
+            self.model = handle.model
+            self.transform = handle.transform
+            PatchSTALL._shared_patch_model = handle.model
+            PatchSTALL._shared_patch_transform = handle.transform
+            PatchSTALL._shared_patch_model_key = handle.cache_key
         else:
             self.model = None
             self.transform = None

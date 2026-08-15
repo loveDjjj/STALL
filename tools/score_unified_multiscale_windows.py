@@ -22,7 +22,7 @@ for path in (SRC_DIR, TOOLS_DIR):
         sys.path.insert(0, str(path))
 
 from eval_patch_fast import FastPatchScorer
-from score_multi_window import (
+from alpha_stalled.legacy_window_scoring import (
     KEY_COLUMNS,
     decode_manifest_row_with_retries,
     stable_shard,

@@ -14,7 +14,7 @@ Stored `S` is higher-is-real. Historical AP is real-positive AP. Fake-positive A
 | unique_video_pooled_macro3 | Macro-3 | 0.8750 | 0.9215 | 0.7471 | 0.6904 | 0.1819 | 0.4561 | 0.2024 |
 | generator_macro20 | All-20 | 0.8658 | 0.8558 | 0.8617 | 0.6859 | 0.1846 | 0.4488 | 0.2053 |
 
-The paper's historical STALL protocol labels real as positive, so the main-table AP remains real-positive AP for direct comparison. Fake-positive AP is reported alongside it as the anomaly-detection orientation. AUC is unchanged when both score and label orientation are reversed. Pooled AP is prevalence-sensitive and must not be compared numerically with balanced pairwise AP.
+The original STALL paper states that generated video is the positive class for AP. This repository's frozen Alpha-STALLED main table instead uses real-positive AP for continuity with its historical evaluation scripts. Fake-positive AP is therefore the orientation aligned with STALL Table 1; real-positive AP is an internal endpoint, and the two must be named explicitly. AUC is unchanged when both score and label orientation are reversed. Pooled AP is prevalence-sensitive and must not be compared numerically with balanced pairwise AP.
 
 | Bootstrap scope | Metric | Mean | Std | 95% CI |
 |---|---|---:|---:|---:|

@@ -5,12 +5,21 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from alpha_stalled.artifacts import read_csv_files
+from alpha_stalled.release_io import video_id_shard
+
+
 KEY_COLUMNS = [
     "video_id",
     "dataset",
@@ -22,10 +31,6 @@ KEY_COLUMNS = [
 WINDOW_KEYS = [*KEY_COLUMNS, "window_id"]
 
 
-def stable_shard(video_id: str, num_shards: int) -> int:
-    return int(video_id[:16], 16) % num_shards
-
-
 def release_videos(release_dir: Path, dataset: str, num_shards: int, shard: int) -> list[dict]:
     records = []
     for name in ("calibration_manifest.json", "evaluation_manifest.json"):
@@ -34,7 +39,7 @@ def release_videos(release_dir: Path, dataset: str, num_shards: int, shard: int)
         row
         for row in records
         if row["dataset"] == dataset
-        and stable_shard(row["video_id"], num_shards) == shard
+        and video_id_shard(row["video_id"], num_shards) == shard
     ]
 
 
@@ -55,10 +60,7 @@ def run(args: argparse.Namespace) -> None:
     parts = sorted(checkpoint_dir.glob("part_*.csv"))
     if not parts:
         raise ValueError(f"no checkpoint parts: {checkpoint_dir}")
-    merged = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in parts],
-        ignore_index=True,
-    )
+    merged = read_csv_files(parts)
     if merged.duplicated(WINDOW_KEYS).any():
         raise ValueError("duplicate locked window keys")
     if set(merged["video_id"]) != expected_ids:

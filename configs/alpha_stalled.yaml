@@ -5,6 +5,11 @@
 # to the leakage-free detector:
 #   original global STALL + same-grid second-order patch STALL + fixed alpha.
 
+config_identity:
+  protocol_id: legacy_k1_paper_scores_v1
+  lifecycle: historical_frozen
+  current_authority: false
+
 method:
   name: Alpha-STALLED
   score_direction: higher_is_real

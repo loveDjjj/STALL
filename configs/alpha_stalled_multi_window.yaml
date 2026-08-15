@@ -1,6 +1,11 @@
 # Historical K=3 MW2 dataset-specific tuned reference. Its calibration samples are disjoint,
 # but region/aggregation were selected per target dataset using fake AUC/AP.
 
+config_identity:
+  protocol_id: strict20_dataset_specific_k3_v1
+  lifecycle: historical_frozen
+  current_authority: false
+
 method:
   name: Alpha-STALLED-K3-MW2
   selection_role: historical_dataset_specific_tuned_supplement

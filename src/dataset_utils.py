@@ -19,6 +19,16 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from alpha_stalled.cache_contract import (
+    cache_entry_is_complete,
+    cache_policy_uses_strict_entries,
+    prepare_model_feature_cache,
+    tensor_descriptor,
+    validate_cache_entry,
+    write_cache_entry_metadata,
+)
+from alpha_stalled.video_io import decode_indexed_frames, load_video_frames
+
 SUBSET_TO_FOLDER = {"real": "real", "annotated": "fake"}
 
 
@@ -184,6 +194,7 @@ def count_cache_misses(
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    cache_policy: str = "auto",
 ) -> int:
     """Count how many videos in the CSV are missing from the embedding cache.
 
@@ -200,13 +211,14 @@ def count_cache_misses(
         )
 
     cache_root = Path(emb_cache_dir)
+    strict_entries = cache_policy_uses_strict_entries(cache_root, cache_policy)
     count = 0
     for _, row in df.iterrows():
         stem = Path(row["video_path"]).stem
         if compact and _is_missing_window(row.get(window_col)):
             continue
         cache_path = _get_cache_path(cache_root, row["subset"], row["source_model"], stem, duration_sec, compact)
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=strict_entries):
             count += 1
     return count
 
@@ -221,6 +233,7 @@ def prefill_emb_cache(
     compact: bool = False,
     num_workers: int = 4,
     video_batch: int = 8,
+    cache_policy: str = "auto",
 ):
     """Phase 1：为所有 cache-miss 视频提取并缓存 DINOv3 embeddings。
 
@@ -245,7 +258,6 @@ def prefill_emb_cache(
         每个已处理行对应的 video_path (str)。
     """
     import torch
-    from stall import load_video_frames
 
     df = load_csv(csv_path)
 
@@ -266,6 +278,15 @@ def prefill_emb_cache(
         )
 
     cache_root = Path(emb_cache_dir)
+    cache_context = prepare_model_feature_cache(
+        cache_root,
+        model=model,
+        cache_kind="global_embeddings",
+        frame_batch_size=batch_size,
+        video_batch_size=video_batch,
+        policy=cache_policy,
+        create=True,
+    )
 
     # 第 1 遍：不做 I/O，只判断每行是 cache hit 还是 miss。
     misses = []  # 需要 decode+embed 的 (video_path, frame_idxs, cache_path) 元组
@@ -285,7 +306,7 @@ def prefill_emb_cache(
             frame_idxs_raw = row[idx_col]
 
         cache_path = _get_cache_path(cache_root, subset, source_model, stem, duration_sec, compact)
-        if not cache_path.exists():
+        if not cache_entry_is_complete(cache_path, strict=cache_context.strict):
             misses.append((video_path, json.loads(frame_idxs_raw), cache_path))
 
     if not misses:
@@ -294,7 +315,11 @@ def prefill_emb_cache(
     # 第 2 遍：按并行 video-batch 处理 cache miss。
     def _decode(job):
         path, frame_idxs, _ = job
-        return load_video_frames(path, frame_idxs)
+        return decode_indexed_frames(
+            path,
+            frame_idxs,
+            require_all=cache_context.strict,
+        )
 
     for chunk_start in range(0, len(misses), video_batch):
         chunk = misses[chunk_start : chunk_start + video_batch]
@@ -321,13 +346,25 @@ def prefill_emb_cache(
 
         # 将 embeddings 拆回逐视频，并原子保存。
         cursor = 0
-        for emb_len, (_, (video_path, _, cache_path)) in zip(lengths, valid_items):
+        for emb_len, (_, (video_path, frame_idxs, cache_path)) in zip(lengths, valid_items):
             emb = flat_embs[cursor : cursor + emb_len]
             cursor += emb_len
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             tmp = cache_path.with_suffix(".tmp.pt")
             torch.save(torch.from_numpy(emb), tmp)
             tmp.rename(cache_path)
+            if cache_context.strict:
+                cached = torch.from_numpy(emb)
+                write_cache_entry_metadata(
+                    cache_context,
+                    cache_path=cache_path,
+                    source_video_path=video_path,
+                    frame_indices=frame_idxs,
+                    payload={
+                        "format": "torch_tensor_v1",
+                        "embedding": tensor_descriptor(cached),
+                    },
+                )
             yield video_path
 
 
@@ -339,6 +376,8 @@ def load_csv_with_emb_cache(
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    video_batch: int = 8,
+    cache_policy: str = "auto",
 ):
     """加载 video_index.py 生成的 enriched CSV，并通过 embedding cache 产出样本。
 
@@ -365,7 +404,6 @@ def load_csv_with_emb_cache(
         ValueError: 若必需索引列不存在（需要重新运行 video_index.py）。
     """
     import torch
-    from stall import load_video_frames
 
     df = load_csv(csv_path)
 
@@ -386,6 +424,15 @@ def load_csv_with_emb_cache(
         )
 
     cache_root = Path(emb_cache_dir)
+    cache_context = prepare_model_feature_cache(
+        cache_root,
+        model=model,
+        cache_kind="global_embeddings",
+        frame_batch_size=batch_size,
+        video_batch_size=video_batch,
+        policy=cache_policy,
+        create=False,
+    )
 
     for _, row in df.iterrows():
         video_path = row["video_path"]
@@ -408,13 +455,41 @@ def load_csv_with_emb_cache(
 
         if compact and compact_cache_path.exists():
             # Compact cache: already contains exactly the window frames, no re-indexing needed
-            emb = torch.load(compact_cache_path, weights_only=True).numpy()  # (T_window, D)
+            cached = torch.load(compact_cache_path, weights_only=True)
+            if cache_context.strict:
+                validate_cache_entry(
+                    cache_context,
+                    cache_path=compact_cache_path,
+                    source_video_path=video_path,
+                    frame_indices=window_idxs,
+                    payload={
+                        "format": "torch_tensor_v1",
+                        "embedding": tensor_descriptor(cached),
+                    },
+                )
+            emb = cached.numpy()  # (T_window, D)
         elif full_cache_path.exists():
-            full_emb = torch.load(full_cache_path, weights_only=True).numpy()  # (N_8fps, D)
+            cached = torch.load(full_cache_path, weights_only=True)
+            if cache_context.strict:
+                validate_cache_entry(
+                    cache_context,
+                    cache_path=full_cache_path,
+                    source_video_path=video_path,
+                    frame_indices=downsample_idxs,
+                    payload={
+                        "format": "torch_tensor_v1",
+                        "embedding": tensor_descriptor(cached),
+                    },
+                )
+            full_emb = cached.numpy()  # (N_8fps, D)
             emb = _slice_window(full_emb, downsample_idxs, window_idxs, video_path)
             if emb is None:
                 continue
         else:
+            if cache_context.strict:
+                raise FileNotFoundError(
+                    f"strict cache entry missing after prefill: {full_cache_path}"
+                )
             # Cache miss: extract embeddings for the downsampled frames
             frames = load_video_frames(video_path, downsample_idxs)
             if len(frames) == 0:

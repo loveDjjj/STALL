@@ -14,11 +14,11 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
+for directory in (ROOT / "src", TOOLS):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
-from audit_u0_metric_protocol import binary_metrics, repeat_by_count, stable_seed
-from build_multi_order_baselines import pairwise_frames
+from alpha_stalled.metrics import binary_metrics, pairwise_frames, repeat_by_count, stable_seed
 
 
 METRICS = ("auc", "fake_positive_ap", "real_positive_ap")

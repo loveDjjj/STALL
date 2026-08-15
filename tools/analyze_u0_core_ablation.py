@@ -17,13 +17,15 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from analyze_u0_locked import load_calibration_references
-from build_multi_order_baselines import metric_tables
-from score_u0_locked_k1_cache import (
+from alpha_stalled.artifacts import read_expected_shards
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.u0_protocol import load_calibration_references
+from alpha_stalled.u0_analysis import (
+    calibrate_k3_candidate,
     calibrate_raw,
     calibration_raw_references,
 )
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.whitening import empirical_cdf_right_inclusive, stable_sorted
 
 
 KEY_COLUMNS = [
@@ -52,14 +54,9 @@ BETAS = (0.0, 0.05, 0.1, 0.2, 0.5, 1.0)
 
 
 def load_k1_scores(directory: Path, num_shards: int) -> pd.DataFrame:
-    frames = []
-    for dataset in ("comgenvid", "videofeedback", "genvideo"):
-        for shard in range(num_shards):
-            path = directory / f"{dataset}_shard{shard:02d}_of_{num_shards:02d}.csv"
-            if not path.is_file():
-                raise FileNotFoundError(path)
-            frames.append(pd.read_csv(path, float_precision="round_trip"))
-    result = pd.concat(frames, ignore_index=True)
+    result = read_expected_shards(
+        directory, ("comgenvid", "videofeedback", "genvideo"), num_shards
+    )
     if len(result) != 21421 or result["video_id"].duplicated().any():
         raise ValueError("K1 score shards must contain 21,421 unique evaluation videos")
     return result
@@ -115,56 +112,6 @@ def calibrate_k1_components(
         target["A9"] = 0.6 * target["A3"] + 0.4 * target["A6"]
         frames.append(target)
     return pd.concat(frames, ignore_index=True)
-
-
-def selected_k_reference(
-    windows: pd.DataFrame, dataset: str, target_k: int, column: str
-) -> np.ndarray:
-    calibration = windows[
-        (windows["dataset"] == dataset)
-        & (windows["protocol_split"] == "calibration")
-    ]
-    values = []
-    for _, frame in calibration.groupby("video_id", sort=False):
-        ordered = frame.sort_values("window_id")
-        if len(ordered) < target_k:
-            continue
-        positions = (
-            np.array([(len(ordered) - 1) // 2], dtype=int)
-            if target_k == 1
-            else np.rint(np.linspace(0, len(ordered) - 1, target_k)).astype(int)
-        )
-        selected = ordered.iloc[np.unique(positions)]
-        if len(selected) == target_k:
-            values.append(float(selected[column].mean()))
-    if len(values) < 2:
-        raise ValueError(f"no K={target_k} calibration reference for {dataset}/{column}")
-    return stable_sorted(np.asarray(values))
-
-
-def calibrate_k3_candidate(windows: pd.DataFrame, column: str) -> pd.DataFrame:
-    per_video = (
-        windows.groupby(KEY_COLUMNS, sort=False, observed=True)
-        .agg(effective_k=("effective_k", "first"), raw=(column, "mean"))
-        .reset_index()
-    )
-    output = []
-    evaluation = per_video[per_video["protocol_split"] == "evaluation"]
-    for (dataset, effective_k), target in evaluation.groupby(
-        ["dataset", "effective_k"], sort=False
-    ):
-        reference = selected_k_reference(
-            windows, str(dataset), int(effective_k), column
-        )
-        target = target.copy()
-        target["score"] = empirical_cdf_right_inclusive(
-            target["raw"].to_numpy(), reference
-        )
-        output.append(target[["video_id", "score"]])
-    result = pd.concat(output, ignore_index=True)
-    if len(result) != 21421 or result["video_id"].duplicated().any():
-        raise ValueError(f"invalid K3 candidate aggregation: {column}")
-    return result
 
 
 def add_k3_candidates(evaluation: pd.DataFrame, windows: pd.DataFrame) -> pd.DataFrame:

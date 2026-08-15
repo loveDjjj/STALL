@@ -7,19 +7,36 @@ from pathlib import Path
 import pandas as pd
 
 
-TOOLS = Path(__file__).resolve().parents[1] / "tools"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
+ROOT = Path(__file__).resolve().parents[1]
+TOOLS = ROOT / "tools"
+SRC = ROOT / "src"
+for directory in (SRC, TOOLS):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
+from alpha_stalled.sampling import (
+    current_window as canonical_current_window,
+    nonoverlap_windows as canonical_nonoverlap_windows,
+    parse_indices as canonical_parse_indices,
+    uniform_windows as canonical_uniform_windows,
+)
 from analyze_multi_window_feasibility import (
     apply_window_exclusions,
+    current_window,
     nonoverlap_windows,
+    parse_indices,
     uniform_windows,
     window_sets,
 )
 
 
 class MultiWindowSamplingTests(unittest.TestCase):
+    def test_legacy_analysis_entry_reexports_canonical_sampling(self) -> None:
+        self.assertIs(parse_indices, canonical_parse_indices)
+        self.assertIs(current_window, canonical_current_window)
+        self.assertIs(uniform_windows, canonical_uniform_windows)
+        self.assertIs(nonoverlap_windows, canonical_nonoverlap_windows)
+
     def test_declared_undecodable_window_is_removed_without_dropping_video(self) -> None:
         row = pd.Series(
             {
@@ -62,6 +79,14 @@ class MultiWindowSamplingTests(unittest.TestCase):
     def test_video_shorter_than_two_seconds_is_excluded(self) -> None:
         self.assertEqual(uniform_windows(list(range(15)), 3), [])
         self.assertEqual(nonoverlap_windows(list(range(15))), [])
+
+    def test_invalid_sampling_arguments_are_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            uniform_windows(list(range(16)), 0)
+        with self.assertRaises(ValueError):
+            uniform_windows(list(range(16)), 1, window_frames=0)
+        with self.assertRaises(ValueError):
+            nonoverlap_windows(list(range(16)), window_frames=0)
 
     def test_window_sets_preserves_numeric_column_name(self) -> None:
         row = pd.Series(

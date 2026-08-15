@@ -12,14 +12,14 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+for directory in (REPO_ROOT / "src", TOOLS_DIR):
+    if str(directory) not in sys.path:
+        sys.path.insert(0, str(directory))
 
 from build_multi_order_baselines import (
     GLOBAL_D3_CONFIG_NAMES,
-    metric_tables,
-    paired_bootstrap,
 )
+from alpha_stalled.metrics import metric_tables, paired_bootstrap
 
 
 GLOBAL_COLUMNS = ("G0", "G1", "G2", "G3", "G4")

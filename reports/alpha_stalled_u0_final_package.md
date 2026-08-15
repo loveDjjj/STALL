@@ -188,9 +188,12 @@ condition-matched CDF recalibration, not covariance or whitening refitting.
 | Synthetic scene cut | 0.9377 (+0.0569) | 0.9325 | 0.8753 |
 | 4 FPS diagnostic | 0.8723 (-0.0085) | 0.8684 | 0.8755 |
 
-U0 is stable to mild CRF 23 and 10% frame drop, but not to severe compression or 25% frame
-repetition. Matched CDFs do not recover these losses, so the shift is not a marginal
-calibration offset alone. In Scenario A, repeat-25 raises mean real/fake scores by
+Scenario-A CRF23 and 10% frame-drop AP deltas are `-0.0024` and `-0.0024`, with 95%
+paired cluster-bootstrap intervals `[-0.0071,+0.0032]` and `[-0.0057,+0.0006]`.
+These are limited observed changes, not equivalence claims. CRF35, resize, drop25,
+repeat25, and 4 FPS have fully negative AP intervals; repeat25 is
+`-0.0226 [-0.0367,-0.0099]`. Matched CDFs do not recover these losses, so the shift is
+not a marginal calibration offset alone. In Scenario A, repeat-25 raises mean real/fake scores by
 `+0.1405/+0.1364`, lowers rank correlation to `0.9365/0.7632`, and trades fewer real false
 alarms for more fake misses. The worst fixed-threshold Macro balanced accuracy is `0.6328`
 under perturbed-repeat25 calibration applied to clean input, with real-FP/fake-FN

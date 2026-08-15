@@ -23,11 +23,11 @@ for path in (SRC_DIR, TOOLS_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from build_multi_order_baselines import metric_tables
-from stable_whitening import (
+from alpha_stalled.metrics import metric_tables
+from alpha_stalled.local_branch import local_d2_features
+from alpha_stalled.whitening import (
     StableGaussianParams,
     configure_strict_fp32,
-    l2_normalized_second_order,
     score_mean_gaussian_float64,
     score_mean_gaussian_fp32,
 )
@@ -148,7 +148,7 @@ def score_mode(
     for start in range(0, len(frame), batch_size):
         paths = frame.iloc[start : start + batch_size]["cache_path"].tolist()
         patch = load_patch_batch(paths)
-        temporal = l2_normalized_second_order(patch)
+        temporal = local_d2_features(patch)
         began = time.perf_counter()
         if mode in {"N0", "N1"}:
             raw, percentile = score_mean_gaussian_fp32(
@@ -343,7 +343,7 @@ def cpu_gpu_float64_check(
             str(params_dir / f"{dataset}_region1_mean.npz")
         )
         patch = load_patch_batch(frame.head(2)["cache_path"].tolist())
-        temporal = l2_normalized_second_order(patch)
+        temporal = local_d2_features(patch)
         raw_cpu, pct_cpu = score_mean_gaussian_float64(
             temporal, params, device="cpu"
         )

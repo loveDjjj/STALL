@@ -4,249 +4,47 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
-import torch
 import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from score_multi_window import decode_selected_frames
-from stable_whitening import (
-    StableGaussianParams,
-    l2_normalized_first_order,
-    l2_normalized_second_order,
-    score_gaussian_aggregate_float64,
-    stable_sorted,
+from alpha_stalled.release_io import (
+    resolve_required_video as resolve_video,
+    video_id_shard as stable_shard,
+)
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.artifacts import checkpoint_completed_ids, read_csv_files
+from alpha_stalled.u0_protocol import (
+    KEY_COLUMNS as U0_KEY_COLUMNS,
+    WINDOW_KEYS as U0_WINDOW_KEYS,
+    load_release_rows,
+)
+from alpha_stalled.u0_scoring import (
+    decode_row,
+    score_batch,
+    score_global_raw,
+    score_local_raw,
 )
 from stall_patch import PatchSTALL
 
 
-KEY_COLUMNS = [
-    "video_id",
-    "dataset",
-    "protocol_split",
-    "subset",
-    "source_model",
-    "filename",
-]
-WINDOW_KEYS = [*KEY_COLUMNS, "window_id"]
-RAW_COLUMNS = [
-    "global_spatial_raw",
-    "global_t1_raw",
-    "patch_spatial_raw",
-    "patch_d2_raw",
-]
-
-
-def stable_shard(video_id: str, num_shards: int) -> int:
-    return int(video_id[:16], 16) % num_shards
-
-
-def resolve_video(value: str) -> Path:
-    path = Path(value)
-    candidates = (path, ROOT / path, ROOT.parent / path)
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate.resolve()
-    raise FileNotFoundError(f"video not found: {value}")
-
-
-def load_release_rows(release_dir: Path) -> tuple[pd.DataFrame, dict[str, list[list[int]]]]:
-    records = []
-    for name in ("calibration_manifest.json", "evaluation_manifest.json"):
-        payload = json.loads((release_dir / name).read_text(encoding="utf-8"))
-        records.extend(payload["videos"])
-    frame_payload = json.loads(
-        (release_dir / "frame_indices.json").read_text(encoding="utf-8")
-    )
-    frame_indices = frame_payload["videos"]
-    rows = pd.DataFrame(records)
-    if rows["video_id"].duplicated().any():
-        raise ValueError("duplicate video_id in locked release manifests")
-    if set(rows["video_id"]) != set(frame_indices):
-        raise ValueError("release manifests and frame-index keys differ")
-    return rows, frame_indices
-
-
-def load_raw_params(
-    config: dict,
-    dataset: str,
-    local_params_override: Path | None = None,
-) -> dict[str, StableGaussianParams]:
-    global_data = np.load(ROOT / config["global_branch"]["params"], allow_pickle=True)
-    global_spatial_reference = stable_sorted(
-        np.max(global_data["calib_ll_spat"].astype(np.float64), axis=1)
-    )
-    global_temporal_reference = stable_sorted(
-        np.min(global_data["calib_ll_temp"].astype(np.float64), axis=1)
-    )
-    local_path = (
-        local_params_override
-        if local_params_override is not None
-        else ROOT / config["local_branch"]["params_by_dataset"][dataset]["path"]
-    )
-    local_data = np.load(local_path, allow_pickle=True)
-    # Local CDF references are rebuilt from this release traversal. The stored
-    # arrays are placeholders here because this stage persists raw scores only.
-    placeholder = np.array([0.0], dtype=np.float64)
-    return {
-        "global_spatial": StableGaussianParams(
-            mean=global_data["mu_spat"].astype(np.float64),
-            whitening=global_data["W_spat"].astype(np.float64),
-            calibration_raw=global_spatial_reference,
-        ),
-        "global_t1": StableGaussianParams(
-            mean=global_data["mu_temp"].astype(np.float64),
-            whitening=global_data["W_temp"].astype(np.float64),
-            calibration_raw=global_temporal_reference,
-        ),
-        "patch_spatial": StableGaussianParams(
-            mean=local_data["mu_patch_spat"].astype(np.float64),
-            whitening=local_data["W_patch_spat"].astype(np.float64),
-            calibration_raw=placeholder,
-        ),
-        "patch_d2": StableGaussianParams(
-            mean=local_data["mu_patch_temp"].astype(np.float64),
-            whitening=local_data["W_patch_temp"].astype(np.float64),
-            calibration_raw=placeholder,
-        ),
-    }
-
-
-def decode_row(
-    row: pd.Series,
-    windows: list[list[int]],
-    seek_gap: int,
-    attempts: int,
-) -> dict:
-    if len(windows) != int(row["effective_k"]):
-        raise ValueError(f"effective_k mismatch for {row['video_id']}")
-    unique_indices = sorted({int(index) for window in windows for index in window})
-    error = None
-    for attempt in range(attempts):
-        try:
-            frames = decode_selected_frames(
-                resolve_video(str(row["video_path"])), unique_indices, seek_gap
-            )
-            positions = {index: position for position, index in enumerate(unique_indices)}
-            return {
-                "row": row,
-                "windows": windows,
-                "positions": [[positions[index] for index in window] for window in windows],
-                "frames": frames,
-                "unique_indices": unique_indices,
-            }
-        except Exception as caught:
-            error = caught
-            if attempt + 1 < attempts:
-                time.sleep(0.25 * (attempt + 1))
-    raise RuntimeError(f"decode failed after {attempts} attempts: {error}") from error
-
-
-@torch.inference_mode()
-def score_batch(
-    decoded: list[dict],
-    extractor: PatchSTALL,
-    params: dict[str, StableGaussianParams],
-    score_device: str,
-    frame_batch_size: int,
-) -> list[dict]:
-    # Keep DINO's frame grouping independent of the outer video/I/O batch.
-    # Concatenating several videos changes the final frame-batch shape and can
-    # perturb patch tokens at roughly 1e-5 even though the model is in eval
-    # mode. Each video therefore has its own fixed extraction call.
-    extracted = [
-        extractor.frames_to_global_patch_embeddings(
-            [item["frames"]], batch_size=frame_batch_size
-        )[0]
-        for item in decoded
-    ]
-    global_windows = []
-    patch_windows = []
-    metadata = []
-    for item, output in zip(decoded, extracted):
-        if tuple(output["grid_size"]) != (14, 14):
-            raise ValueError(f"unexpected patch grid: {output['grid_size']}")
-        for window_id, positions in enumerate(item["positions"]):
-            global_windows.append(output["global"][positions])
-            patch_windows.append(output["patch"][positions])
-            metadata.append((item, window_id))
-    global_batch = torch.from_numpy(np.stack(global_windows).astype(np.float32))
-    patch_batch = torch.from_numpy(np.stack(patch_windows).astype(np.float32))
-
-    global_spatial_raw, _ = score_gaussian_aggregate_float64(
-        global_batch,
-        params["global_spatial"],
-        aggregation="max",
-        device=score_device,
-        compute_percentile=False,
-    )
-    global_delta, zero_mask = l2_normalized_first_order(global_batch)
-    global_t1_raw, _ = score_gaussian_aggregate_float64(
-        global_delta,
-        params["global_t1"],
-        aggregation="min",
-        device=score_device,
-        invalid_mask=zero_mask,
-        compute_percentile=False,
-    )
-    patch_spatial_raw, _ = score_gaussian_aggregate_float64(
-        patch_batch,
-        params["patch_spatial"],
-        aggregation="mean",
-        device=score_device,
-        compute_percentile=False,
-    )
-    patch_d2 = l2_normalized_second_order(patch_batch)
-    patch_d2_raw, _ = score_gaussian_aggregate_float64(
-        patch_d2,
-        params["patch_d2"],
-        aggregation="mean",
-        device=score_device,
-        compute_percentile=False,
-    )
-
-    rows = []
-    for index, (item, window_id) in enumerate(metadata):
-        source = item["row"]
-        rows.append(
-            {
-                **{column: source[column] for column in KEY_COLUMNS},
-                "video_path": source["video_path"],
-                "duration_seconds": float(source["duration_seconds"]),
-                "effective_k": int(source["effective_k"]),
-                "unique_frame_count": len(item["unique_indices"]),
-                "window_id": window_id,
-                "frame_indices": json.dumps(
-                    item["windows"][window_id], separators=(",", ":")
-                ),
-                "global_spatial_raw": global_spatial_raw[index],
-                "global_t1_raw": global_t1_raw[index],
-                "patch_spatial_raw": patch_spatial_raw[index],
-                "patch_d2_raw": patch_d2_raw[index],
-            }
-        )
-    return rows
+KEY_COLUMNS = list(U0_KEY_COLUMNS)
+WINDOW_KEYS = list(U0_WINDOW_KEYS)
 
 
 def completed_videos(checkpoint_dir: Path) -> tuple[set[str], list[Path]]:
-    parts = sorted(checkpoint_dir.glob("part_*.csv"))
-    completed: set[str] = set()
-    for part in parts:
-        completed.update(pd.read_csv(part, usecols=["video_id"])["video_id"].unique())
-    return completed, parts
+    completed, parts = checkpoint_completed_ids(checkpoint_dir, cast_str=True)
+    return {str(value) for value in completed}, parts
 
 
 def run(args: argparse.Namespace) -> None:
@@ -337,10 +135,7 @@ def run(args: argparse.Namespace) -> None:
         raise RuntimeError(
             f"incomplete locked shard: missing={len(expected-completed)} failures={len(failures)}"
         )
-    merged = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in parts],
-        ignore_index=True,
-    )
+    merged = read_csv_files(parts)
     if merged.duplicated(WINDOW_KEYS).any():
         raise ValueError("duplicate locked window keys")
     output = (

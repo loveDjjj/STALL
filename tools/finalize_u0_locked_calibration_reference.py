@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -12,10 +13,12 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-
-def stable_shard(video_id: str, num_shards: int) -> int:
-    return int(video_id[:16], 16) % num_shards
+from alpha_stalled.artifacts import read_csv_files
+from alpha_stalled.release_io import video_id_shard
 
 
 def run(args: argparse.Namespace) -> None:
@@ -26,7 +29,7 @@ def run(args: argparse.Namespace) -> None:
         row["video_id"]
         for row in manifest
         if row["dataset"] == args.dataset
-        and stable_shard(row["video_id"], args.num_shards) == args.shard_index
+        and video_id_shard(row["video_id"], args.num_shards) == args.shard_index
     }
     references = json.loads(
         (args.release_dir / "frame_indices.json").read_text()
@@ -40,10 +43,7 @@ def run(args: argparse.Namespace) -> None:
     parts = sorted(checkpoint_dir.glob("part_*.csv"))
     if not parts:
         raise ValueError(f"no calibration checkpoint parts: {checkpoint_dir}")
-    merged = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in parts],
-        ignore_index=True,
-    )
+    merged = read_csv_files(parts)
     if merged["video_id"].duplicated().any():
         raise ValueError("duplicate calibration reference video IDs")
     if set(merged["effective_k"].astype(int)) != {1}:

@@ -74,3 +74,22 @@ Score shifts and Spearman correlations are averaged equally across the three dat
 - Mild CRF 23 and 10% frame drop change Scenario-A final AP by less than 0.003; CRF 35 and 25% frame repetition lower it by about 0.020 and 0.023.
 - Condition-matched CDF recalibration does not recover the severe shifts, so their loss is not explained by a one-dimensional calibration offset alone.
 - Scene-cut AP improves on this balanced detection subset, but the real-only injection study shows that this must not be interpreted as a monotonic per-video anomaly response.
+
+## Paired cluster bootstrap for Scenario A
+
+Deltas are paired against R0 on the same videos. Resampling is clustered by video ID, stratified by dataset and generator, and repeated 1,000 times; windows are never sampling units.
+
+| Condition | Macro AP delta | 95% CI |
+|---|---:|---:|
+| R0_original | +0.0000 | [+0.0000, +0.0000] |
+| R1_h264_crf23 | -0.0024 | [-0.0071, +0.0032] |
+| R2_h264_crf35 | -0.0196 | [-0.0274, -0.0112] |
+| R3_resize_half_restore | -0.0097 | [-0.0163, -0.0031] |
+| R4_drop10 | -0.0024 | [-0.0057, +0.0006] |
+| R5_drop25 | -0.0051 | [-0.0099, -0.0005] |
+| R6_repeat10 | -0.0077 | [-0.0151, +0.0002] |
+| R7_repeat25 | -0.0226 | [-0.0367, -0.0099] |
+| R8_scene_cut | +0.0569 | [+0.0358, +0.0771] |
+| R9_4fps | -0.0085 | [-0.0154, -0.0012] |
+
+CRF23 and drop10 have small point losses whose intervals cross zero; this is evidence of limited observed change, not an equivalence test. CRF35, resize, drop25, repeat25, and 4fps have fully negative AP intervals. The positive scene-cut interval reflects better class separation on this subset and must not be read as monotonic anomaly response.

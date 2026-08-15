@@ -1,6 +1,6 @@
 \begin{table}[!t]
   \centering
-  \caption{锁定 \method 与正式方法链条对比。指标为 pairwise balanced AUC/real-positive AP，数值越高越好。}
+  \caption{锁定 \method 与公平方法链条对比。指标为 pairwise balanced AUC/real-positive AP。Historical clean K1 仅作协议审计；统一 K1 是 K=3 覆盖增益的直接对照。}
   \label{tab:main_results}
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{lcccc}
@@ -8,7 +8,8 @@
     方法 & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
     \midrule
     Original STALL & 0.8508/0.8560 & 0.8449/0.8596 & 0.8206/0.8129 & 0.8388/0.8428 \\
-    Clean single-window & 0.8699/0.8819 & \textbf{0.8631/0.8708} & 0.8382/0.8274 & 0.8570/0.8600 \\
+    Historical clean K1 (audit) & 0.8699/0.8819 & 0.8631/0.8708 & 0.8382/0.8274 & 0.8570/0.8600 \\
+    Unified K1 (direct control) & 0.8786/0.8878 & \textbf{0.8654/0.8734} & 0.8456/0.8297 & 0.8632/0.8636 \\
     \method (locked K=3) & \textbf{0.8968/0.9064} & 0.8597/0.8689 & \textbf{0.8657/0.8416} & \textbf{0.8741/0.8723} \\
     \bottomrule
   \end{tabular}

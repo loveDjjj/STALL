@@ -1,0 +1,90 @@
+schema_version: alpha_stalled_config_registry_v1
+
+lifecycle_classes:
+  - current_locked
+  - coverage_extension
+  - historical_frozen
+  - release_evidence
+  - release_input
+  - governance
+  - template
+
+entries:
+  - path: configs/alpha_stalled_u0_locked.yaml
+    kind: protocol_config
+    lifecycle: current_locked
+    authority: current
+    protocol_id: u0_locked_v1
+    mutable: false
+  - path: configs/alpha_stalled_duration_aware_23source.yaml
+    kind: protocol_config
+    lifecycle: coverage_extension
+    authority: extension
+    protocol_id: duration_aware_23source_v1
+    mutable: false
+  - path: configs/alpha_stalled_clean_universal.yaml
+    kind: protocol_config
+    lifecycle: historical_frozen
+    authority: historical
+    protocol_id: strict20_prerelease_temporal_unified_v1
+    mutable: false
+  - path: configs/alpha_stalled_multi_window.yaml
+    kind: protocol_config
+    lifecycle: historical_frozen
+    authority: historical
+    protocol_id: strict20_dataset_specific_k3_v1
+    mutable: false
+  - path: configs/alpha_stalled.yaml
+    kind: protocol_config
+    lifecycle: historical_frozen
+    authority: historical
+    protocol_id: legacy_k1_paper_scores_v1
+    mutable: false
+  - path: configs/multi_window_exclusions.csv
+    kind: protocol_input
+    lifecycle: release_input
+    authority: supporting
+    protocol_id: null
+    mutable: false
+  - path: configs/run_manifests/alpha_stalled_u0_locked.yaml
+    kind: run_manifest_spec
+    lifecycle: release_evidence
+    authority: supporting
+    protocol_id: u0_locked_v1
+    mutable: false
+  - path: configs/run_manifests/captured_experiment.yaml.template
+    kind: run_manifest_template
+    lifecycle: template
+    authority: template
+    protocol_id: null
+    mutable: true
+  - path: configs/cache_inventory.yaml
+    kind: governance_spec
+    lifecycle: governance
+    authority: supporting
+    protocol_id: null
+    mutable: true
+  - path: configs/data_catalog.yaml
+    kind: governance_spec
+    lifecycle: governance
+    authority: supporting
+    protocol_id: u0_locked_v1
+    mutable: true
+  - path: configs/parameter_assets.yaml
+    kind: governance_spec
+    lifecycle: governance
+    authority: supporting
+    protocol_id: null
+    mutable: true
+  - path: configs/tool_dependencies.yaml
+    kind: governance_spec
+    lifecycle: governance
+    authority: supporting
+    protocol_id: null
+    mutable: true
+  - path: configs/config_registry.yaml
+    kind: governance_registry
+    lifecycle: governance
+    authority: supporting
+    protocol_id: null
+    mutable: true

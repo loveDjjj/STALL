@@ -1,8 +1,14 @@
-"""Alpha-STALLED patch 工具共享的轻量 numpy 数学函数。"""
+"""Generic patch-experiment aggregation compatibility helpers.
+
+Locked U0 uses region1/mean and does not call ``bottomk_mean``. The percentile
+wrapper delegates to the canonical right-inclusive ECDF implementation.
+"""
 
 from __future__ import annotations
 
 import numpy as np
+
+from alpha_stalled.whitening import empirical_cdf_right_inclusive
 
 
 def bottomk_mean(arr: np.ndarray, ratio: float) -> np.ndarray:
@@ -23,4 +29,7 @@ def empirical_percentile(scores: np.ndarray, calib_sorted: np.ndarray) -> np.nda
     返回值表示小于等于当前分数的校准分数比例，符合 STALL 的分数方向约定：
     百分位越高，证据越接近真实视频。
     """
-    return np.searchsorted(calib_sorted, scores, side="right") / len(calib_sorted)
+    return empirical_cdf_right_inclusive(scores, calib_sorted)
+
+
+__all__ = ["bottomk_mean", "empirical_percentile"]

@@ -20,13 +20,12 @@ for directory in (ROOT / "src", ROOT / "tools"):
     if str(directory) not in sys.path:
         sys.path.insert(0, str(directory))
 
-from score_multi_window import decode_selected_frames
-from score_u0_locked_windows import load_raw_params, resolve_video, stable_shard
-from stable_whitening import (
-    l2_normalized_first_order,
-    l2_normalized_second_order,
-    score_gaussian_aggregate_float64,
-)
+from alpha_stalled.video_io import decode_selected_frames
+from alpha_stalled.release_io import resolve_required_video as resolve_video, video_id_shard
+from alpha_stalled.parameters import load_raw_params
+from alpha_stalled.artifacts import checkpoint_completed_ids
+from alpha_stalled.global_branch import score_global_raw
+from alpha_stalled.local_branch import score_local_raw
 from stall_patch import PatchSTALL
 from u0_perturbations import (
     CONDITIONS,
@@ -174,42 +173,24 @@ def score_condition(
 ) -> list[dict[str, float]]:
     global_batch = torch.from_numpy(np.stack([item["global"] for item in windows]).astype(np.float32))
     patch_batch = torch.from_numpy(np.stack([item["patch"] for item in windows]).astype(np.float32))
-    global_spatial, _ = score_gaussian_aggregate_float64(
+    global_raw = score_global_raw(
         global_batch,
         params["global_spatial"],
-        aggregation="max",
-        device=device,
-        compute_percentile=False,
-    )
-    first_order, zero = l2_normalized_first_order(global_batch)
-    global_t1, _ = score_gaussian_aggregate_float64(
-        first_order,
         params["global_t1"],
-        aggregation="min",
         device=device,
-        invalid_mask=zero,
-        compute_percentile=False,
     )
-    patch_spatial, _ = score_gaussian_aggregate_float64(
+    local_raw = score_local_raw(
         patch_batch,
         params["patch_spatial"],
-        aggregation="mean",
-        device=device,
-        compute_percentile=False,
-    )
-    patch_d2, _ = score_gaussian_aggregate_float64(
-        l2_normalized_second_order(patch_batch),
         params["patch_d2"],
-        aggregation="mean",
         device=device,
-        compute_percentile=False,
     )
     return [
         {
-            "global_spatial_raw": global_spatial[index],
-            "global_t1_raw": global_t1[index],
-            "patch_spatial_raw": patch_spatial[index],
-            "patch_d2_raw": patch_d2[index],
+            "global_spatial_raw": global_raw.spatial[index],
+            "global_t1_raw": global_raw.temporal_t1[index],
+            "patch_spatial_raw": local_raw.patch_spatial[index],
+            "patch_d2_raw": local_raw.patch_temporal[index],
         }
         for index in range(len(windows))
     ]
@@ -276,11 +257,8 @@ def score_video(
 
 
 def completed_ids(checkpoint: Path) -> tuple[set[str], int]:
-    parts = sorted(checkpoint.glob("part_*.csv"))
-    completed: set[str] = set()
-    for path in parts:
-        completed.update(pd.read_csv(path, usecols=["video_id"])["video_id"].astype(str))
-    return completed, len(parts)
+    completed, parts = checkpoint_completed_ids(checkpoint, cast_str=True)
+    return {str(value) for value in completed}, len(parts)
 
 
 def run(args: argparse.Namespace) -> None:
@@ -293,7 +271,10 @@ def run(args: argparse.Namespace) -> None:
         args.plan,
     )
     rows = rows[
-        rows["video_id"].map(lambda value: stable_shard(str(value), args.num_shards) == args.shard_index)
+        rows["video_id"].map(
+            lambda value: video_id_shard(str(value), args.num_shards)
+            == args.shard_index
+        )
     ].reset_index(drop=True)
     if args.debug_videos is not None:
         rows = rows.head(args.debug_videos)

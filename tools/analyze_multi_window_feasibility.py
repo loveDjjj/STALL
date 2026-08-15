@@ -13,15 +13,24 @@ import pandas as pd
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TOOLS_DIR = REPO_ROOT / "tools"
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from build_multi_order_baselines import KEY_COLUMNS
-from run_local_d2_residuals import build_strict_eval_index, dataset_specs
+from alpha_stalled.sampling import (
+    WINDOW_FRAMES,
+    current_window,
+    nonoverlap_windows,
+    parse_indices,
+    uniform_windows,
+)
+from alpha_stalled.legacy_local_d2_protocol import (
+    KEY_COLUMNS,
+    build_strict_eval_index,
+    dataset_specs,
+)
 
 
-WINDOW_FRAMES = 16
 DURATION_BINS = (0.0, 2.0, 4.0, 6.0, 10.0, 20.0, float("inf"))
 DURATION_LABELS = ("<2", "2-4", "4-6", "6-10", "10-20", "20+")
 EXCLUSION_KEYS = [
@@ -32,60 +41,6 @@ EXCLUSION_KEYS = [
     "filename",
     "sampling",
 ]
-
-
-def parse_indices(value: object) -> list[int]:
-    if isinstance(value, str):
-        parsed = json.loads(value)
-    elif isinstance(value, (list, tuple, np.ndarray)):
-        parsed = list(value)
-    else:
-        raise ValueError(f"invalid frame-index value: {value!r}")
-    return [int(item) for item in parsed]
-
-
-def _deduplicate_windows(windows: list[list[int]]) -> list[list[int]]:
-    unique: list[list[int]] = []
-    seen: set[tuple[int, ...]] = set()
-    for window in windows:
-        key = tuple(window)
-        if key not in seen:
-            seen.add(key)
-            unique.append(window)
-    return unique
-
-
-def uniform_windows(downsample_indices: list[int], requested_k: int) -> list[list[int]]:
-    """Return up to K uniformly spaced contiguous 2 s windows."""
-    if requested_k < 1:
-        raise ValueError("requested_k must be positive")
-    max_start = len(downsample_indices) - WINDOW_FRAMES
-    if max_start < 0:
-        return []
-    starts = np.rint(np.linspace(0, max_start, requested_k)).astype(int)
-    windows = [
-        downsample_indices[start : start + WINDOW_FRAMES]
-        for start in starts.tolist()
-    ]
-    return _deduplicate_windows(windows)
-
-
-def nonoverlap_windows(downsample_indices: list[int]) -> list[list[int]]:
-    """Return full non-overlapping 2 s windows, excluding a short tail."""
-    if len(downsample_indices) < WINDOW_FRAMES:
-        return []
-    return [
-        downsample_indices[start : start + WINDOW_FRAMES]
-        for start in range(0, len(downsample_indices) - WINDOW_FRAMES + 1, WINDOW_FRAMES)
-    ]
-
-
-def current_window(value: object) -> list[list[int]]:
-    if pd.isna(value):
-        return []
-    window = parse_indices(value)
-    return [window] if len(window) == WINDOW_FRAMES else []
-
 
 def window_sets(row: pd.Series) -> dict[str, list[list[int]]]:
     downsample = parse_indices(row["downsample_idxs"])

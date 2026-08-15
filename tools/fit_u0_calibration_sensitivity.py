@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -14,8 +15,15 @@ import torch
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from build_u0_calibration_reserve import DATASETS, SEEDS, SIZES
+from alpha_stalled.u0_calibration_experiments import (
+    CALIBRATION_RESERVE_SPECS as DATASETS,
+    SEEDS,
+    SIZES,
+)
 from create_patch_params import build_patch_params
 
 

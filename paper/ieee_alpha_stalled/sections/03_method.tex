@@ -115,4 +115,4 @@
   S(V)=0.6G(V)+0.4L(V).
   \label{eq:final_score}
 \end{equation}
-Local whitening、窗口级 CDF 和视频级 CDF 均仅由目标域独立真实视频估计；生成视频不参与拟合、校准或权重选择。正式实现将 whitening 和高斯似然阶段转换为 float64，经验 CDF 使用稳定排序和右闭合 tie 规则。该实现不改变 DINOv3 的 float32 特征，只消除高维 whitening 对外层 batch shape 的数值依赖。
+Local whitening、窗口级 CDF 和视频级 CDF 均仅由目标域独立真实视频估计；生成视频不参与这些统计量的拟合或校准，锁定运行也不再据此调整权重。需要区分统计拟合与方法开发：固定的 $\alpha$、$\beta$、$K$ 及总体结构是在三个开发基准上查看生成视频结果后冻结的，因此这些基准不属于未触碰的确认集。正式实现将 whitening 和高斯似然阶段转换为 float64，经验 CDF 使用稳定排序和右闭合 tie 规则。该实现不改变 DINOv3 的 float32 特征，只消除高维 whitening 对外层 batch shape 的数值依赖。

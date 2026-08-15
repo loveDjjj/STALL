@@ -17,8 +17,13 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from eval_alpha_stalled import compute_metrics, fuse_scores
-from eval_score_csv import evaluate_score_csv
+import eval_alpha_stalled as fusion_cli
+import eval_score_csv as score_cli
+from alpha_stalled.score_csv import (
+    compute_fused_metrics as compute_metrics,
+    evaluate_score_csv,
+    fuse_score_csvs as fuse_scores,
+)
 from patch_math import bottomk_mean, empirical_percentile
 from patch_matching import (
     patch_temporal_delta,
@@ -34,6 +39,11 @@ def _write_csv(path: Path, rows: list[dict]) -> None:
 
 
 class AlphaStalledFusionTest(unittest.TestCase):
+    def test_score_clis_reexport_shared_implementations(self) -> None:
+        self.assertIs(fusion_cli.compute_metrics, compute_metrics)
+        self.assertIs(fusion_cli.fuse_scores, fuse_scores)
+        self.assertIs(score_cli.evaluate_score_csv, evaluate_score_csv)
+
     def test_fuse_scores_uses_global_patch_alpha(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

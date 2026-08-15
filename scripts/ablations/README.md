@@ -1,7 +1,12 @@
 # 消融复现说明
 
-所有消融指标都应通过 `src/metrics.py` 重新计算，不再使用早期一次性探索脚本。
-统一入口为：
+当前正式消融必须先在 `reports/u0_experiment_registry.csv` 和
+`docs/RESULT_STATUS.md` 中确认协议角色。U0 的 K1/K3、Global/Local、D1/D2、
+calibration 和 bootstrap 分析使用对应的 `tools/analyze_u0_*.py` 或报告中记录的
+专用分析器；不能把 legacy K1 CSV 与 locked K3 分数直接拼接。
+
+下面的 `eval_score_csv.py` 入口只适用于已经具有相同数据身份、label方向和协议
+定义的单个 score CSV。它负责指标计算，不负责证明两个 CSV 是公平对照：
 
 ```bash
 conda run --no-capture-output -n stall python tools/eval_score_csv.py \
@@ -11,6 +16,20 @@ conda run --no-capture-output -n stall python tools/eval_score_csv.py \
 ```
 
 除非实验显式声明相反方向，所有分数均解释为“越高越接近真实视频”。
+AP 还必须显式注明 `AP_real` 或 `AP_fake`，结果汇总必须注明 `Macro-3` 或
+`All-N`。
+
+## 当前 U0 消融入口
+
+| 实验 | 权威分析/报告 |
+|---|---|
+| Global/Local、K1/K3、alpha/beta | `tools/analyze_u0_core_ablation.py`、`reports/u0_core_ablation.md` |
+| Local D1/D2 | `tools/analyze_second_order_independent_calibration.py`、`reports/second_order_and_independent_calibration.md` |
+| calibration size/seed | `tools/analyze_u0_calibration_sensitivity.py`、`reports/u0_calibration_size_and_seed.md` |
+| cross-dataset calibration | `tools/analyze_u0_cross_dataset_calibration.py`、`reports/u0_cross_dataset_calibration.md` |
+| 23-source K1/K3 factorial | `tools/analyze_duration_aware_k1_factorial.py`、`reports/original_k1_full23_factorial.md` |
+
+以下各节是 legacy K1 `paper_scores` 的复算说明。
 
 ## 1. Global/Patch 组件消融
 

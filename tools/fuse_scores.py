@@ -14,10 +14,11 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from metrics import ScoreDirection, build_results_table
-
-
-KEY_COLUMNS = ["subset", "source_model", "filename"]
+from alpha_stalled.score_csv import (
+    KEY_COLUMNS,
+    metric_rows as _metric_rows,
+    read_keyed_scores as _read_scores,
+)
 
 
 def _parse_alphas(value: str) -> list[float]:
@@ -26,41 +27,6 @@ def _parse_alphas(value: str) -> list[float]:
         count = int(round((stop - start) / step)) + 1
         return [round(start + i * step, 10) for i in range(count)]
     return [float(x) for x in value.split(",")]
-
-
-def _read_scores(path: Path, score_col: str, prefix: str) -> pd.DataFrame:
-    df = pd.read_csv(path)
-    missing = [c for c in KEY_COLUMNS + [score_col] if c not in df.columns]
-    if missing:
-        raise ValueError(f"{path} 缺少列: {missing}")
-
-    out = df[KEY_COLUMNS + [score_col]].copy()
-    out["subset"] = out["subset"].astype(str)
-    out["source_model"] = out["source_model"].astype(str)
-    out["filename"] = out["filename"].astype(str)
-    out = out.rename(columns={score_col: f"{prefix}_score"})
-    return out
-
-
-def _metric_rows(df: pd.DataFrame, score_col: str, seed: int) -> pd.DataFrame:
-    """通过 src/metrics.py 计算论文口径的 pairwise balanced 指标。"""
-    metrics = build_results_table(
-        df[["subset", "source_model", score_col]],
-        {score_col: ScoreDirection.HIGHER_IS_REAL},
-        seed=seed,
-        skip_global_compare=True,
-        verbose=False,
-    )
-    out = metrics.rename(
-        columns={
-            "Generative Model": "source_model",
-            f"{score_col} AUC": "auc",
-            f"{score_col} AP": "ap",
-            "n_annotated": "n_fake",
-        }
-    )
-    keep = [c for c in ["source_model", "n_real", "n_fake", "n_total", "auc", "ap"] if c in out.columns]
-    return out[keep]
 
 
 def _score_summary(df: pd.DataFrame) -> dict[str, float]:
@@ -114,7 +80,12 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     global_df = _read_scores(args.global_csv, args.global_score_col, "global")
     patch_df = _read_scores(args.patch_csv, args.patch_score_col, "patch")
-    merged = global_df.merge(patch_df, on=KEY_COLUMNS, how="inner", validate="one_to_one")
+    merged = global_df.merge(
+        patch_df,
+        on=list(KEY_COLUMNS),
+        how="inner",
+        validate="one_to_one",
+    )
     if len(merged) != len(global_df) or len(merged) != len(patch_df):
         print(
             f"警告：合并后 {len(merged)} 行；global={len(global_df)} patch={len(patch_df)}。"

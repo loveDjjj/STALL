@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import sys
 from pathlib import Path
 
@@ -14,13 +13,20 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-for directory in (ROOT / "src", ROOT / "tools"):
-    if str(directory) not in sys.path:
-        sys.path.insert(0, str(directory))
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-from analyze_u0_locked import cdf_with_positive_infinity, global_references
-from analyze_u0_robustness import selected_k_reference
-from stable_whitening import empirical_cdf_right_inclusive, stable_sorted
+from alpha_stalled.calibration import (
+    U0VideoReferences,
+    U0WindowReferences,
+    calibrate_u0_video_branches,
+    calibrate_u0_window_components,
+)
+from alpha_stalled.artifacts import read_checkpoint_parts
+from alpha_stalled.parameters import global_references
+from alpha_stalled.u0_analysis import effective_k_reference as selected_k_reference
+from alpha_stalled.whitening import stable_sorted
 from u0_injections import CONDITIONS
 
 
@@ -36,15 +42,10 @@ KEY_COLUMNS = [
 
 
 def load_parts(root: Path) -> pd.DataFrame:
-    paths = sorted(
-        Path(path)
-        for path in glob.glob(str(root / "checkpoints" / "*" / "shard_*" / "part_*.csv"))
-    )
-    if not paths:
-        raise FileNotFoundError("no injection score parts")
-    frame = pd.concat(
-        [pd.read_csv(path, float_precision="round_trip") for path in paths],
-        ignore_index=True,
+    frame, _ = read_checkpoint_parts(
+        root,
+        "checkpoints/*/shard_*/part_*.csv",
+        empty_error="no injection score parts",
     )
     if frame.duplicated(["video_id", "sampling", "condition", "window_id"]).any():
         raise ValueError("duplicate injection score keys")
@@ -72,20 +73,19 @@ def calibrate_windows(
     global_t1_ref: np.ndarray,
 ) -> pd.DataFrame:
     output = frame.copy()
-    output["global_spatial"] = empirical_cdf_right_inclusive(
-        output["global_spatial_raw"].to_numpy(), global_spatial_ref
+    calibrated = calibrate_u0_window_components(
+        output["global_spatial_raw"].to_numpy(),
+        output["global_t1_raw"].to_numpy(),
+        output["patch_spatial_raw"].to_numpy(),
+        output["patch_d2_raw"].to_numpy(),
+        U0WindowReferences(
+            global_spatial_ref, global_t1_ref, patch_spatial_ref, patch_d2_ref
+        ),
     )
-    output["global_t1"] = cdf_with_positive_infinity(
-        output["global_t1_raw"].to_numpy(), global_t1_ref
-    )
-    output["patch_spatial"] = empirical_cdf_right_inclusive(
-        output["patch_spatial_raw"].to_numpy(), patch_spatial_ref
-    )
-    output["patch_d2"] = empirical_cdf_right_inclusive(
-        output["patch_d2_raw"].to_numpy(), patch_d2_ref
-    )
-    output["G_k"] = 0.5 * output["global_spatial"] + 0.5 * output["global_t1"]
-    output["L_k"] = 0.1 * output["patch_spatial"] + 0.9 * output["patch_d2"]
+    for column, values in calibrated.items():
+        if column == "S_k":
+            continue
+        output["patch_d2" if column == "patch_temporal" else column] = values
     return output
 
 
@@ -136,19 +136,23 @@ def build_video_scores(
                 for effective_k, group in video.groupby("effective_k", sort=True):
                     group = group.copy()
                     if sampling == "k1":
-                        references = {"G": k1_g_ref, "L": k1_l_ref}
+                        references = U0VideoReferences(k1_g_ref, k1_l_ref)
                     else:
-                        references = {
-                            branch: selected_k_reference(
-                                locked_dataset, int(effective_k), f"{branch}_k"
-                            )
-                            for branch in ("G", "L")
-                        }
-                    for branch in ("G", "L"):
-                        group[branch] = empirical_cdf_right_inclusive(
-                            group[f"{branch}_raw"].to_numpy(), references[branch]
+                        references = U0VideoReferences(
+                            selected_k_reference(
+                                locked_dataset, int(effective_k), "G_k"
+                            ),
+                            selected_k_reference(
+                                locked_dataset, int(effective_k), "L_k"
+                            ),
                         )
-                    group["S"] = 0.6 * group["G"] + 0.4 * group["L"]
+                    calibrated = calibrate_u0_video_branches(
+                        group["G_raw"].to_numpy(),
+                        group["L_raw"].to_numpy(),
+                        references,
+                    )
+                    for column, values in calibrated.items():
+                        group[column] = values
                     group["condition"] = condition
                     group["sampling"] = sampling
                     pieces.append(group)

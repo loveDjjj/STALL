@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical pre-U0 score-CSV asset rebuild. This does not reproduce u0_locked_v1.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -107,8 +108,8 @@ for dataset in DATASETS:
     )
 main_lines += [
     "",
-    "这些数值是当前已验证的 release baseline。若更新手稿表格，",
-    "应使用同一组命令重新生成本文件和 `docs/restructure/reproducibility_audit.md`。",
+    "这些数值属于 pre-U0 score-CSV release，不是当前 locked U0。",
+    "历史审计见 `research_archive/docs/pre_u0_release/reproducibility_audit.md`。",
 ]
 Path("results/paper_tables/alpha_stalled_main_summary.md").write_text(
     "\n".join(main_lines) + "\n", encoding="utf-8"

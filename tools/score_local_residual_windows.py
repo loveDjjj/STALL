@@ -21,7 +21,7 @@ for directory in (REPO_ROOT / "src", REPO_ROOT / "tools"):
         sys.path.insert(0, str(directory))
 
 from eval_patch_fast import FastPatchScorer
-from score_multi_window import (
+from alpha_stalled.legacy_window_scoring import (
     KEY_COLUMNS,
     decode_manifest_row_with_retries,
     load_completed,
