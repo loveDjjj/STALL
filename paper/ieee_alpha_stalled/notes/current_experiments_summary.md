@@ -17,7 +17,7 @@
 
 | 实验 | 证据文件 | 关键结果 | 主文用途 |
 |---|---|---|---|
-| Alpha-STALLED 三数据集主结果 | `results/paper_tables/alpha_stalled_main_summary.md` | ComGenVid 0.9198/0.9211；VideoFeedback 0.8628/0.8750；GenVideo 0.8374/0.8283 | 主表 |
+| Alpha-STALLED 三数据集主结果 | `results/paper_tables/alpha_stalled_main_summary.md` | 历史草案主表数值，当前正文已改写为以固定 21,421 视频交集报告的主结果 | 主表 |
 | Global/Patch/Fusion 消融 | `results/paper_tables/ablation_summary.md` | 三数据集均有 global-only、patch-only、fusion 对照 | 证明全局与局部证据互补 |
 | ComGenVid 局部时序定义消融 | `results/paper_tables/ablation_summary.md` | 同网格二阶 0.9273/0.9309，高于 spatial/lag-1/multi-lag/motion variants | 支撑局部二阶设计 |
 | 生成器宏平均 paired bootstrap | `results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md` | Alpha-STALLED 相对 global-only 的三数据集 $\Delta$AUC 95% CI 均大于 0 | 支撑稳定性 |

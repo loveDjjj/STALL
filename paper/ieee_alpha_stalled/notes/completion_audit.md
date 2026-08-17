@@ -20,11 +20,11 @@
 | 加入投稿常见声明和初投稿材料 | `sections/08_declarations.tex`; `notes/initial_submission_materials.md`; `notes/submission_readiness_audit.md` | 已完成，占位事实需作者确认 |
 | 使用 conda 环境 `stall` 做验证 | 静态审计命令使用 `conda run --no-capture-output -n stall python` | 已完成 |
 | 本机不编译 LaTeX | 未运行 LaTeX 编译；README 指导 Overleaf 使用 XeLaTeX | 已遵守 |
-| 提交并推送到 GitHub | commit `69ba278` 已推送；本文件将作为补充审计提交 | 已完成/本轮补充 |
+| 提交并推送到 GitHub | 当前工作分支已推送到 GitHub；具体 HEAD 以远端分支为准 | 已完成/本轮补充 |
 
 ## 保留的作者输入
 
-以下项目不能由工具推断，已保留为 `AUTHOR_INPUT_NEEDED`：
+以下项目不能由工具推断，已保留为待补充项：
 
 - 作者姓名、单位、邮箱、ORCID。
 - 目标期刊、文章类型、最终题名和短题名。
@@ -39,4 +39,4 @@
 - 文件存在性：`find paper/ieee_alpha_stalled -maxdepth 3 -type f`。
 - Git 状态：`git status --short --branch`。
 - 静态 LaTeX 审计：检查 `\input`、`\includegraphics`、`\cite`、label 重复和 BibTeX key。
-- 远端状态：`origin/refactor/alpha-stalled-reproducible-release` 指向提交 `69ba278`，本审计文件提交后应更新到新的 HEAD。
+- 远端状态：`origin/refactor/alpha-stalled-reproducible-release` 与当前工作分支保持同步，本审计文件应随 HEAD 变化更新。

@@ -41,4 +41,4 @@
 - 历史 clean single-window `0.8570/0.8600` 只用于方法演进展示；正式 K=3 增益以统一核心 K1 `0.8632/0.8636` 为因果对照。
 - 原论文规模复现、原窗口 K1/K3 因子分解和全 fake 覆盖分别见 `reports/original_k1_full23_factorial.md`、`tables/original_k1_factorial.tex` 与 `tables/full23_coverage.tex`；Macro-3 与 All-23、AP_fake 与 AP_real 不得互换。
 - 外部集、鲁棒性和可控注入只按预锁定协议报告，不允许据此回调 U0。
-- 数据/代码/伦理/利益冲突/作者贡献声明位于 `sections/08_declarations.tex`，未知事实保留为 `AUTHOR_INPUT_NEEDED`。
+- 数据/代码/伦理/利益冲突/作者贡献声明位于 `sections/08_declarations.tex`，未知事实保留为待补充项。

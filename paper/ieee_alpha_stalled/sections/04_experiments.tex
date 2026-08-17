@@ -2,11 +2,11 @@
 \label{sec:experiments}
 
 \subsection{数据集与固定协议}
-本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上评测，共包含 4,298、3,500 和 13,623 个视频，总计 21,421 个。每个数据集使用 200 个与评测集互斥的真实校准视频；评测真实视频与生成视频均不进入白化、经验分布、阈值或权重拟合。生成视频仅用于最终指标计算。
+本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上评测，共包含 4,298、3,500 和 13,623 个视频，总计 21,421 个。每个数据集使用 200 个与评测集互斥的真实校准视频；评测真实视频与生成视频均不进入白化、经验分布、阈值或权重拟合，生成视频仅用于最终指标计算。
 
 每个生成器分别与确定性匹配的真实视频计算 AUC/AP，再在数据集内对生成器宏平均，最后对三个数据集等权得到 Macro-3。分数方向为越高越真实，当前冻结主表沿用项目历史脚本，以真实视频为 AP 正类；原 \stall 论文 Table~1 明确以生成视频为正类，因此本文在复核原协议时另报 fake-positive AP，且不把两种 AP 直接混用。AUC 在同时反转标签与分数方向后不变。配对 bootstrap 在视频 ID 层面、按数据集与生成器分层重采样 1,000 次，窗口从不作为独立采样单位。
 
-本文在论文推断层级中明确区分主要与探索性问题。主要终点是 Macro-3 real-positive AP，两个主要比较为锁定 U0 相对 Original STALL、以及锁定 K=3 相对同核心 Unified K1；AUC、fake-positive AP、单数据集和逐生成器结果是次要终点。置信区间报告效应大小而非只报告显著性。组件、敏感性、冲突子集、注入和扰动实验均作为机制或稳健性分析，不据其多重比较结果重新选择 U0，也不作未经校正的全族显著性声明。三个主 benchmark 参与过方法开发，只有方法锁定后的 GenVidBench 被解释为确认性验证。
+本文将 Macro-3 real-positive AP 作为主要终点，锁定 U0 相对 Original STALL 以及锁定 K=3 相对同核心 Unified K1 为主要比较；AUC、fake-positive AP、单数据集和逐生成器结果是次要终点。置信区间报告效应大小而非只报告显著性。组件、敏感性、冲突子集、注入和扰动实验均作为机制或稳健性分析，不据其多重比较结果重新选择 U0，也不作未经校正的全族显著性声明。三个主 benchmark 参与过方法开发，只有方法锁定后的 GenVidBench 可被解释为确认性验证。
 
 锁定 U0 在完整允许起点区间确定性均匀选择三个 2 秒窗口。每个窗口以 8 FPS 取得 16 个互异帧，不允许 1 秒回退或复制帧；映射到相同帧索引的窗口去重。三个数据集的 effective-$K$ 分布为 $K=1/2/3$ 共 3,689/73/17,659 个视频。校准阶段先将窗口聚合为每视频一个分支值，再按 effective-$K$ 建立真实经验分布，因而每个真实视频权重相同。
 
@@ -18,6 +18,20 @@
 表~\ref{tab:u0_protocol_roles} 明确各结果行的证据角色。历史 clean K1 的校准样本与评测样本虽互斥，但其 region/aggregation 来自早期目标 fake 指标选择，因而只保留为审计参考。Unified K1 与锁定 U0 使用完全相同的 region1/mean、分支公式、真实校准和评测交集，唯一方法差异是单窗口与三窗口，因此只有该比较用于归因时间覆盖增益。受校准泄漏影响的历史 0.8737/0.8750 完全排除在正式比较与选参之外。
 
 \input{tables/u0_protocol_roles}
+
+\subsection{证据层级}
+表~\ref{tab:experiment_inventory} 区分主文证据、边界证据与待补缺口。主文只依赖已经锁定的三数据集主结果、核心消融、覆盖率、校准规模、跨域校准、外部确认和复现检查，其余资产保留为补充或后续工作，不进入结论主链。
+
+\input{tables/experiment_inventory}
+
+\subsection{真实校准与融合权重}
+表~\ref{tab:real_calib_alpha_summary} 汇总不同真实校准规模和不同数据来源下的全局--局部融合结果。固定默认权重已给出稳定增益，LOGO 和 best/oracle 仅作为诊断上界，用来说明该权重并非由测试集扫描选出。
+
+\input{tables/real_calib_alpha_summary}
+
+表~\ref{tab:validation_fusion_loso} 进一步检验融合权重是否依赖留一源选择。对外部与原始数据集，three-branch 相对 alpha-only 只带来很小但一致的额外收益，因此固定线性融合可视为发布配置，而不是需要在测试集上重选的自由参数。
+
+\input{tables/validation_fusion_loso}
 
 \subsection{统一核心消融}
 表~\ref{tab:component_ablation} 显示两个分支的互补性。K=3 下，Local 加到 Global 后 Macro AP 从 0.8486 提高到 0.8723，差值为 0.0237，95\% 区间为 [0.0191,0.0285]；Global 加到 Local 后提高 0.0431，区间为 [0.0350,0.0513]。因此最终性能不是任一单分支的结果。
