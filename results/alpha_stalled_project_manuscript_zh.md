@@ -779,5 +779,5 @@ Persistence 异常形态进一步显示出增益潜力，但当前 fallback 的�
 | 主线 release | 短视频 patch 覆盖缺口 | results/paper_tables/patch_coverage_gaps.md |
 | pre-U0 release | 资产清单 | research_archive/docs/pre_u0_release/asset_manifest.md |
 | pre-U0 release | 复现审计 | research_archive/docs/pre_u0_release/reproducibility_audit.md |
-| 历史审计 | 原版复现对照 | results/stall_repro_comparison.md |
+| 历史审计 | 探索与失败路径记录 | docs/EXPLORATION_LOG.md |
 | 历史代码 | 非主线路径与诊断工具 | research_archive/ |

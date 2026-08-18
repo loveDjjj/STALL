@@ -77,8 +77,6 @@ persistence、source/rank selector 和 debug run 不属于当前主线。
 |---|---|---|
 | `README.md` | 本说明文件 | 是 |
 | `alpha_stalled_project_manuscript_zh.md` | 中文项目手稿和方法/实验审计 | 是 |
-| `alpha_stalled_full_pipeline_flow_zh.svg` | Alpha-STALLED 完整方法流程图 SVG 源文件 | 是 |
-| `stall_repro_comparison.md` | 原版 STALL 复现对照说明；该文件历史上已修改，提交前需单独审查 | 视 diff 决定 |
 
 ## `paper_scores/`（Legacy K1）
 
