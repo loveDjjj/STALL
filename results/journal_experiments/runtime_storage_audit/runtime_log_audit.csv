@@ -1,5 +1,0 @@
-log_path,bytes,has_tqdm_elapsed,last_tqdm_elapsed,last_nonempty_line
-results/journal_experiments/aggregation_sensitivity/genvideo_aggregation_run.log,41339,True,30:05,2026年 07月 19日 星期日 23:26:14 CST
-results/journal_experiments/aggregation_sensitivity/videofeedback_aggregation_run.log,87190,True,57:06,2026年 07月 20日 星期一 01:26:48 CST
-results/journal_experiments/region_sensitivity/comgenvid_region_mean_run.log,25900,True,01:25,2026年 07月 19日 星期日 22:12:16 CST
-results/journal_experiments/region_sensitivity/videofeedback_region_mean_run.log,130642,True,57:31,===== 2026-07-19 00:48:58 VideoFeedback region mean sensitivity all done =====

@@ -1,2 +1,0 @@
-csv,patch_emb_cache,duration,compact,debug_n,num_workers,video_batch,frame_batch,device,execute,status,misses_before,written
-STALL/cache/indexes/comgenvid.csv,/tmp/alpha_stalled_video_runtime_uu0anwta/patch_embeddings/comgenvid,2,True,2,2,2,16,cuda,True,EXECUTED,6,6

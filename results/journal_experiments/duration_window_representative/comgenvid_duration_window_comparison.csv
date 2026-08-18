@@ -1,3 +1,0 @@
-dataset,branch,duration_sec,setting,auc,ap,delta_auc_vs_2s,delta_ap_vs_2s,source
-ComGenVid,patch-only,1,region3_bottomk0p20_same_grid_second_order,0.9434351211072664,0.9456111420716408,0.016113207708145172,0.014702064194766162,results/journal_experiments/duration_window_representative/comgenvid_1s_metrics_full.csv
-ComGenVid,patch-only,2,main_release_region3_bottomk0p20_same_grid_second_order,0.9273219133991212,0.9309090778768746,0.0,0.0,results/paper_tables/comgenvid_patch_only_metrics.csv
