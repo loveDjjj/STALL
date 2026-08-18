@@ -5,7 +5,13 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const manuscriptPath = path.join(root, "results", "alpha_stalled_project_manuscript_zh.md");
-const outputDir = path.join(root, "results", "alpha_stalled_manuscript_tables");
+const outputDir = path.join(
+  root,
+  "paper",
+  "ieee_alpha_stalled",
+  "tables",
+  "generated_manuscript"
+);
 const markdown = fs.readFileSync(manuscriptPath, "utf8");
 
 fs.mkdirSync(outputDir, { recursive: true });

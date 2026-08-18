@@ -1,3 +1,0 @@
-operator,windows,raw_score_max_abs_error,raw_score_changed_windows,percentile_max_abs_error,percentile_changed_windows,evaluation_percentile_changed_windows,evaluation_changed_videos
-layer23_region1_mean,7076,84.378173828125,1277,0.594999972730875,12,3,3
-layer17_region1_mean,7076,96.400634765625,1278,0.49000000953674316,12,3,3

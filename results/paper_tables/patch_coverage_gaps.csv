@@ -1,4 +1,0 @@
-dataset,source_model,status,evidence,release_decision,reason
-VideoFeedback,Hotshot-XL,historical_local_variant_not_retained,not retained in the cleaned results tree,exclude_from_current_release_baseline,"1-second target exists, but compatibility gate marked the available patch score as DURATION_MISMATCH_LOCAL_VARIANT_ONLY because it used a duration-2 parameter/calibration setup"
-GenVideo,HotShot-XL,missing_patch_score,,exclude_from_current_release_baseline,"No GenVideo HotShot-XL patch score asset was found in the current results tree"
-GenVideo,MoonValley,missing_patch_score,,exclude_from_current_release_baseline,"No GenVideo MoonValley patch score asset was found in the current results tree"
