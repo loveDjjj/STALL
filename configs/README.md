@@ -4,10 +4,6 @@
 |---|---|---|
 | `config_registry.yaml` | 全部配置资产的机器可读身份和生命周期注册表 | 当前治理声明源 |
 | `alpha_stalled_u0_locked.yaml` | `u0_locked_v1` strict-20 主协议 | 当前锁定主方法 |
-| `alpha_stalled_duration_aware_23source.yaml` | `duration_aware_23source_v1` | 23-source 覆盖扩展 |
-| `alpha_stalled_clean_universal.yaml` | pre-release temporal-unified U0 | 已被 locked U0 替代 |
-| `alpha_stalled_multi_window.yaml` | dataset-specific K3 MW2 | 历史 tuned 审计 |
-| `alpha_stalled.yaml` | legacy K1 paper_scores | 历史复现，不是当前 release |
 | `multi_window_exclusions.csv` | 已知不可解码窗口排除 | 多个锁定协议共享输入 |
 | `run_manifests/alpha_stalled_u0_locked.yaml` | locked U0 run manifest spec | 历史重建 provenance |
 | `run_manifests/captured_experiment.yaml.template` | 新实验 capture-backed manifest 字段模板 | 模板，不直接执行 |

@@ -259,9 +259,9 @@ def verify(root: Path = ROOT) -> list[str]:
         "cache inventory snapshot contains unregistered files",
     )
     checks.append("cache inventory declarations and generated report agree")
-    require(config_registry_summary.asset_count == 13, "unexpected config asset count")
+    require(config_registry_summary.asset_count == 9, "unexpected config asset count")
     require(
-        config_registry_summary.protocol_config_count == 5,
+        config_registry_summary.protocol_config_count == 1,
         "unexpected protocol config count",
     )
     require(
@@ -270,21 +270,21 @@ def verify(root: Path = ROOT) -> list[str]:
         "unexpected current config authority",
     )
     checks.append(
-        "config registry covers 13 assets with one locked current authority"
+        "config registry covers 9 assets with one locked current authority"
     )
     require(data_summary.dataset_count == 3, "unexpected canonical dataset count")
     require(data_summary.canonical_video_count == 60949, "unexpected canonical video count")
     require(data_summary.release_video_count == 22021, "unexpected catalog release count")
     require(data_summary.missing_file_count == 0, "data catalog reports missing videos")
     checks.append("data catalog declarations, identities, and generated report agree")
-    require(parameter_summary.governed_asset_count == 8, "unexpected parameter asset count")
+    require(parameter_summary.governed_asset_count == 5, "unexpected parameter asset count")
     require(parameter_summary.current_release_count == 4, "unexpected current parameter count")
     require(
         parameter_summary.external_confirmation_count == 1,
         "unexpected external parameter count",
     )
     require(
-        parameter_summary.historical_frozen_count == 3,
+        parameter_summary.historical_frozen_count == 0,
         "unexpected historical parameter count",
     )
     checks.append("parameter identities, NPZ contracts, and generated report agree")
@@ -502,8 +502,9 @@ def verify(root: Path = ROOT) -> list[str]:
             ROOT / "configs/README.md",
             [
                 protocol_id,
-                "duration_aware_23source_v1",
-                "legacy K1 paper_scores",
+                "u0_locked_v1",
+                "当前锁定主方法",
+                "multi_window_exclusions.csv",
                 "run_manifests/alpha_stalled_u0_locked.yaml",
                 "run_manifests/captured_experiment.yaml.template",
                 "build_run_manifest.py",
@@ -657,10 +658,10 @@ def verify(root: Path = ROOT) -> list[str]:
         require_fragments(
             PARAMETER_ASSET_REPORT,
             [
-                "Governed assets: 8",
+                "Governed assets: 5",
                 "Current locked-U0 assets: 4",
                 "External-confirmation assets: 1",
-                "Historical frozen assets: 3",
+                "Historical frozen assets: 0",
                 "precomputed/stall_params_vatex_dino_v3.npz",
                 "release/u0/params/comgenvid_region1_mean.npz",
                 "Local sweep boundary",

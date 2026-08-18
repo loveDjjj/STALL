@@ -896,7 +896,7 @@
         },
         {
           "lines": [
-            744
+            745
           ],
           "path": "tools/verify_project_documentation.py"
         }
@@ -1014,7 +1014,7 @@
         },
         {
           "lines": [
-            745
+            746
           ],
           "path": "tools/verify_project_documentation.py"
         }

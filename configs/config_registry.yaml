@@ -16,30 +16,6 @@ entries:
     authority: current
     protocol_id: u0_locked_v1
     mutable: false
-  - path: configs/alpha_stalled_duration_aware_23source.yaml
-    kind: protocol_config
-    lifecycle: coverage_extension
-    authority: extension
-    protocol_id: duration_aware_23source_v1
-    mutable: false
-  - path: configs/alpha_stalled_clean_universal.yaml
-    kind: protocol_config
-    lifecycle: historical_frozen
-    authority: historical
-    protocol_id: strict20_prerelease_temporal_unified_v1
-    mutable: false
-  - path: configs/alpha_stalled_multi_window.yaml
-    kind: protocol_config
-    lifecycle: historical_frozen
-    authority: historical
-    protocol_id: strict20_dataset_specific_k3_v1
-    mutable: false
-  - path: configs/alpha_stalled.yaml
-    kind: protocol_config
-    lifecycle: historical_frozen
-    authority: historical
-    protocol_id: legacy_k1_paper_scores_v1
-    mutable: false
   - path: configs/multi_window_exclusions.csv
     kind: protocol_input
     lifecycle: release_input

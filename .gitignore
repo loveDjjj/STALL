@@ -91,6 +91,7 @@ logs/
 # Precomputed parameter assets remain local; registered release parameters live
 # under release/<release_id>/params/ instead.
 precomputed/*.npz
+!precomputed/stall_params_vatex_dino_v3.npz
 
 # Keep selected lightweight artifacts under version control
 !results/
