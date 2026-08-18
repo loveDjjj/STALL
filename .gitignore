@@ -88,14 +88,9 @@ results/
 debug_outputs/
 logs/
 
-# Patch calibration sweeps are local/release-managed artifacts by default.
-# Keep only the frozen main-line patch calibration files unless a data-release
-# decision explicitly includes ablation sweeps.
-precomputed/patch_params_*.npz
-precomputed/debug_patch_params_*.npz
-!precomputed/patch_params_comgenvid_real_second_order_region3_bottomk0p20_v2.npz
-!precomputed/patch_params_videofeedback_real_same_grid_second_order_region1_mean_v2.npz
-!precomputed/patch_params_genvideo_real_same_grid_second_order_region2_mean_v2.npz
+# Precomputed parameter assets remain local; registered release parameters live
+# under release/<release_id>/params/ instead.
+precomputed/*.npz
 
 # Keep selected lightweight artifacts under version control
 !results/
@@ -129,6 +124,9 @@ results/*
 !results/multi_order_baselines/
 !results/multi_order_baselines/*.csv
 !results/multi_order_baselines/*.md
+# Per-video baseline scores remain local; aggregate metrics stay versioned.
+results/multi_order_baselines/*per_video_scores.csv
+results/multi_order_baselines/per_video_scores.csv
 !results/local_residual/
 results/local_residual/*
 !results/local_residual/dataset_metrics.csv
