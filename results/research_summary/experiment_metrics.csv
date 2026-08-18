@@ -60,3 +60,10 @@ Robustness-1600,scenario_a_original_calibration,resize_half_restore,0.879157,0.8
 Robustness-1600,scenario_a_original_calibration,repeat25,0.860118,0.858150,severe_shift
 Robustness-1600,scenario_a_original_calibration,scene_cut,0.943575,0.937678,separation_improves_not_monotonic_anomaly_response
 Robustness-1600,scenario_a_original_calibration,4fps,0.877132,0.872264,diagnostic_shift
+Macro-3,strict_2s_k3_mw2,original_stall_strict20_k1,0.8387652755496094,0.8428095726287818,main_baseline
+Macro-3,strict_2s_k3_mw2,unified_k1_region1_mean,0.863198392721409,0.8636253622479297,valid_direct_control
+Macro-3,strict_2s_k3_mw2,k3_global_only,0.8484925511128328,0.8485655387449915,valid_ablation
+Macro-3,strict_2s_k3_mw2,k3_local_only,0.8356554515189497,0.8291904222619401,valid_ablation
+Macro-3,strict_2s_k3_mw2,local_d1_only,0.8236780571608288,0.8170672385250803,valid_ablation
+Macro-3,strict_2s_k3_mw2,local_d2_only,0.8322862307244704,0.8281381053169868,valid_ablation
+Macro-3,strict_2s_k3_mw2,full_local_d1,0.872143488291739,0.8695047163809134,valid_direct_control

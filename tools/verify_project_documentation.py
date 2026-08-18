@@ -88,9 +88,6 @@ DOCUMENTS = (
     ROOT / "release/u0_external_genvidbench/README.md",
     ROOT / "reports/README.md",
     ROOT / "scripts/README.md",
-    ROOT / "scripts/reproduce/README.md",
-    ROOT / "scripts/ablations/README.md",
-    ROOT / "scripts/experiments/README.md",
     ROOT / "results/README.md",
     ROOT / "results/research_summary/README.md",
     ROOT / "research_archive/docs/pre_u0_release/README.md",
@@ -228,10 +225,6 @@ def verify(root: Path = ROOT) -> list[str]:
         registry_summary.main_experiment_id == "alpha_stalled_u0_locked",
         "registry locked main experiment mismatch",
     )
-    require(
-        registry_summary.status_counts.get("coverage_extension", 0) >= 1,
-        "registry is missing the full-coverage extension",
-    )
     locked_registry_row = {
         row["experiment_id"]: row for row in registry_rows
     }[registry_summary.main_experiment_id]
@@ -251,8 +244,8 @@ def verify(root: Path = ROOT) -> list[str]:
         run_summary.experiment_id == registry_summary.main_experiment_id,
         "locked run manifest/registry experiment ID mismatch",
     )
-    require(run_summary.artifact_count == 28, "unexpected locked run artifact count")
-    checks.append("locked run manifest is valid with 28 artifacts")
+    require(run_summary.artifact_count == 15, "unexpected locked run artifact count")
+    checks.append("locked run manifest is valid with 15 release artifacts")
     require(cache_summary.group_count == 13, "unexpected cache inventory group count")
     require(
         cache_inventory["summary"]["unregistered_file_count"] == 0,
@@ -431,16 +424,8 @@ def verify(root: Path = ROOT) -> list[str]:
                 "main_method_locked",
                 "invalid_leakage",
                 "0.8741/0.8723",
-                "0.8737/0.8750",
-                "0.9198/0.9211",
-                "duration_aware_23source",
+                "docs/EXPLORATION_LOG.md",
             ],
-        )
-    )
-    checks.extend(
-        require_fragments(
-            ROOT / "scripts/reproduce/README.md",
-            [protocol_id, "Legacy K1 paper_scores", "verify_u0_locked_release.py"],
         )
     )
     checks.extend(
@@ -563,32 +548,11 @@ def verify(root: Path = ROOT) -> list[str]:
         require_fragments(
             ROOT / "results/README.md",
             [
-                "release/u0/final_video_scores.csv",
-                "Legacy K1",
-                "verify_u0_locked_release.py",
-                "u0_experiment_registry.csv",
-                "verify_experiment_registry.py",
                 "run_manifests/",
                 "cache_inventory.json",
                 "data_catalog.json",
-                "results/runs/<experiment_id>/",
-                "run_capture.json",
                 "tool_dependency_inventory.json",
-            ],
-        )
-    )
-    checks.extend(
-        require_fragments(
-            ROOT / "scripts/experiments/README.md",
-            [
-                "capture_experiment_run.py",
-                "results/runs/<experiment_id>/",
-                "run_capture.json",
-                "--require-clean",
-                "verify_run_capture.py",
-                "--allow-running",
-                "captured_experiment.yaml.template",
-                "u0_experiment_registry.csv",
+                "docs/EXPLORATION_LOG.md",
             ],
         )
     )
@@ -871,8 +835,6 @@ def verify(root: Path = ROOT) -> list[str]:
 
     script_indexes = (
         (ROOT / "scripts", ROOT / "scripts/README.md"),
-        (ROOT / "scripts/experiments", ROOT / "scripts/experiments/README.md"),
-        (ROOT / "scripts/reproduce", ROOT / "scripts/reproduce/README.md"),
     )
     indexed_script_count = 0
     for script_dir, index_path in script_indexes:

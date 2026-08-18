@@ -13,7 +13,7 @@
 | 中文、双栏 LaTeX 稿件 | `main.tex`; `sections/00_abstract.tex` 到 `sections/08_declarations.tex` | 已完成 |
 | 方法部分靠近 `2603.15026v2` 原文思路，同时突出本文创新 | `sections/01_introduction.tex`; `sections/02_related_work.tex`; `sections/03_method.tex`; `notes/source_reference_summary_2603.15026v2.md` | 已完成 |
 | 避免固定三分支融合比例，改为局部分数与全局分数融合 | `sections/03_method.tex` 的 `\slocal(V)` 与 `S(V)=\alpha\sglobal(V)+(1-\alpha)\slocal(V)` | 已完成 |
-| 总结当前所有已完成实验 | `notes/current_experiments_summary.md`; `tables/experiment_inventory.tex`; `sections/04_experiments.tex`; `sections/05_ablation_analysis.tex` | 已完成 |
+| 总结当前所有已完成实验 | `docs/EXPLORATION_LOG.md`; `tables/experiment_inventory.tex`; `sections/04_experiments.tex`; `sections/05_ablation_analysis.tex` | 已完成 |
 | 纳入 `2603.15026v2.pdf` 作为参考文件 | `references/source_papers/2603.15026v2.pdf` | 已完成 |
 | 图片放入论文工作区并优化格式 | `figures/method/`; `figures/results/`; `figures/supplementary/`; PDF/SVG/PNG 多格式；主文关键帧图裁剪为 `keyframe_patch_anomaly_cases_main.pdf` | 已完成 |
 | 参考文献仔细调研并建立 BibTeX | `references.bib`; `notes/reference_audit.md` | 已完成，最终 DOI/卷期需目标期刊前再确认 |

@@ -179,13 +179,10 @@ Per-seed paper-protocol all-remaining-real results:
 ## Paper artifacts
 
 - `paper/ieee_alpha_stalled/tables/local_d1_d2_ablation.tex`: paper-ready D1/D2 table.
-- `results/second_order_independent_calibration/dataset_metrics.csv`: per-dataset and Macro metrics.
-- `results/second_order_independent_calibration/generator_metrics.csv`: all 20 generators.
-- `results/second_order_independent_calibration/bootstrap_deltas.csv`: paired confidence intervals.
-- `results/second_order_independent_calibration/independent_seed_metrics.csv`: raw seed results.
-- `results/second_order_independent_calibration/splits/`: reproducible calibration/test identity files.
-- `results/second_order_independent_calibration/independent_complement_seed_metrics.csv`: strict all-remaining-real raw seed results under both metric protocols.
-- `results/second_order_independent_calibration/splits_complement/`: strict all-remaining-real split files (backward-compatible directory name).
+- `reports/u0_experiment_registry.csv`: conclusion-level Macro metrics and evidence roles.
+- `results/research_summary/experiment_metrics.csv`: lightweight machine-readable summary.
+- Full per-video, per-window, split and bootstrap intermediates remain server-only and
+  are not required for the Git checkout.
 
 ## Commands
 

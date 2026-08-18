@@ -117,7 +117,7 @@ class ConfigRegistryTests(unittest.TestCase):
         registry = read_config_registry(ROOT / "configs/config_registry.yaml")
         summary = validate_config_registry(registry, ROOT)
         self.assertEqual(summary.current_path, "configs/alpha_stalled_u0_locked.yaml")
-        self.assertGreaterEqual(summary.asset_count, 12)
+        self.assertEqual(summary.asset_count, 9)
 
 
 if __name__ == "__main__":

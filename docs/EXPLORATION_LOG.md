@@ -13,10 +13,10 @@ The main paper keeps five experiment families:
 
 | ID | Family | Current evidence |
 |---|---|---|
-| M01 | Unified benchmark comparison | `release/u0/`, `results/u0_core_ablation/` |
-| M02 | Evidence composition and local temporal dynamics | `results/u0_core_ablation/`, `results/second_order_independent_calibration/` |
+| M01 | Unified benchmark comparison | `release/u0/`, `results/research_summary/` |
+| M02 | Evidence composition and local temporal dynamics | `reports/u0_core_ablation.md`, `reports/second_order_and_independent_calibration.md` |
 | M03 | Local modeling versus K=1/K=3 coverage | U0 K1/K3 controlled comparison |
-| M04 | Real-only calibration reliability | `results/u0_calibration_sensitivity/` |
+| M04 | Real-only calibration reliability | `reports/u0_calibration_size_and_seed.md` |
 | M05 | Frozen external generalization | `release/u0_external_genvidbench/` |
 
 ## Rejected or Superseded Directions
@@ -54,7 +54,8 @@ required by M01-M05:
 - Journal experiment launchers and legacy paper-score wrappers.
 
 When these families are removed, retain only their result, reason for rejection,
-and replacement decision in this document.
+and replacement decision in this document. Their raw outputs, sweep parameters,
+launchers and dedicated reports are intentionally not part of the main checkout.
 
 ## Data Boundaries
 

@@ -2,28 +2,22 @@
   "artifacts": {
     "inputs": [
       {
-        "bytes": 6279,
+        "bytes": 4708,
         "path": "configs/run_manifests/alpha_stalled_u0_locked.yaml",
         "role": "run_manifest_spec",
-        "sha256": "e9eac01e4ef10c99e023a27b47c4a33c66f8d20d229e7f2c004581e469340462"
+        "sha256": "fc102e9344cf087a71a2f3b55a77db5265464912b86180c59337577365694c33"
       },
       {
-        "bytes": 5100,
+        "bytes": 4926,
         "path": "configs/alpha_stalled_u0_locked.yaml",
         "role": "locked_config",
-        "sha256": "2cc01b101e6961de5125697311bc274e307d237a704b92f026c4afd4696f4651"
+        "sha256": "5ae90c673e374c403a95b5632b2f296fd19b1507021dcdbab06a9d4754b30b9c"
       },
       {
         "bytes": 1213050671,
         "path": "dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth",
         "role": "dino_checkpoint",
         "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035"
-      },
-      {
-        "bytes": 17868805,
-        "path": "results/multi_window_joint_typicality/multi_window_manifest.csv",
-        "role": "source_manifest",
-        "sha256": "6b457bc9462e5f043366341f5bad284c3995b2363e116d72c126bd36aa751967"
       },
       {
         "bytes": 442,
@@ -74,80 +68,7 @@
         "sha256": "22ad545366642601238adf6ecd30ca848cf23900ea99b41ed4bbc71ad48e3d3a"
       }
     ],
-    "intermediates": [
-      {
-        "bytes": 37937,
-        "path": "results/u0_locked_reproduction/calibration_raw/comgenvid_shard00_of_02.csv",
-        "role": "calibration_raw_comgenvid_0",
-        "sha256": "118fa04eb21f8090f18b42bd669f6cd69bc360db2a1895b0550e329e18d915ec"
-      },
-      {
-        "bytes": 35064,
-        "path": "results/u0_locked_reproduction/calibration_raw/comgenvid_shard01_of_02.csv",
-        "role": "calibration_raw_comgenvid_1",
-        "sha256": "cc7ac44b3bd179cc3c046938a40f7539a0fca32fd944ecd9f5eb19e16eba16d8"
-      },
-      {
-        "bytes": 32694,
-        "path": "results/u0_locked_reproduction/calibration_raw/videofeedback_shard00_of_02.csv",
-        "role": "calibration_raw_videofeedback_0",
-        "sha256": "0ce07d1c0eab665056f88727f8b1c5b53266d669bbac9b20eec6302e2014149e"
-      },
-      {
-        "bytes": 34728,
-        "path": "results/u0_locked_reproduction/calibration_raw/videofeedback_shard01_of_02.csv",
-        "role": "calibration_raw_videofeedback_1",
-        "sha256": "85f171233da56be07a20996a4a34f6d7147d8d1b86ed243a90182beb15faf605"
-      },
-      {
-        "bytes": 32145,
-        "path": "results/u0_locked_reproduction/calibration_raw/genvideo_shard00_of_02.csv",
-        "role": "calibration_raw_genvideo_0",
-        "sha256": "26d1a0c9d0bb7bf187f867d306c69793575c2a6b97d4d24784ed46b87c4472cc"
-      },
-      {
-        "bytes": 37567,
-        "path": "results/u0_locked_reproduction/calibration_raw/genvideo_shard01_of_02.csv",
-        "role": "calibration_raw_genvideo_1",
-        "sha256": "b6905191427f9005b75fcb69a73ac9aacad5a8867ae04c6d2ae38cb46259c811"
-      },
-      {
-        "bytes": 2335900,
-        "path": "results/u0_locked_reproduction/raw/comgenvid_shard00_of_02.csv",
-        "role": "evaluation_raw_comgenvid_0",
-        "sha256": "ac5cbf270358114d725f7fc92ba4c906322ec39f14936b809744f0b68e9dd380"
-      },
-      {
-        "bytes": 2346573,
-        "path": "results/u0_locked_reproduction/raw/comgenvid_shard01_of_02.csv",
-        "role": "evaluation_raw_comgenvid_1",
-        "sha256": "93d8c20b1e5bdf0d92749547cb988460e8598c8f2bb11037a901ba7096dce50e"
-      },
-      {
-        "bytes": 1078537,
-        "path": "results/u0_locked_reproduction/raw/videofeedback_shard00_of_02.csv",
-        "role": "evaluation_raw_videofeedback_0",
-        "sha256": "421f86df5e4a8aae36f955942b1fbcfb67ae626ed59e32805815080cebaca9d0"
-      },
-      {
-        "bytes": 1122017,
-        "path": "results/u0_locked_reproduction/raw/videofeedback_shard01_of_02.csv",
-        "role": "evaluation_raw_videofeedback_1",
-        "sha256": "0ba4dff7e98765a1a0dd8870316cdc1d952df1a62e98c70179dcce7bb0f40005"
-      },
-      {
-        "bytes": 5886020,
-        "path": "results/u0_locked_reproduction/raw/genvideo_shard00_of_02.csv",
-        "role": "evaluation_raw_genvideo_0",
-        "sha256": "c4f61eda4b7572812f9a90bbe2ce9d5bda554b6fdcde072d4ceb807909db4fd7"
-      },
-      {
-        "bytes": 5993934,
-        "path": "results/u0_locked_reproduction/raw/genvideo_shard01_of_02.csv",
-        "role": "evaluation_raw_genvideo_1",
-        "sha256": "ba4de16e29b3fe2a7a2722df21978336ee0f846f9d61bb6f8b1484fd7cb41bc4"
-      }
-    ],
+    "intermediates": [],
     "outputs": [
       {
         "bytes": 5148363,

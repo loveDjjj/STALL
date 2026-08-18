@@ -81,8 +81,6 @@ artifacts:
       path: configs/alpha_stalled_u0_locked.yaml
     - role: dino_checkpoint
       path: dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
-    - role: source_manifest
-      path: results/multi_window_joint_typicality/multi_window_manifest.csv
     - role: sampling_exclusions
       path: configs/multi_window_exclusions.csv
     - role: global_parameters
@@ -99,31 +97,7 @@ artifacts:
       path: release/u0/evaluation_manifest.json
     - role: frame_indices
       path: release/u0/frame_indices.json
-  intermediates:
-    - role: calibration_raw_comgenvid_0
-      path: results/u0_locked_reproduction/calibration_raw/comgenvid_shard00_of_02.csv
-    - role: calibration_raw_comgenvid_1
-      path: results/u0_locked_reproduction/calibration_raw/comgenvid_shard01_of_02.csv
-    - role: calibration_raw_videofeedback_0
-      path: results/u0_locked_reproduction/calibration_raw/videofeedback_shard00_of_02.csv
-    - role: calibration_raw_videofeedback_1
-      path: results/u0_locked_reproduction/calibration_raw/videofeedback_shard01_of_02.csv
-    - role: calibration_raw_genvideo_0
-      path: results/u0_locked_reproduction/calibration_raw/genvideo_shard00_of_02.csv
-    - role: calibration_raw_genvideo_1
-      path: results/u0_locked_reproduction/calibration_raw/genvideo_shard01_of_02.csv
-    - role: evaluation_raw_comgenvid_0
-      path: results/u0_locked_reproduction/raw/comgenvid_shard00_of_02.csv
-    - role: evaluation_raw_comgenvid_1
-      path: results/u0_locked_reproduction/raw/comgenvid_shard01_of_02.csv
-    - role: evaluation_raw_videofeedback_0
-      path: results/u0_locked_reproduction/raw/videofeedback_shard00_of_02.csv
-    - role: evaluation_raw_videofeedback_1
-      path: results/u0_locked_reproduction/raw/videofeedback_shard01_of_02.csv
-    - role: evaluation_raw_genvideo_0
-      path: results/u0_locked_reproduction/raw/genvideo_shard00_of_02.csv
-    - role: evaluation_raw_genvideo_1
-      path: results/u0_locked_reproduction/raw/genvideo_shard01_of_02.csv
+  intermediates: []
   outputs:
     - role: final_video_scores
       path: release/u0/final_video_scores.csv

@@ -33,8 +33,6 @@ preprocessing:
   feature_dimension: 1024
 
 sampling:
-  source_manifest: results/multi_window_joint_typicality/multi_window_manifest.csv
-  source_manifest_sha256: 6b457bc9462e5f043366341f5bad284c3995b2363e116d72c126bd36aa751967
   mode: deterministic_uniform_K3
   requested_windows: 3
   window_seconds: 2

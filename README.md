@@ -219,9 +219,8 @@ conda run --no-capture-output -n stall \
   --release-dir results/u0_reproduction_new/release
 ```
 
-历史 K1 `paper_scores` 重建流程仍保留用于实验考古，但不能用于重建当前
-locked U0。相关旧资产和命令见 `results/README.md` 与
-`scripts/reproduce/README.md`，使用时必须同时注明协议状态。
+历史 K1 `paper_scores`、旧 sweep 和失败方向只保留结论摘要，统一记录在
+`docs/EXPLORATION_LOG.md`，不能用于重建当前 locked U0。
 
 ## 代码结构
 
@@ -317,8 +316,7 @@ contract SHA，评分器拒绝跨缓存身份复用；历史参数和历史缓�
 
 新实验不得直接 `mkdir` 后裸跑。先用 `tools/capture_experiment_run.py` 写入
 `results/runs/<experiment_id>/run_capture.json`，完成后再从 capture 构建
-run-local manifest；具体流程见 `scripts/experiments/README.md` 与
-`configs/run_manifests/README.md`。
+run-local manifest；具体流程见 `configs/run_manifests/README.md`。
 
 ## 原版 STALL
 

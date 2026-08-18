@@ -376,14 +376,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 741,
-          "path": "results/journal_experiments/cross_dataset_frozen_hyperparams/alpha_leave_one_out.csv",
-          "sha256": "c597a54a78ae8a6ca4a8bd6a5025f1e515487dbf389d8c91c1b847f9f2d7bdf1"
-        },
-        {
-          "bytes": 3611,
-          "path": "results/journal_experiments/cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md",
-          "sha256": "1d466f4aad1881800a1fa31012ae8e5f6af3f80f3837b414c8904f35e23a25f6"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -421,9 +416,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 3376,
-          "path": "results/journal_experiments/duration_window_feasibility/duration_window_feasibility.md",
-          "sha256": "5f4fc7a55964fe9450d3e0a59b19a350a29ebc09cb0f6efdc20c9aca2b432488"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -467,14 +462,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 9472,
-          "path": "results/paper_sensitivity/beta_sensitivity_summary.csv",
-          "sha256": "09714338cb0f61aa8a4fd25329a0c463e9e661d30c5f61766ab28037193569e2"
-        },
-        {
-          "bytes": 23324,
-          "path": "results/paper_sensitivity/journal_experiment_gap_analysis.md",
-          "sha256": "68183a88c04b183b412b116e0a43fa1937c8c9dee00a2796ddcf6ad27eb783b7"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -512,14 +502,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 137667,
-          "path": "results/journal_experiments/failure_case_audit/failure_case_audit.csv",
-          "sha256": "9d6905e94ab368e4698bbb09ca7a2462cce02978844adc41c4e52db6f1b795ec"
-        },
-        {
-          "bytes": 7375,
-          "path": "results/journal_experiments/failure_case_audit/failure_case_audit.md",
-          "sha256": "a9420bc287773959cc3650ce85ab79e1ee0978428ffb83a4734c7db20855862b"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -557,19 +542,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 833,
-          "path": "paper/ieee_alpha_stalled/tables/patch_likelihood_assumption_audit.tex",
-          "sha256": "ad12edfecd3b397c79e61e75d1a5751ec549411930f412f04541837ac1445a13"
-        },
-        {
-          "bytes": 1855,
-          "path": "results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_audit.md",
-          "sha256": "33f15031267b442356175bf2b6d7ee7a9fbe356f22d3b2d6141a52f12ea2a24f"
-        },
-        {
-          "bytes": 2288,
-          "path": "results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_summary.csv",
-          "sha256": "3539223ddd6c79b70a06893c84a562903d8fbe5f957dc83dc792a71cbd63e0db"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -619,9 +594,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 9569,
-          "path": "results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.md",
-          "sha256": "77abf642ecb6cbe541f865ca8adf223e86892b13f0695cbb24e46c63599b3e26"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -665,9 +640,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 2285,
-          "path": "results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.md",
-          "sha256": "17635f28946c3293252be8fe360f088365e28100f238aa4c9a4f3016530e6133"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -711,14 +686,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 4584,
-          "path": "results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.csv",
-          "sha256": "c2b62f43a57b8e0cc88f814f7f80d28eeb5981d7dc25a298f4065b4260874f4b"
-        },
-        {
-          "bytes": 1955,
-          "path": "results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md",
-          "sha256": "3ed3ca07dea3d4a28cf34f396a5e987b7aa6e173569ef0ae2191c5745c72dc8c"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -756,14 +726,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 1544,
-          "path": "results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv",
-          "sha256": "7a1ebdaa0ac907d9dbb6b04154c1a4cca2ec558541e469f15f1583e68eb3a241"
-        },
-        {
-          "bytes": 1817,
-          "path": "results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md",
-          "sha256": "0c829d890e5a194ddcd609267f10d34e88eda7838b8f3fb8cca1e7dcc9e548fa"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -842,61 +807,13 @@
         },
         {
           "lines": [
-            8,
-            12,
-            39,
-            48,
-            57,
-            71,
-            76,
-            81,
-            86,
-            91,
-            96
-          ],
-          "path": "scripts/ablations/README.md"
-        },
-        {
-          "lines": [
-            48
-          ],
-          "path": "scripts/experiments/run_journal_patch_sensitivity.sh"
-        },
-        {
-          "lines": [
-            76
-          ],
-          "path": "scripts/reproduce/README.md"
-        },
-        {
-          "lines": [
-            26,
-            30,
-            37,
-            41,
-            45,
-            49,
-            53,
-            57,
-            150
-          ],
-          "path": "scripts/reproduce/rebuild_paper_assets.sh"
-        },
-        {
-          "lines": [
-            111
-          ],
-          "path": "scripts/run_comgenvid_duration1_representative.sh"
-        },
-        {
-          "lines": [
             21
           ],
           "path": "tests/test_alpha_stalled_core.py"
         },
         {
           "lines": [
-            745
+            709
           ],
           "path": "tools/verify_project_documentation.py"
         }
@@ -978,26 +895,6 @@
         },
         {
           "lines": [
-            104,
-            107
-          ],
-          "path": "scripts/ablations/README.md"
-        },
-        {
-          "lines": [
-            61
-          ],
-          "path": "scripts/reproduce/README.md"
-        },
-        {
-          "lines": [
-            64,
-            199
-          ],
-          "path": "scripts/reproduce/rebuild_paper_assets.sh"
-        },
-        {
-          "lines": [
             25,
             44,
             71,
@@ -1014,7 +911,7 @@
         },
         {
           "lines": [
-            746
+            710
           ],
           "path": "tools/verify_project_documentation.py"
         }
@@ -1229,12 +1126,6 @@
             567
           ],
           "path": "results/research_summary/cache_inventory.json"
-        },
-        {
-          "lines": [
-            65
-          ],
-          "path": "scripts/run_comgenvid_duration1_representative.sh"
         }
       ],
       "replacement": null,
@@ -1255,14 +1146,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 495,
-          "path": "results/journal_experiments/duration_window_representative/comgenvid_duration_window_comparison.csv",
-          "sha256": "b1b27e12999c0805a55f6f48014531ce2e341989e679784ac1c7cbaf45686d6f"
-        },
-        {
-          "bytes": 2128,
-          "path": "results/journal_experiments/duration_window_representative/comgenvid_duration_window_representative.md",
-          "sha256": "f2c2178b1a5b91f64d9039f9e3d2c5c203868112f9dcbe5aa868c52b2dcdab78"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -1300,9 +1186,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 518,
-          "path": "results/journal_experiments/region_sensitivity/region_sensitivity_summary.md",
-          "sha256": "9d09bac50fe34dd5a702c4cf10131eba05d32c31a63fcc4299cb8a6e2a97b303"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -1314,14 +1200,6 @@
             20
           ],
           "path": "research_archive/tools/journal_experiments/README.md"
-        },
-        {
-          "lines": [
-            134,
-            149,
-            178
-          ],
-          "path": "scripts/experiments/run_journal_patch_sensitivity.sh"
         },
         {
           "lines": [
@@ -1348,14 +1226,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 5669,
-          "path": "research_archive/docs/pre_u0_release/FILE_STRUCTURE.md",
-          "sha256": "20ab07e9aed46cfd3877dc0e3e4e9c432b8484dfaa7979dd86c9f798ad338e76"
-        },
-        {
-          "bytes": 5083,
-          "path": "research_archive/docs/pre_u0_release/release_staging_manifest.md",
-          "sha256": "2e026a863b22159a53b557baa7815f4856d43b7d5503ca3c90c114840cf1008d"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -1412,19 +1285,9 @@
       "decision": "compatibility_wrapper",
       "evidence": [
         {
-          "bytes": 3982,
-          "path": "research_archive/docs/pre_u0_release/reproducibility_audit.md",
-          "sha256": "40c24f9c36dcb5e42fcec5152443bfe86b0ab12f7b86a0adb0a7209fa157a5d2"
-        },
-        {
-          "bytes": 884,
-          "path": "results/paper_tables/alpha_stalled_main_summary.md",
-          "sha256": "f2077597141c80678eadfcf01106c4d3aa4583288ccf6655af227ce86c81cf63"
-        },
-        {
-          "bytes": 9289,
-          "path": "scripts/reproduce/rebuild_paper_assets.sh",
-          "sha256": "4a0f9875651e3b0bd42039e26ba729c7fc7cb5fc6d382e979e59a5879e30eacf"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "lifecycle": "compatibility",
@@ -1489,12 +1352,6 @@
             9
           ],
           "path": "research_archive/tools/pre_release_assets/README.md"
-        },
-        {
-          "lines": [
-            220
-          ],
-          "path": "scripts/reproduce/rebuild_paper_assets.sh"
         },
         {
           "lines": [
@@ -2165,24 +2022,9 @@
       "archive_target": "research_archive/tools/d3_operator_controls",
       "evidence": [
         {
-          "bytes": 15294,
-          "path": "reports/global_local_multi_order_final.md",
-          "sha256": "9d70538c55017d6574529dfbbe3b3f26f7c102c44bfbd79752fb1577c6b64937"
-        },
-        {
-          "bytes": 1857,
-          "path": "results/multi_order_baselines/d3_pixel_robustness_dataset_metrics.csv",
-          "sha256": "3bc932d8f1ea0f7ddcc78534646b13d2cd7da0f31ab89f66d9cd319cda20fd7b"
-        },
-        {
-          "bytes": 2303,
-          "path": "results/multi_order_baselines/d3_robustness_dataset_metrics.csv",
-          "sha256": "f138836210e5d3c8e682f3e5656762e54b9c9e25834979ad4d4638971c069138"
-        },
-        {
-          "bytes": 1599,
-          "path": "results/multi_order_baselines/global_d3_dataset_metrics.csv",
-          "sha256": "f456192029eacb07a520b979e03479bbe35781cbcf32c4359c4ca825af3e58f6"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "family_id": "d3_operator_controls",
@@ -2200,19 +2042,9 @@
       "archive_target": "research_archive/tools/keyframe_case_visualization",
       "evidence": [
         {
-          "bytes": 358642,
-          "path": "paper/ieee_alpha_stalled/figures/results/keyframe_patch_anomaly_cases_main.png",
-          "sha256": "8049c834ac8e610cb24c2c10dba30a32569e2a8403782ebf5963ee31ed30af63"
-        },
-        {
-          "bytes": 1255,
-          "path": "paper/ieee_alpha_stalled/tables/keyframe_case_summary.tex",
-          "sha256": "2624695847f87cf80c48e45f934d4c42d86ccc3f754055810fa6bd10a0c93b12"
-        },
-        {
-          "bytes": 1893,
-          "path": "reports/u0_localization_and_injection.md",
-          "sha256": "b77d5490085da1644db355ddb476fffd5aef8a635fd6a61b549beb48e244d638"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "family_id": "keyframe_case_visualization",
@@ -2228,24 +2060,9 @@
       "archive_target": "research_archive/tools/multiscale_intermediate_layers",
       "evidence": [
         {
-          "bytes": 9360,
-          "path": "reports/clean_universal_cross_layer_final.md",
-          "sha256": "af7a9aa793c5b8e3b47c51f8506f9d9a6b7d5f7e63df4cd3fa4f128d67b70096"
-        },
-        {
-          "bytes": 10281,
-          "path": "reports/unified_multiscale_intermediate_layers.md",
-          "sha256": "2513e8bb8540eb425042d09b90d700f51053e015f4a4ed3a25ce5c6487fa97ed"
-        },
-        {
-          "bytes": 727,
-          "path": "results/clean_universal/cross_layer_dataset_metrics.csv",
-          "sha256": "05803381861b77d9c459a091301a937bcf2f0a9724d3607ac11b9a5db1f3800b"
-        },
-        {
-          "bytes": 1852,
-          "path": "results/unified_multiscale_layers/layer_dataset_metrics.csv",
-          "sha256": "985500bb6cf4521a7303bd804b637f74b5cd24b774c76693f7dfb7b9639b2c83"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "family_id": "multiscale_intermediate_layers",
@@ -2263,24 +2080,9 @@
       "archive_target": "research_archive/tools/u0_robustness_injection",
       "evidence": [
         {
-          "bytes": 1893,
-          "path": "reports/u0_localization_and_injection.md",
-          "sha256": "b77d5490085da1644db355ddb476fffd5aef8a635fd6a61b549beb48e244d638"
-        },
-        {
-          "bytes": 6243,
-          "path": "reports/u0_robustness.md",
-          "sha256": "50ac9e898ba5c7851df33c0b7793c1f3d7d29ba7a400248dd2de0633fec99b7c"
-        },
-        {
-          "bytes": 15454,
-          "path": "results/u0_injection/analysis/score_response.csv",
-          "sha256": "3d45bae953372c8bc9e04f8c4c41eb7794be94546bac7b77406f0777d578bcd3"
-        },
-        {
-          "bytes": 57688,
-          "path": "results/u0_robustness/analysis/dataset_metrics.csv",
-          "sha256": "974518421a9c01494fcca2560a65b5a7e054541d52494ea5656da73163a8988e"
+          "bytes": 4733,
+          "path": "docs/EXPLORATION_LOG.md",
+          "sha256": "8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166"
         }
       ],
       "family_id": "u0_robustness_injection",

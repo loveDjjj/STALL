@@ -88,14 +88,14 @@ archival; referenced candidates must name a replacement before moving.
 | `benchmark_csv_stage_runtime` | `compatibility` | `compatibility_wrapper` | 3 | `research_archive/tools/journal_experiments/benchmark_csv_stage_runtime.py` |
 | `benchmark_video_stage_runtime` | `compatibility` | `compatibility_wrapper` | 2 | `research_archive/tools/journal_experiments/benchmark_video_stage_runtime.py` |
 | `bootstrap_macro_average_delta` | `compatibility` | `compatibility_wrapper` | 2 | `research_archive/tools/journal_experiments/bootstrap_macro_average_delta.py` |
-| `eval_score_csv` | `compatibility` | `retain_referenced` | 14 | `-` |
-| `fuse_scores` | `compatibility` | `retain_referenced` | 16 | `-` |
+| `eval_score_csv` | `compatibility` | `retain_referenced` | 9 | `-` |
+| `fuse_scores` | `compatibility` | `retain_referenced` | 13 | `-` |
 | `inspect_dinov3_tokens` | `compatibility` | `compatibility_wrapper` | 6 | `research_archive/tools/journal_experiments/inspect_dinov3_tokens.py` |
-| `prefill_patch_cache` | `research_utility` | `retain_referenced` | 17 | `-` |
+| `prefill_patch_cache` | `research_utility` | `retain_referenced` | 16 | `-` |
 | `summarize_duration_window_representative` | `compatibility` | `compatibility_wrapper` | 2 | `research_archive/tools/journal_experiments/summarize_duration_window_representative.py` |
-| `summarize_journal_experiments` | `compatibility` | `compatibility_wrapper` | 3 | `research_archive/tools/journal_experiments/summarize_journal_experiments.py` |
+| `summarize_journal_experiments` | `compatibility` | `compatibility_wrapper` | 2 | `research_archive/tools/journal_experiments/summarize_journal_experiments.py` |
 | `summarize_metrics_average_rows` | `compatibility` | `compatibility_wrapper` | 5 | `research_archive/tools/journal_experiments/summarize_metrics_average_rows.py` |
-| `verify_alpha_stalled_release` | `compatibility` | `compatibility_wrapper` | 11 | `research_archive/tools/pre_release_assets/verify_alpha_stalled_release.py` |
+| `verify_alpha_stalled_release` | `compatibility` | `compatibility_wrapper` | 10 | `research_archive/tools/pre_release_assets/verify_alpha_stalled_release.py` |
 
 ### Archived wrapper integrity
 
@@ -153,10 +153,7 @@ gate is met.
 - Reason: These scripts reproduce the rejected DINOv3 operator-controlled D3 family and share its exact historical cache and calibration semantics.
 - Archive gate: Move only with a compatibility wrapper, the registered result files, and a command manifest that reproduces all three dataset-metric tables.
 - Evidence:
-  - `reports/global_local_multi_order_final.md` (15294 bytes, sha256 `9d70538c55017d6574529dfbbe3b3f26f7c102c44bfbd79752fb1577c6b64937`)
-  - `results/multi_order_baselines/d3_pixel_robustness_dataset_metrics.csv` (1857 bytes, sha256 `3bc932d8f1ea0f7ddcc78534646b13d2cd7da0f31ab89f66d9cd319cda20fd7b`)
-  - `results/multi_order_baselines/d3_robustness_dataset_metrics.csv` (2303 bytes, sha256 `f138836210e5d3c8e682f3e5656762e54b9c9e25834979ad4d4638971c069138`)
-  - `results/multi_order_baselines/global_d3_dataset_metrics.csv` (1599 bytes, sha256 `f456192029eacb07a520b979e03479bbe35781cbcf32c4359c4ca825af3e58f6`)
+  - `docs/EXPLORATION_LOG.md` (4733 bytes, sha256 `8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166`)
 
 ### `keyframe_case_visualization`
 
@@ -166,9 +163,7 @@ gate is met.
 - Reason: The explanation generator is a thin second stage of the paper's frozen qualitative patch-visualization workflow.
 - Archive gate: Move only after the paper figure and table have a standalone source-data manifest and their current paths remain available through wrappers.
 - Evidence:
-  - `paper/ieee_alpha_stalled/figures/results/keyframe_patch_anomaly_cases_main.png` (358642 bytes, sha256 `8049c834ac8e610cb24c2c10dba30a32569e2a8403782ebf5963ee31ed30af63`)
-  - `paper/ieee_alpha_stalled/tables/keyframe_case_summary.tex` (1255 bytes, sha256 `2624695847f87cf80c48e45f934d4c42d86ccc3f754055810fa6bd10a0c93b12`)
-  - `reports/u0_localization_and_injection.md` (1893 bytes, sha256 `b77d5490085da1644db355ddb476fffd5aef8a635fd6a61b549beb48e244d638`)
+  - `docs/EXPLORATION_LOG.md` (4733 bytes, sha256 `8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166`)
 
 ### `multiscale_intermediate_layers`
 
@@ -178,10 +173,7 @@ gate is met.
 - Reason: These fitters and scorers form the rejected multiscale and DINO intermediate-layer experiment family with shared frozen registries.
 - Archive gate: Move only after parameter files, raw score shards, checkpoint identity, and the four registered result files are captured by an archival run manifest.
 - Evidence:
-  - `reports/clean_universal_cross_layer_final.md` (9360 bytes, sha256 `af7a9aa793c5b8e3b47c51f8506f9d9a6b7d5f7e63df4cd3fa4f128d67b70096`)
-  - `reports/unified_multiscale_intermediate_layers.md` (10281 bytes, sha256 `2513e8bb8540eb425042d09b90d700f51053e015f4a4ed3a25ce5c6487fa97ed`)
-  - `results/clean_universal/cross_layer_dataset_metrics.csv` (727 bytes, sha256 `05803381861b77d9c459a091301a937bcf2f0a9724d3607ac11b9a5db1f3800b`)
-  - `results/unified_multiscale_layers/layer_dataset_metrics.csv` (1852 bytes, sha256 `985500bb6cf4521a7303bd804b637f74b5cd24b774c76693f7dfb7b9639b2c83`)
+  - `docs/EXPLORATION_LOG.md` (4733 bytes, sha256 `8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166`)
 
 ### `u0_robustness_injection`
 
@@ -191,10 +183,7 @@ gate is met.
 - Reason: Synthetic injection scoring intentionally reuses the frozen robustness perturbation and raw U0 scoring implementation.
 - Archive gate: Keep in place while robustness and localization are paper supplements; move only with wrapper commands and manifests for both result directories.
 - Evidence:
-  - `reports/u0_localization_and_injection.md` (1893 bytes, sha256 `b77d5490085da1644db355ddb476fffd5aef8a635fd6a61b549beb48e244d638`)
-  - `reports/u0_robustness.md` (6243 bytes, sha256 `50ac9e898ba5c7851df33c0b7793c1f3d7d29ba7a400248dd2de0633fec99b7c`)
-  - `results/u0_injection/analysis/score_response.csv` (15454 bytes, sha256 `3d45bae953372c8bc9e04f8c4c41eb7794be94546bac7b77406f0777d578bcd3`)
-  - `results/u0_robustness/analysis/dataset_metrics.csv` (57688 bytes, sha256 `974518421a9c01494fcca2560a65b5a7e054541d52494ea5656da73163a8988e`)
+  - `docs/EXPLORATION_LOG.md` (4733 bytes, sha256 `8c1ccb3215731b30eaa7491413888ef4baabc8cf9336a64063898215bb28a166`)
 
 ## Registered edges
 

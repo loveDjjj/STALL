@@ -104,8 +104,8 @@ class ExperimentRegistryTests(unittest.TestCase):
         payload = verify()
         self.assertTrue(payload["passed"])
         self.assertEqual(payload["main_experiment_id"], "alpha_stalled_u0_locked")
-        self.assertGreaterEqual(payload["row_count"], 20)
-        self.assertEqual(payload["claim_evidence_checks"], 10)
+        self.assertEqual(payload["row_count"], 9)
+        self.assertEqual(payload["claim_evidence_checks"], 9)
 
 
 if __name__ == "__main__":

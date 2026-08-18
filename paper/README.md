@@ -8,7 +8,7 @@
 
 组织原则：
 
-- 正文只引用已经在 `results/` 中审计过的实验，不把诊断上限、测试集 rank 路由或生成器来源选择写成主方法。
+- 正文只引用已经在 `release/u0/`、`results/research_summary/` 和 `reports/` 中审计过的实验，不把诊断上限、测试集 rank 路由或生成器来源选择写成主方法。
 - 主文优先围绕全局 STALL 与局部 patch 二阶时序证据的互补性展开。
-- 外部 baseline 当前只做协议审计，不写成已经完成重跑；若审稿要求，再按 `results/journal_experiments/d3_protocol_audit/` 的同索引、同帧、pairwise balanced 协议补跑。
+- 外部 baseline 当前只做协议审计，不写成已经完成重跑；失败或未纳入的方向统一记录在 `docs/EXPLORATION_LOG.md`。
 - 本机不编译 LaTeX；Overleaf 建议选择 XeLaTeX。

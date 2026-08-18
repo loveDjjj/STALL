@@ -219,85 +219,77 @@ maintenance_decisions:
     archive_target: research_archive/tools/journal_experiments/analyze_cross_dataset_frozen_hyperparams.py
     original_sha256: 97d0064a53fdd702501f90348b2ea5f2aecc78a97a28446f2ec0b129cc5858d1
     evidence_paths:
-      - results/journal_experiments/cross_dataset_frozen_hyperparams/cross_dataset_frozen_hyperparams.md
-      - results/journal_experiments/cross_dataset_frozen_hyperparams/alpha_leave_one_out.csv
+      - docs/EXPLORATION_LOG.md
   - tool: analyze_journal_experiments
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/analyze_journal_experiments.py
     original_sha256: 7594a16da983924974a5b2fef90d1d8461923d7b0076337f80274a3eea9eca2a
     evidence_paths:
-      - results/paper_sensitivity/journal_experiment_gap_analysis.md
-      - results/paper_sensitivity/beta_sensitivity_summary.csv
+      - docs/EXPLORATION_LOG.md
   - tool: audit_failure_cases
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/audit_failure_cases.py
     original_sha256: 0feceb8eb0524729e228900d8f59c21caaad409b27fcddf98f7c07ccb2e14e09
     evidence_paths:
-      - results/journal_experiments/failure_case_audit/failure_case_audit.md
-      - results/journal_experiments/failure_case_audit/failure_case_audit.csv
+      - docs/EXPLORATION_LOG.md
   - tool: audit_patch_likelihood_assumptions
     decision: compatibility_wrapper
     reason: The superseded region-3 diagnostic is archived because its assets are not part of the current U0 manuscript; the original command remains for historical reproduction.
     archive_target: research_archive/tools/journal_experiments/audit_patch_likelihood_assumptions.py
     original_sha256: f6d1eae85a6c45ab6bf75665afb573dce4547a9e22ef392d4618fe00e2a22958
     evidence_paths:
-      - results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_audit.md
-      - results/journal_experiments/patch_likelihood_assumption_audit/patch_likelihood_assumption_summary.csv
-      - paper/ieee_alpha_stalled/tables/patch_likelihood_assumption_audit.tex
+      - docs/EXPLORATION_LOG.md
   - tool: benchmark_video_stage_runtime
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/benchmark_video_stage_runtime.py
     original_sha256: 48e844730488cd59074ec7cf824c3bd02c20b24c3aa11a94669789720ee1cce5
     evidence_paths:
-      - results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.md
-      - results/journal_experiments/video_stage_runtime_benchmark/video_stage_runtime_benchmark.csv
+      - docs/EXPLORATION_LOG.md
   - tool: bootstrap_macro_average_delta
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/bootstrap_macro_average_delta.py
     original_sha256: 99091cb46daa21827e288ccda56d0458eeca9963a4d18635f8e9559ca661935f
     evidence_paths:
-      - results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.md
-      - results/journal_experiments/macro_average_bootstrap/macro_average_paired_bootstrap_delta.csv
+      - docs/EXPLORATION_LOG.md
   - tool: summarize_duration_window_representative
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/summarize_duration_window_representative.py
     original_sha256: 3b986751ff13a73d0be17983e3158d5991024a1d13b611b7148794457a40c71d
     evidence_paths:
-      - results/journal_experiments/duration_window_representative/comgenvid_duration_window_representative.md
-      - results/journal_experiments/duration_window_representative/comgenvid_duration_window_comparison.csv
+      - docs/EXPLORATION_LOG.md
   - tool: analyze_duration_window_feasibility
     decision: compatibility_wrapper
     reason: The implementation is archived with its journal runtime workflow; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/analyze_duration_window_feasibility.py
     original_sha256: b134e1ae69ddfea84bc11a2d01695bad90dfa6f9175f07471764f565be9c6693
     evidence_paths:
-      - results/journal_experiments/duration_window_feasibility/duration_window_feasibility.md
+      - docs/EXPLORATION_LOG.md
   - tool: audit_reference_experiment_alignment
     decision: compatibility_wrapper
     reason: The implementation is archived with its journal runtime workflow; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/audit_reference_experiment_alignment.py
     original_sha256: e59604846309b249f0f9c49aa4f5c114bc023c1c20e08568e91f892dc764bbaf
     evidence_paths:
-      - results/journal_experiments/reference_alignment_audit/reference_experiment_alignment.md
+      - docs/EXPLORATION_LOG.md
   - tool: benchmark_csv_stage_runtime
     decision: compatibility_wrapper
     reason: The implementation is archived beside the video-stage benchmark; the original command remains as a thin compatibility wrapper.
     archive_target: research_archive/tools/journal_experiments/benchmark_csv_stage_runtime.py
     original_sha256: 3395b357a500827f418c6d249425c87a1d60f62bd2e5b737774e2f606fe522bf
     evidence_paths:
-      - results/journal_experiments/runtime_benchmark/csv_stage_runtime_benchmark.md
+      - docs/EXPLORATION_LOG.md
   - tool: summarize_journal_experiments
     decision: compatibility_wrapper
     reason: The implementation is archived; the original command remains as a thin compatibility wrapper for the historical sensitivity workflow.
     archive_target: research_archive/tools/journal_experiments/summarize_journal_experiments.py
     original_sha256: 3242b7a63c6efe60d4b47750d121fd2b97b77764ffc603438e62c795918ba7a9
     evidence_paths:
-      - results/journal_experiments/region_sensitivity/region_sensitivity_summary.md
+      - docs/EXPLORATION_LOG.md
   - tool: inspect_dinov3_tokens
     decision: compatibility_wrapper
     reason: The implementation is archived after the backbone contract and tests superseded this one-off token-layout probe; the original command remains available.
@@ -315,8 +307,7 @@ maintenance_decisions:
     archive_target: research_archive/tools/journal_experiments/summarize_metrics_average_rows.py
     original_sha256: 1d955dc8dee4b37712e77ce1b7727bcba10d50cbc15d3acc3bbe4531df6811e8
     evidence_paths:
-      - research_archive/docs/pre_u0_release/FILE_STRUCTURE.md
-      - research_archive/docs/pre_u0_release/release_staging_manifest.md
+      - docs/EXPLORATION_LOG.md
   - tool: eval_score_csv
     decision: retain_referenced
     reason: Ablation and paper-asset reproduction scripts actively invoke this compatibility CLI; its reusable evaluation API now lives in src/alpha_stalled/score_csv.py.
@@ -329,9 +320,7 @@ maintenance_decisions:
     archive_target: research_archive/tools/pre_release_assets/verify_alpha_stalled_release.py
     original_sha256: 3f03f58905ec76399592f17790232d71b46079d0b22b14cd759abcc76398f965
     evidence_paths:
-      - research_archive/docs/pre_u0_release/reproducibility_audit.md
-      - results/paper_tables/alpha_stalled_main_summary.md
-      - scripts/reproduce/rebuild_paper_assets.sh
+      - docs/EXPLORATION_LOG.md
 
 retained_families:
   - family_id: d3_operator_controls
@@ -342,10 +331,7 @@ retained_families:
       - evaluate_d3_pixel_robustness
       - evaluate_d3_robustness
     evidence_paths:
-      - reports/global_local_multi_order_final.md
-      - results/multi_order_baselines/global_d3_dataset_metrics.csv
-      - results/multi_order_baselines/d3_robustness_dataset_metrics.csv
-      - results/multi_order_baselines/d3_pixel_robustness_dataset_metrics.csv
+      - docs/EXPLORATION_LOG.md
     archive_target: research_archive/tools/d3_operator_controls
     reason: These scripts reproduce the rejected DINOv3 operator-controlled D3 family and share its exact historical cache and calibration semantics.
     archive_gate: Move only with a compatibility wrapper, the registered result files, and a command manifest that reproduces all three dataset-metric tables.
@@ -355,9 +341,7 @@ retained_families:
       - create_keyframe_case_explanations
       - create_patch_case_visualizations
     evidence_paths:
-      - reports/u0_localization_and_injection.md
-      - paper/ieee_alpha_stalled/figures/results/keyframe_patch_anomaly_cases_main.png
-      - paper/ieee_alpha_stalled/tables/keyframe_case_summary.tex
+      - docs/EXPLORATION_LOG.md
     archive_target: research_archive/tools/keyframe_case_visualization
     reason: The explanation generator is a thin second stage of the paper's frozen qualitative patch-visualization workflow.
     archive_gate: Move only after the paper figure and table have a standalone source-data manifest and their current paths remain available through wrappers.
@@ -369,10 +353,7 @@ retained_families:
       - score_intermediate_layer_windows
       - score_unified_multiscale_windows
     evidence_paths:
-      - reports/unified_multiscale_intermediate_layers.md
-      - reports/clean_universal_cross_layer_final.md
-      - results/unified_multiscale_layers/layer_dataset_metrics.csv
-      - results/clean_universal/cross_layer_dataset_metrics.csv
+      - docs/EXPLORATION_LOG.md
     archive_target: research_archive/tools/multiscale_intermediate_layers
     reason: These fitters and scorers form the rejected multiscale and DINO intermediate-layer experiment family with shared frozen registries.
     archive_gate: Move only after parameter files, raw score shards, checkpoint identity, and the four registered result files are captured by an archival run manifest.
@@ -382,10 +363,7 @@ retained_families:
       - score_u0_injections
       - score_u0_robustness
     evidence_paths:
-      - reports/u0_robustness.md
-      - reports/u0_localization_and_injection.md
-      - results/u0_robustness/analysis/dataset_metrics.csv
-      - results/u0_injection/analysis/score_response.csv
+      - docs/EXPLORATION_LOG.md
     archive_target: research_archive/tools/u0_robustness_injection
     reason: Synthetic injection scoring intentionally reuses the frozen robustness perturbation and raw U0 scoring implementation.
     archive_gate: Keep in place while robustness and localization are paper supplements; move only with wrapper commands and manifests for both result directories.
