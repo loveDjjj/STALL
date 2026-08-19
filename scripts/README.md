@@ -38,5 +38,9 @@ runner 明确拒绝。
 `--shard-index 0 --shard-count 2` 与 `--shard-index 1 --shard-count 2`。分片按稳定缓存键
 划分，因此可安全续跑且不会发生并发覆盖。
 
+重建入口会优先使用随机帧定位；极少数 H.264 容器在目标帧边界随机定位失败时，会用
+顺序解码取得相同的 manifest 帧索引，并在 `audit/sequential_decode_fallbacks_shard*.csv`
+记录该降级事件。若顺序解码仍不包含所需帧，任务会带完整视频路径失败，不能静默跳过。
+
 原文 STALL 不在本仓库运行。请使用官方仓库完成基线推理，再把其标准化逐视频分数
 作为外部结果交给论文汇总流程。
