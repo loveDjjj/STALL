@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import fcntl
+import io
 import json
 import os
 import sys
@@ -214,14 +215,23 @@ def _repair_manifest_frame_count(manifest: Path, row: pd.Series, decoded_frames:
     with lock_path.open("a+") as lock_handle:
         fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
         try:
-            frame = load_manifest(str(manifest))
-            selector = frame["video_path"].eq(str(row["video_path"]))
-            if int(selector.sum()) != 1:
+            lines = manifest.read_text(encoding="utf-8").splitlines(keepends=True)
+            header = next(csv.reader([lines[0].rstrip("\r\n")]))
+            prefix = f"{row['video_path']},"
+            matches = [index for index, line in enumerate(lines[1:], start=1) if line.startswith(prefix)]
+            if len(matches) != 1:
                 raise ValueError(f"无法唯一定位待修正 manifest 行：{row['video_path']}")
+            record = next(csv.reader([lines[matches[0]].rstrip("\r\n")]))
+            values = dict(zip(header, record))
             for key, value in updated.items():
-                if key in frame.columns:
-                    frame.loc[selector, key] = value
-            frame.to_csv(manifest, index=False)
+                if key in values:
+                    values[key] = "" if value is None else str(value)
+            buffer = io.StringIO()
+            csv.writer(buffer, lineterminator="\n").writerow([values[key] for key in header])
+            lines[matches[0]] = buffer.getvalue()
+            temporary = Path(f"{manifest}.tmp")
+            temporary.write_text("".join(lines), encoding="utf-8")
+            temporary.replace(manifest)
         finally:
             fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
     return updated
