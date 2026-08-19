@@ -217,7 +217,7 @@ def main() -> None:
     if unavailable:
         print(
             f"发现 {len(unavailable)} 个不足 {args.duration_sec} 秒的样本；"
-            "完整序列缓存仍会写入它们，主实验由 data.short_video_policy 决定是否允许评测时排除。",
+            "它们不会写入 K 窗口缓存，主实验将按 data.short_video_policy 明确排除。",
             flush=True,
         )
     if args.audit_only:
