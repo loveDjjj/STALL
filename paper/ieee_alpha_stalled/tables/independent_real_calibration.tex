@@ -1,17 +1,28 @@
-\begin{table*}[!t]
+\begin{table}[t]
   \centering
-  \caption{Independent-real calibration stability over three fixed splits. Values are AUC/real-positive AP; independent rows report mean $\pm$ sample standard deviation. Fixed evaluation identities isolate calibration-bank variation, while the all-remaining-real diagnostic changes the test-real pool.}
+  \caption{校准协议的稳定性分析。(a) 使用 200 个真实视频、随机种子 17、29 和 43 构造三个预先确定且彼此独立的校准集；(b) 使用五个固定随机种子评估每个数据集 25、50、100 和 200 个真实校准视频时的性能变化。每次均重新拟合白化参数和经验分布函数，校准真实视频与评测真实视频完全互斥，生成视频仅参与最终评价。}
   \label{tab:independent_real_calibration}
-  \resizebox{\textwidth}{!}{%
-  \begin{tabular}{lcccc}
+  {\scriptsize
+  \setlength{\tabcolsep}{4.5pt}
+  \renewcommand{\arraystretch}{1.12}
+  \begin{tabular}{l|>{\columncolor{gray!8}}c c}
     \toprule
-    Protocol & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
+    \multicolumn{3}{l}{\textbf{(a) Independent calibration splits (seeds 17/29/43)}} \\
+    Dataset & \cellcolor{gray!8}AUC (mean $\pm$ std) & AP (mean $\pm$ std) \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    ComGenVid & 0.8980 $\pm$ 0.0019 & 0.9076 $\pm$ 0.0015 \\
+    VideoFeedback & 0.8502 $\pm$ 0.0028 & 0.8589 $\pm$ 0.0019 \\
+    GenVideo & 0.8674 $\pm$ 0.0042 & 0.8385 $\pm$ 0.0041 \\
     \midrule
-    Locked original calibration & 0.8968/0.9064 & 0.8597/0.8689 & 0.8657/0.8416 & 0.8741/0.8723 \\
-    Independent, fixed evaluation & 0.8980$\pm$0.0019/0.9076$\pm$0.0015 & 0.8502$\pm$0.0028/0.8589$\pm$0.0019 & 0.8674$\pm$0.0042/0.8385$\pm$0.0041 & 0.8718$\pm$0.0024/0.8684$\pm$0.0021 \\
-    $\Delta$ independent--locked & +0.0011/+0.0012 & -0.0095/-0.0100 & +0.0017/-0.0030 & -0.0022/-0.0039 \\
-    Independent, all remaining real & 0.9045$\pm$0.0026/0.9106$\pm$0.0023 & 0.8256$\pm$0.0037/0.8430$\pm$0.0026 & 0.8589$\pm$0.0032/0.8342$\pm$0.0034 & 0.8630$\pm$0.0020/0.8626$\pm$0.0023 \\
+    \textbf{Macro-3} & \textbf{0.8718 $\pm$ 0.0024} & \textbf{0.8684 $\pm$ 0.0021} \\
+    \midrule
+    \multicolumn{3}{l}{\textbf{(b) Macro-3 calibration-set size (five seeds)}} \\
+    Calibration reals / dataset & \cellcolor{gray!8}AUC (mean $\pm$ std) & AP (mean $\pm$ std) \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    25 & 0.8280 $\pm$ 0.0060 & 0.8237 $\pm$ 0.0050 \\
+    50 & 0.8495 $\pm$ 0.0027 & 0.8487 $\pm$ 0.0026 \\
+    100 & 0.8631 $\pm$ 0.0054 & 0.8628 $\pm$ 0.0052 \\
+    200 & \textbf{0.8712 $\pm$ 0.0027} & \textbf{0.8680 $\pm$ 0.0022} \\
     \bottomrule
-  \end{tabular}%
-  }
-\end{table*}
+  \end{tabular}}
+\end{table}

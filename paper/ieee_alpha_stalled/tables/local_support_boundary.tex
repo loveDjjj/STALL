@@ -1,0 +1,18 @@
+\begin{table*}[t]
+  \centering
+  \caption{图块区域大小的影响。各列均报告均值聚合下的局部分支结果；每个数据集内的最优和次优结果分别以粗体和下划线标出。}
+  \label{tab:local_support_boundary}
+  {\scriptsize
+  \setlength{\tabcolsep}{4.2pt}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{tabular}{l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c}
+    \toprule
+    \multirow{2}{*}{Region size} & \multicolumn{2}{c|}{ComGenVid} & \multicolumn{2}{c|}{VideoFeedback} & \multicolumn{2}{c}{GenVideo} \\
+    & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    1 & 0.9088 & 0.9075 & \textbf{0.8228} & \textbf{0.8302} & \underline{0.7976} & \underline{0.7985} \\
+    2 & \underline{0.9230} & \underline{0.9227} & \underline{0.7941} & \underline{0.7946} & \textbf{0.8072} & \textbf{0.8092} \\
+    3 & \textbf{0.9299} & \textbf{0.9288} & 0.7533 & 0.7551 & 0.7893 & 0.7909 \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

@@ -1,78 +1,31 @@
-\section{消融与机制分析}
+\section{消融与边界分析}
 \label{sec:ablation}
 
-\subsection{局部时序定义与统计假设}
-表~\ref{tab:temporal_order} 先给出 ComGenVid 上同网格 patch 时序阶数的最直接对照。D=2 作为主线设定，D=1、D=3 和 D=4 都明显退化，因此本方法把局部证据锁定为二阶差分，而不是继续堆叠更高阶导数。
+本节按科学问题组织实验。除特别说明外，所有结果均采用相同的独立真实视频校准协议、相同的评测交集和相同的分数方向；单元格报告 AUC 与以真实视频为正类的 AP。
 
-\input{tables/temporal_order}
+\subsection{全局与局部证据的互补性}
+表~\ref{tab:component_ablation} 固定 $K=3$，分别移除全局或局部分支。融合模型在 Macro-3 上达到 0.8741/0.8723，超过仅全局分支的 0.8485/0.8486 和仅局部分支的 0.8357/0.8292。三个数据集的相对排序并不完全一致，但融合在宏平均上稳定受益，说明局部二阶证据提供了全局分支之外的互补信息。
 
-对于窗口内第 $t$ 帧、第 $i$ 个 patch token $P_{t,i}$，局部加速度为
-\begin{equation}
- A_{t,i}=P_{t+2,i}-2P_{t+1,i}+P_{t,i}.
-\end{equation}
-196 个 patch 保持 14$\times$14 行优先网格顺序，CLS 与 register token 在计算前移除。$A_{t,i}$ 沿特征维 L2 归一化，再使用独立真实校准视频拟合的白化变换与高斯似然打分。窗口内对 patch 与时间位置取均值，并用真实窗口 CDF 转成 high-is-real percentile。这一 same-grid D2 定义检测局部表征轨迹的非平滑加速度，而不是跨位置做 hard/soft matching。
+\input{tables/component_ablation}
 
-表~\ref{tab:patch_temporal_comprehensive} 把 D=1、D=2、D=3、D=4，以及 spatial-only 和 motion-hard/soft 放在同一协议下比较，进一步说明 D=2 不是任意高阶导数的替代品，而是局部时序分支的有效设定。
+\subsection{局部一阶与二阶时序}
+表~\ref{tab:temporal_ablation} 在三个数据集上隔离局部时序的导数阶数。四组实验共享相同的编码器、窗口、区域大小、聚合方式、真实校准视频、局部空间分支、全局分支和融合权重；仅将局部时序从 D1 替换为 D2。D2 在仅局部时序和完整 LSTL 中均提高三个数据集的 AUC/AP；完整模型的 Macro-3 AP 增加 0.0028，配对 bootstrap 的 95\% 区间为 [0.0019, 0.0038]。
 
-\input{tables/patch_temporal_comprehensive}
+\input{tables/temporal_ablation}
 
-表~\ref{tab:patch_likelihood_assumption_audit} 则检验白化后局部表示是否足够接近高斯假设。second-order diff 的对角方差、非对角耦合和正态性压力测试都优于原始 patch token，因此该似然建模比直接在 patch token 上拟合更稳健。
+\subsection{时间覆盖}
+表~\ref{tab:window_coverage_ablation} 先给出仅改变窗口数的受控比较：由 $K=1$ 到 $K=3$ 时，Macro-3 AUC/AP 分别提升 0.0109/0.0087。已有的 $K=5$ 与全部窗口扩展均未改善 AP，却显著增加帧数，因此本文采用三个均匀窗口。
 
-\input{tables/patch_likelihood_assumption_audit}
+\input{tables/window_coverage_ablation}
 
-统一 K=1 核心消融进一步确认，PatchD2-only 的 Macro AP 为 0.8214；加入 0.1 PatchSpatial 后 Local 降到 0.8144，差值为 $-0.0070$，95\% 区间为 [$-0.0088,-0.0054$]。因此 Local 的有效信号主要来自 D2，PatchSpatial 只因冻结 clean 定义而保留。固定 beta 敏感性中 $\beta=0.05$ 与 $0.10$ 的 Macro AP 分别为 0.8725 和 0.8723，差异小于校准 seed 波动，不足以支持事后替换锁定值。
+\subsection{局部空间支持域}
+表~\ref{tab:local_support_boundary} 显示最优图块区域大小随数据集变化：ComGenVid 偏好较大支持域，GenVideo 在中等支持域达到峰值，而 VideoFeedback 偏好细粒度图块。该差异表明区域大小与局部运动尺度相关，不能简单视为可跨数据集固定的常数。
 
-\input{tables/local_d1_d2_ablation}
+\input{tables/local_support_boundary}
 
-\subsection{窗口数量与聚合}
-历史同协议时间覆盖实验比较了 K=1、K=3、K=5 和全部非重叠窗口。K=3 分支均值达到 0.8694/0.8697；K=5 降至 0.8663/0.8672，全部非重叠窗口为 0.8712/0.8695，AP 未改善且推理量与时长耦合。K=3 的 Local bottom-2 和 mean/bottom-2 hybrid 分别为 0.8680/0.8684 与 0.8687/0.8691，均低于分支均值。最低窗口天然随 $K$ 增大而下降，即使真实重校准也更容易放大剪辑、模糊和解码扰动；因此 U0 只保留 K=3 mean。
+\subsection{独立真实校准稳定性}
+表~\ref{tab:independent_real_calibration} 使用预先固定的三个独立真实视频校准集。每次均重新拟合局部白化和经验分布函数，生成视频始终只参与最终评价，校准真实视频与评测真实视频也完全互斥。结果的低标准差表明主结果不依赖某一组特定的真实校准视频。
 
-按历史长度分组，K=3 在 10--20 秒和 20 秒以上视频上的 AP 分别提高约 0.0239 和 0.0177，而 2--4 秒组下降约 0.0024；这支持“额外覆盖主要帮助较长视频”。但 6--10 秒组下降约 0.0101，effective-$K=1$ 组也从重校准中获益，因此不能把全部增益归因于时长。
+\input{tables/independent_real_calibration}
 
-\input{tables/u0_region_aggregation_sensitivity}
-
-表~\ref{tab:u0_region_aggregation} 说明 region 与聚合方式具有数据集依赖性，因此它们适合作为边界分析，而不是重选 U0 的自由度。
-
-\input{tables/hyperparameter_sensitivity_matrix}
-
-表~\ref{tab:hyperparameter_sensitivity_matrix} 进一步显示 region、aggregation 和 bottom-k 的最优值并不共享同一个设置，因而只能据此描述局部空间尺度边界，不能把某个候选简单外推到全部数据集。
-
-\subsection{共同运动残差}
-我们在未池化 $[T-2,196,D]$ 加速度上计算空间均值共同运动比例，并测试先减共同运动、再独立拟合白化和 CDF 的 residual D2。Spatial-mean residual 将历史 K=3 对照的 Macro AUC/AP 从 0.8694/0.8697 降到 0.8626/0.8609，AP 差值为 $-0.0088$，95\% 区间 [$-0.0103,-0.0073$]，仅 4/20 个生成器不下降。真实与生成视频的共同运动比例方向在三个数据集间不一致；四个重点负迁移生成器也不存在统一高共同运动偏差。因此共同运动不是当前误差的通用解释，mean/median residual 均不进入最终方法。
-
-\subsection{空间尺度与 DINO 层}
-旧 region=2 已经是在计算 D2 前对 raw 14$\times$14 token 做 2$\times$2 average pooling，即真正的 7$\times$7 coarse D2，而不是 likelihood 后的分数池化。独立校准的 fine+coarse 融合 Macro AP 为 0.8687，未超过 fine-only；继续增加尺度没有证据基础。
-
-中间层实验从同一次 DINO forward 提取 mid、late 和 final patch token，每层分别执行 residual 定义、L2 归一化、白化、似然和真实 CDF。最佳 late+final 融合相对进入阶段的基线只提高约 0.0002 AP，置信区间跨 0，且 VideoFeedback 与 GenVideo 各下降约 0.005。该增益不足以抵消多套校准参数和缓存复杂度，最终只使用 final layer。
-
-\subsection{按生成器的机制分解}
-按生成器展开可以更清楚地看到融合带来的边界。表~\ref{tab:per_generator_component_matrix} 显示，\method 虽在大多数生成器上优于单分支，但也存在少数 patch-only 更强或 global-only 更强的例外，说明“融合更好”只能作为总体结论，不能被夸大为逐生成器单调改善。
-
-\input{tables/per_generator_component_matrix}
-
-表~\ref{tab:per_generator_bootstrap_delta} 进一步给出生成器级 paired bootstrap 区间。多数生成器的 $\Delta_{\alpha-G}$ 和 $\Delta_{\alpha-P}$ 都为正，但 Text2Video-Zero、VideoCrafter2、部分 Sora 与少数 Global-only 友好的样本仍然保留负迁移或跨零区间，因此本方法的增益是总体稳定而不是处处占优。
-
-\input{tables/per_generator_bootstrap_delta}
-
-\subsection{联合融合与其他负结果}
-固定线性融合之外，我们用五折 cross-fitting 生成真实校准视频的 OOF $(G,L)$，比较对称 Mahalanobis、单侧 lower-tail Mahalanobis 和 Gaussian copula。固定 $0.6G+0.4L$ 的历史对照 AP 为 0.8697；J2 和最佳 J3 分别只有 0.8437 与 0.8602。J2 虽降低 ComGenVid 和 VideoFeedback conflict subset 的阈值错误率，却使 GenVideo 冲突样本恶化，并同时降低 SoRA-Clip、Text2Video-Zero 和 VideoCrafter2。二维联合模型没有优于稳定的单调融合。
-
-此前已完成的 lag-1/multi-lag、hard/soft matching、patch D3/D4、Global raw D3、三分支与 gate/clip/cap 也均未超过 same-grid D2 主线，因而不在 U0 上重复搜索。表~\ref{tab:u0_failed_directions} 汇总主要负结果。所有未通过预设增益、最差数据集和 bootstrap 门槛的组件均单独拒绝，不允许通过继续调权重或堆叠失败组件恢复。
-
-\input{tables/u0_failed_directions}
-
-唯一允许的新性能候选是无超参数 OAS shrinkage covariance。表~\ref{tab:u0_oas_candidate} 显示它只改变 Macro AP $+0.000043$，95\% 区间为 [$-0.000089,+0.000174$]；五 seed AP 标准差还从 0.002210 增至 0.002245。该候选未达到 $+0.003$ 准入线，最终保留稳定有效秩 whitening，并关闭后续 covariance 搜索。
-
-\input{tables/u0_oas_candidate}
-
-\subsection{锁定合成注入与定位}
-在 300 条真实视频上，我们预先锁定 K=3 窗口，并向中央 25\% patch 区域注入局部冻结、重复、闪烁、仿射抖动和时间平移；全帧冻结与合成切镜作为控制。表~\ref{tab:u0_injection} 中正的 score drop 表示注入后真实性降低。Local D2 只对局部冻结产生很弱的预期响应（最终分数 $+0.0023$），对闪烁、仿射抖动和时间平移的平均响应方向错误。全帧冻结使 Local 分数反而提高 0.4084，原因是冻结压低了二阶 token 运动；合成切镜也未形成预期的负真实性响应。
-
-\input{tables/u0_injection}
-
-Patch-time AUPRC 在局部冻结、重复、闪烁、仿射抖动和时间平移上分别为 0.1558、0.0670、0.1032、0.1030 和 0.1245。K=1 在 165/300 个视频中完全未覆盖注入帧，验证了时间覆盖不足；但 K=3 只增加扰动暴露概率，并不保证正确的异常方向。该实验不支持把 patch score map 解释成通用语义伪影定位器。
-
-\subsection{最终复杂度选择}
-最终 U0 仍只有 Global 与 Local 两个分支，且两者来自同一次冻结 DINO 前向。K=3 评测使用 787,690 个唯一帧，相对 K=1 的 342,736 个为 2.30 倍；K=5 和 all-window 分别为 3.21 倍和 4.02 倍。K=3 的 AP 增益有正向置信区间，而后两者没有，因此额外复杂度只保留到三个窗口。Residual、多尺度、中间层和 Joint 均不增加发布时推理路径。
-
-\input{tables/u0_compute_cost}
+其余融合权重、聚合方式与低分图块比例的敏感性分析，以及跨域校准、校准规模、逐生成器差值、失败方向和注入实验均置于补充材料，作为稳定性和局限性证据；它们不再作为正文的独立结果或方法增益来源。

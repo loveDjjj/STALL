@@ -1,0 +1,20 @@
+\begin{table*}[t]
+  \centering
+  \caption{局部一阶与二阶时序的受控消融。编码器、窗口、区域大小、聚合方式、真实校准视频、局部空间分支、全局分支和融合权重均保持不变，仅将局部时序从 D1 替换为 D2。AUC 列以浅灰色标示。}
+  \label{tab:temporal_ablation}
+  {\scriptsize
+  \setlength{\tabcolsep}{3.2pt}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{tabular}{l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c||>{\columncolor{gray!8}}c c|cc}
+    \toprule
+    \multirow{2}{*}{Variant} & \multicolumn{2}{c|}{ComGenVid} & \multicolumn{2}{c|}{VideoFeedback} & \multicolumn{2}{c||}{GenVideo} & \multicolumn{2}{c|}{Macro-3} & \multicolumn{2}{c}{D2--D1} \\
+    & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & $\Delta$AUC & $\Delta$AP \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    Local first-order only & 0.8846 & 0.8848 & 0.7675 & 0.7712 & 0.8188 & 0.7952 & 0.8237 & 0.8171 & -- & -- \\
+    Local second-order only & 0.8907 & 0.8908 & 0.7783 & 0.7870 & 0.8279 & 0.8066 & 0.8323 & 0.8281 & +0.0086 & +0.0111 \\
+    \midrule
+    Full model with Local D1 & \underline{0.8966} & \underline{0.9055} & \underline{0.8563} & \underline{0.8645} & \underline{0.8635} & \underline{0.8385} & \underline{0.8721} & \underline{0.8695} & -- & -- \\
+    LSTL / Alpha-STALLED (Local D2) & \textbf{0.8968} & \textbf{0.9064} & \textbf{0.8597} & \textbf{0.8689} & \textbf{0.8657} & \textbf{0.8416} & \textbf{0.8741} & \textbf{0.8723} & \textbf{+0.0019} & \textbf{+0.0028} \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}

@@ -16,3 +16,17 @@ results/runs/
 # 仅在正式冻结发布时纳入版本控制
 release/*
 !release/README.md
+
+# 论文 LaTeX 编译产物，不纳入版本控制
+paper/ieee_alpha_stalled/.DS_Store
+paper/ieee_alpha_stalled/figures/.DS_Store
+paper/ieee_alpha_stalled/main.aux
+paper/ieee_alpha_stalled/main.bbl
+paper/ieee_alpha_stalled/main.blg
+paper/ieee_alpha_stalled/main.fdb_latexmk
+paper/ieee_alpha_stalled/main.fls
+paper/ieee_alpha_stalled/main.log
+paper/ieee_alpha_stalled/main.pdf
+paper/ieee_alpha_stalled/main.synctex.gz
+paper/ieee_alpha_stalled/main.xdv
+paper/ieee_alpha_stalled/missfont.log

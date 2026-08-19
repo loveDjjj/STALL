@@ -1,17 +1,53 @@
-\begin{table}[!t]
+\begin{table*}[t]
   \centering
-  \caption{锁定 \method 与公平方法链条对比。指标为 pairwise balanced AUC/real-positive AP。Historical clean K1 仅作协议审计；统一 K1 是 K=3 覆盖增益的直接对照。}
+  \caption{与图像检测器和视频检测器的比较。为便于阅读，AUC 列以浅灰色标示；每行同一指标下的最优和次优结果分别以粗体和下划线标出。}
   \label{tab:main_results}
-  \resizebox{\columnwidth}{!}{%
-  \begin{tabular}{lcccc}
+  {\scriptsize
+  \setlength{\tabcolsep}{2.1pt}
+  \renewcommand{\arraystretch}{1.08}
+  \begin{tabular}{l|l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c}
     \toprule
-    方法 & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
-    \midrule
-    Original STALL & 0.8508/0.8560 & 0.8449/0.8596 & 0.8206/0.8129 & 0.8388/0.8428 \\
-    Historical clean K1 (audit) & 0.8699/0.8819 & 0.8631/0.8708 & 0.8382/0.8274 & 0.8570/0.8600 \\
-    Unified K1 (direct control) & 0.8786/0.8878 & \textbf{0.8654/0.8734} & 0.8456/0.8297 & 0.8632/0.8636 \\
-    \method (locked K=3) & \textbf{0.8968/0.9064} & 0.8597/0.8689 & \textbf{0.8657/0.8416} & \textbf{0.8741/0.8723} \\
+    \multirow{3}{*}{Benchmark} & \multirow{3}{*}{Model} & \multicolumn{6}{c||}{Image Detectors} & \multicolumn{8}{c}{Video Detectors} \\
+    \cline{3-16}
+    & & \multicolumn{2}{c|}{AEROBLADE} & \multicolumn{2}{c|}{RIGID} & \multicolumn{2}{c||}{ZED} & \multicolumn{2}{c|}{D3 (L2)} & \multicolumn{2}{c|}{D3 (cos)} & \multicolumn{2}{c|}{STALL} & \multicolumn{2}{c}{\scriptsize Alpha-STALLED} \\
+    & & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    \multirow{12}{*}{VideoFeedback}
+    & AnimateDiff & 0.57 & 0.55 & 0.73 & 0.74 & 0.65 & 0.62 & 0.49 & 0.49 & 0.61 & 0.57 & \underline{0.83} & \underline{0.86} & \textbf{0.872} & \textbf{0.887} \\
+    & Fast-SVD & 0.52 & 0.51 & 0.54 & 0.56 & 0.45 & 0.48 & 0.76 & 0.77 & 0.80 & 0.79 & \underline{0.89} & \underline{0.89} & \textbf{0.915} & \textbf{0.924} \\
+    & LVDM & \underline{0.88} & \underline{0.90} & 0.65 & 0.57 & 0.76 & 0.70 & 0.42 & 0.49 & 0.31 & 0.41 & 0.86 & 0.89 & \textbf{0.909} & \textbf{0.924} \\
+    & LaVie & 0.50 & 0.50 & 0.71 & 0.73 & 0.29 & 0.37 & 0.51 & 0.47 & 0.49 & 0.46 & \underline{0.81} & \underline{0.83} & \textbf{0.850} & \textbf{0.858} \\
+    & ModelScope & 0.60 & 0.56 & 0.66 & 0.62 & 0.69 & 0.59 & 0.51 & 0.52 & 0.42 & 0.46 & \underline{0.81} & \underline{0.83} & \textbf{0.841} & \textbf{0.841} \\
+    & Pika & 0.44 & 0.46 & 0.54 & 0.54 & 0.39 & 0.47 & \underline{0.83} & \underline{0.84} & 0.81 & 0.81 & 0.78 & 0.80 & \textbf{0.864} & \textbf{0.888} \\
+    & Sora / SoRA-Clip & 0.65 & 0.62 & 0.43 & 0.44 & 0.56 & 0.62 & 0.62 & 0.56 & 0.67 & 0.58 & \textbf{0.81} & \textbf{0.82} & \underline{0.802} & \underline{0.805} \\
+    & Text2Video-Zero & 0.67 & 0.63 & 0.70 & 0.68 & 0.55 & 0.49 & 0.15 & 0.33 & 0.22 & 0.36 & \textbf{0.83} & \textbf{0.83} & \underline{0.795} & \underline{0.782} \\
+    & VideoCrafter2 & 0.60 & 0.58 & 0.80 & 0.76 & 0.53 & 0.50 & 0.69 & 0.71 & 0.80 & 0.79 & \underline{0.93} & \underline{0.94} & \textbf{0.943} & \textbf{0.944} \\
+    & ZeroScope & \underline{0.78} & 0.78 & 0.65 & 0.59 & 0.70 & 0.62 & 0.35 & 0.45 & 0.35 & 0.44 & \underline{0.78} & \underline{0.81} & \textbf{0.807} & \textbf{0.835} \\
+    & Hotshot-XL & 0.20 & 0.34 & 0.51 & 0.58 & 0.44 & 0.45 & \underline{0.64} & \underline{0.67} & 0.60 & 0.62 & \textbf{0.79} & \textbf{0.80} & -- & -- \\
+    \cline{2-16}
+    & \textbf{Average} & \textbf{0.58} & \textbf{0.58} & \textbf{0.63} & \textbf{0.62} & \textbf{0.54} & \textbf{0.54} & \textbf{0.54} & \textbf{0.57} & \textbf{0.55} & \textbf{0.57} & \textbf{\underline{0.83}} & \textbf{\underline{0.85}} & \textbf{0.860} & \textbf{0.869} \\
+    \specialrule{0.6pt}{1pt}{1pt}
+    \multirow{11}{*}{GenVideo}
+    & Crafter & 0.64 & 0.65 & 0.71 & 0.66 & 0.55 & 0.56 & 0.79 & \textbf{0.82} & 0.76 & 0.79 & \underline{0.82} & 0.80 & \textbf{0.850} & \underline{0.811} \\
+    & Gen2 & 0.56 & 0.59 & 0.70 & 0.67 & 0.51 & 0.58 & \underline{0.88} & \underline{0.90} & \underline{0.88} & \underline{0.90} & \underline{0.88} & 0.89 & \textbf{0.941} & \textbf{0.945} \\
+    & Lavie & 0.58 & 0.59 & 0.77 & 0.76 & 0.39 & 0.42 & 0.68 & 0.68 & 0.67 & 0.68 & \underline{0.85} & \underline{0.84} & \textbf{0.866} & \textbf{0.855} \\
+    & ModelScope & 0.60 & 0.60 & 0.62 & 0.59 & 0.61 & 0.57 & 0.63 & 0.64 & 0.60 & 0.63 & \underline{0.78} & \underline{0.78} & \textbf{0.859} & \textbf{0.856} \\
+    & MorphStudio & 0.74 & 0.73 & 0.74 & 0.69 & 0.60 & 0.60 & 0.66 & 0.71 & 0.64 & 0.69 & \underline{0.83} & \underline{0.84} & \textbf{0.851} & \textbf{0.850} \\
+    & Show 1 & 0.48 & 0.50 & 0.53 & 0.52 & 0.45 & 0.47 & 0.76 & \underline{0.80} & 0.75 & 0.79 & \underline{0.82} & \underline{0.80} & \textbf{0.868} & \textbf{0.826} \\
+    & Sora & 0.73 & 0.70 & 0.49 & 0.48 & 0.71 & 0.79 & 0.75 & 0.75 & 0.74 & 0.74 & \underline{0.79} & \underline{0.80} & \textbf{0.909} & \textbf{0.896} \\
+    & WildScrape & 0.49 & 0.53 & 0.61 & 0.59 & 0.55 & 0.57 & 0.65 & \underline{0.69} & 0.64 & \underline{0.69} & \underline{0.72} & \underline{0.68} & \textbf{0.783} & \textbf{0.693} \\
+    & HotShot-XL & 0.31 & 0.39 & \underline{0.64} & \underline{0.65} & 0.47 & 0.46 & 0.56 & 0.64 & 0.54 & 0.62 & \textbf{0.79} & \textbf{0.78} & -- & -- \\
+    & MoonValley & \underline{0.75} & \underline{0.78} & 0.72 & 0.66 & 0.63 & 0.72 & \textbf{0.81} & \textbf{0.82} & \textbf{0.81} & \textbf{0.82} & 0.72 & 0.75 & -- & -- \\
+    \cline{2-16}
+    & \textbf{Average} & \textbf{0.59} & \textbf{0.61} & \textbf{0.65} & \textbf{0.63} & \textbf{0.55} & \textbf{0.57} & \textbf{0.72} & \textbf{0.74} & \textbf{0.70} & \textbf{0.74} & \textbf{\underline{0.80}} & \textbf{\underline{0.80}} & \textbf{0.866} & \textbf{0.842} \\
+    \specialrule{0.6pt}{1pt}{1pt}
+    \multirow{3}{*}{ComGenVid}
+    & Sora & 0.72 & 0.67 & 0.53 & 0.55 & 0.58 & 0.59 & 0.68 & 0.65 & 0.68 & 0.65 & \underline{0.84} & \underline{0.85} & \textbf{0.882} & \textbf{0.891} \\
+    & VEO3 & 0.67 & 0.62 & 0.62 & 0.63 & 0.52 & 0.55 & 0.79 & 0.76 & 0.79 & 0.78 & \underline{0.86} & \underline{0.87} & \textbf{0.911} & \textbf{0.922} \\
+    \cline{2-16}
+    & \textbf{Average} & \textbf{0.69} & \textbf{0.64} & \textbf{0.57} & \textbf{0.59} & \textbf{0.55} & \textbf{0.57} & \textbf{0.73} & \textbf{0.71} & \textbf{0.73} & \textbf{0.71} & \textbf{\underline{0.85}} & \textbf{\underline{0.86}} & \textbf{0.897} & \textbf{0.906} \\
+    \specialrule{0.9pt}{1pt}{1pt}
+    \multirow{1}{*}{All Benchmarks} & \textbf{Average} & \textbf{0.62} & \textbf{0.61} & \textbf{0.61} & \textbf{0.59} & \textbf{0.57} & \textbf{0.58} & \textbf{0.64} & \textbf{0.65} & \textbf{0.64} & \textbf{0.65} & \textbf{\underline{0.82}} & \textbf{\underline{0.82}} & \textbf{0.874} & \textbf{0.872} \\
     \bottomrule
-  \end{tabular}
-  }
-\end{table}
+  \end{tabular}}
+\end{table*}

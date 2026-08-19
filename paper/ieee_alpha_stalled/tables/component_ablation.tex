@@ -1,15 +1,19 @@
-\begin{table}[!t]
+\begin{table*}[t]
   \centering
-  \caption{锁定 K=3 协议下的 Global/Local 组件消融。每个单元格为 AUC/real-positive AP。}
+  \caption{全局分支与局部分支的消融实验。``w/o Local'' 仅保留全局分支，``w/o Global'' 仅保留局部分支。AUC 列以浅灰色标示；每个指标中的最优和次优结果分别以粗体和下划线标出。}
   \label{tab:component_ablation}
-  \begin{tabular}{lccc}
+  {\scriptsize
+  \setlength{\tabcolsep}{4.0pt}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{tabular}{l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c||>{\columncolor{gray!8}}c c}
     \toprule
-    数据集 & Global-only & Local-only & Global+Local \\
-    \midrule
-    ComGenVid & 0.8627/0.8694 & 0.8914/0.8912 & \textbf{0.8968/0.9064} \\
-    VideoFeedback & 0.8442/0.8582 & 0.7828/0.7849 & \textbf{0.8597/0.8689} \\
-    GenVideo & 0.8386/0.8181 & 0.8328/0.8114 & \textbf{0.8657/0.8416} \\
-    Macro-3 & 0.8485/0.8486 & 0.8357/0.8292 & \textbf{0.8741/0.8723} \\
+    \multirow{2}{*}{Method} & \multicolumn{2}{c|}{ComGenVid} & \multicolumn{2}{c|}{VideoFeedback} & \multicolumn{2}{c||}{GenVideo} & \multicolumn{2}{c}{Macro-3} \\
+    & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    Original STALL & 0.8508 & 0.8560 & \underline{0.8449} & \underline{0.8596} & 0.8206 & 0.8129 & 0.8388 & 0.8428 \\
+    w/o Local & 0.8627 & 0.8694 & 0.8442 & 0.8582 & \underline{0.8386} & \underline{0.8181} & \underline{0.8485} & \underline{0.8486} \\
+    w/o Global & \underline{0.8914} & \underline{0.8912} & 0.7828 & 0.7849 & 0.8328 & 0.8114 & 0.8357 & 0.8292 \\
+    \method & \textbf{0.8968} & \textbf{0.9064} & \textbf{0.8597} & \textbf{0.8689} & \textbf{0.8657} & \textbf{0.8416} & \textbf{0.8741} & \textbf{0.8723} \\
     \bottomrule
-  \end{tabular}
-\end{table}
+  \end{tabular}}
+\end{table*}

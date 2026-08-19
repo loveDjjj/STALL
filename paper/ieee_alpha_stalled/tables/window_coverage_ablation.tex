@@ -1,0 +1,19 @@
+\begin{table}[t]
+  \centering
+  \caption{时间覆盖范围的影响。前两行是在相同配置下仅改变窗口数的受控比较。$K=5$ 与全窗口结果来自已有扩展实验，其区域大小和聚合设置与主配置不同，故仅报告 Macro-3。}
+  \label{tab:window_coverage_ablation}
+  {\scriptsize
+  \setlength{\tabcolsep}{3.4pt}
+  \renewcommand{\arraystretch}{1.08}
+  \begin{tabular}{l|>{\columncolor{gray!8}}c c|c}
+    \toprule
+    Coverage & \cellcolor{gray!8}AUC & AP & Relative frames \\
+    \specialrule{0.8pt}{0pt}{1pt}
+    $K=1$ (controlled) & 0.8632 & 0.8636 & 1.00$\times$ \\
+    $K=3$ (ours) & \textbf{0.8741} & \textbf{0.8723} & 2.30$\times$ \\
+    \midrule
+    $K=5$ (extended) & 0.8663 & 0.8672 & 3.21$\times$ \\
+    All windows (extended) & \underline{0.8712} & \underline{0.8695} & 4.02$\times$ \\
+    \bottomrule
+  \end{tabular}}
+\end{table}
