@@ -153,6 +153,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--minimum-free-gib", type=float, default=12.0)
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument(
+        "--skip-audit-report",
+        action="store_true",
+        help="不重写根目录审计 CSV；用于多个 GPU 并行恢复同一缓存时保留已有全量审计。",
+    )
+    parser.add_argument(
         "--allow-short-videos",
         action="store_true",
         help="允许不足 2 秒的样本被记录为不适用；不设置时将其视为协议错误。",
@@ -174,12 +179,13 @@ def main() -> None:
 
     audits, unavailable = _read_manifests(manifests, args.duration_sec)
     cache_dir = _resolve_path(args.cache_dir).resolve()
-    report_dir = cache_dir / "audit"
-    _write_csv(
-        report_dir / "short_or_ineligible_videos.csv",
-        unavailable,
-        ["manifest", "video_path", "reason"],
-    )
+    if not args.skip_audit_report:
+        report_dir = cache_dir / "audit"
+        _write_csv(
+            report_dir / "short_or_ineligible_videos.csv",
+            unavailable,
+            ["manifest", "video_path", "reason"],
+        )
     summary = {
         "duration_sec": args.duration_sec,
         "cache_dir": str(cache_dir),
