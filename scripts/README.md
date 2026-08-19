@@ -34,5 +34,9 @@ bash scripts/run_cache_rebuild.sh --audit-only
 均匀窗口帧并去重，因此 K=1/K=2/K=3 均可复用同一严格缓存；超过 K=3 的配置会被
 runner 明确拒绝。
 
+两张 GPU 同时重建同一根缓存时，两个进程必须分别设置
+`--shard-index 0 --shard-count 2` 与 `--shard-index 1 --shard-count 2`。分片按稳定缓存键
+划分，因此可安全续跑且不会发生并发覆盖。
+
 原文 STALL 不在本仓库运行。请使用官方仓库完成基线推理，再把其标准化逐视频分数
 作为外部结果交给论文汇总流程。

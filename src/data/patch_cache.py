@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -87,6 +88,16 @@ def cache_frame_selection_identity(cache_window_count: int | None) -> dict[str, 
     }
 
 
+def _belongs_to_shard(row: pd.Series, shard_index: int, shard_count: int) -> bool:
+    """按稳定缓存键分片，确保并行任务不会写入同一条目。"""
+
+    if not 0 <= shard_index < shard_count:
+        raise ValueError("shard_index 必须满足 0 <= shard_index < shard_count")
+    key = "\0".join((str(row["subset"]), str(row["source_model"]), Path(str(row["video_path"])).stem))
+    value = int.from_bytes(hashlib.sha256(key.encode("utf-8")).digest()[:8], "little")
+    return value % shard_count == shard_index
+
+
 def count_patch_cache_misses(
     csv_path: str,
     patch_emb_cache_dir: str,
@@ -94,6 +105,8 @@ def count_patch_cache_misses(
     debug_n: Optional[int] = None,
     compact: bool = False,
     cache_window_count: int | None = None,
+    shard_index: int = 0,
+    shard_count: int = 1,
     cache_policy: str = "auto",
 ) -> int:
     df = load_manifest(csv_path)
@@ -108,6 +121,8 @@ def count_patch_cache_misses(
     strict_entries = cache_policy_uses_strict_entries(cache_root, cache_policy)
     count = 0
     for _, row in df.iterrows():
+        if not _belongs_to_shard(row, shard_index, shard_count):
+            continue
         stem = Path(row["video_path"]).stem
         if not cache_frame_indices(
             row,
@@ -133,6 +148,8 @@ def prefill_patch_emb_cache(
     debug_n: Optional[int] = None,
     compact: bool = False,
     cache_window_count: int | None = None,
+    shard_index: int = 0,
+    shard_count: int = 1,
     num_workers: int = 4,
     video_batch: int = 8,
     cache_policy: str = "auto",
@@ -169,6 +186,8 @@ def prefill_patch_emb_cache(
     misses = []  # (video_path, frame_idxs, cache_path) 元组
 
     for _, row in df.iterrows():
+        if not _belongs_to_shard(row, shard_index, shard_count):
+            continue
         video_path = row["video_path"]
         stem = Path(video_path).stem
         subset = row["subset"]

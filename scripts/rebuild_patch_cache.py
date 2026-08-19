@@ -156,6 +156,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--frame-batch-size", type=int, default=8)
     parser.add_argument("--video-batch-size", type=int, default=1)
     parser.add_argument("--decode-workers", type=int, default=2)
+    parser.add_argument("--shard-index", type=int, default=0, help="当前并行分片编号，从 0 开始。")
+    parser.add_argument("--shard-count", type=int, default=1, help="稳定哈希分片总数；两张卡并行时设为 2。")
     parser.add_argument("--minimum-free-gib", type=float, default=12.0)
     parser.add_argument("--audit-only", action="store_true")
     parser.add_argument(
@@ -175,6 +177,8 @@ def main() -> None:
     args = parse_args()
     if min(args.frame_batch_size, args.video_batch_size, args.decode_workers, args.cache_window_count) < 1:
         raise ValueError("batch size、decode workers 和 cache_window_count 必须为正整数")
+    if not 0 <= args.shard_index < args.shard_count:
+        raise ValueError("shard_index 必须满足 0 <= shard_index < shard_count")
     manifests = [_resolve_path(value) for value in args.manifest] if args.manifest else list(DEFAULT_MANIFESTS)
     manifests = [path.resolve() for path in manifests]
     if len(set(manifests)) != len(manifests):
@@ -207,6 +211,7 @@ def main() -> None:
         ],
         "cacheable_rows": sum(item.cacheable_rows for item in audits),
         "short_video_rows": len(unavailable),
+        "shard": {"index": args.shard_index, "count": args.shard_count},
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
     if unavailable:
@@ -225,6 +230,7 @@ def main() -> None:
         missing_before = count_patch_cache_misses(
             str(manifest), str(cache_dir), duration_sec=args.duration_sec,
             compact=False, cache_window_count=args.cache_window_count, cache_policy="strict",
+            shard_index=args.shard_index, shard_count=args.shard_count,
         )
         print(f"构建 {manifest.relative_to(ROOT)}：待处理 {missing_before} 条", flush=True)
         for video_path in prefill_patch_emb_cache(
@@ -235,6 +241,8 @@ def main() -> None:
             duration_sec=args.duration_sec,
             compact=False,
             cache_window_count=args.cache_window_count,
+            shard_index=args.shard_index,
+            shard_count=args.shard_count,
             num_workers=args.decode_workers,
             video_batch=args.video_batch_size,
             cache_policy="strict",
@@ -245,6 +253,7 @@ def main() -> None:
         missing_after = count_patch_cache_misses(
             str(manifest), str(cache_dir), duration_sec=args.duration_sec,
             compact=False, cache_window_count=args.cache_window_count, cache_policy="strict",
+            shard_index=args.shard_index, shard_count=args.shard_count,
         )
         if missing_after:
             raise RuntimeError(f"{manifest} 构建后仍缺少 {missing_after} 条严格缓存")
