@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import fcntl
 import json
 import os
 import sys
@@ -17,6 +18,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -64,6 +66,19 @@ class ManifestAudit:
     short_video_rows: int
     missing_videos: int
     duplicate_keys: int
+
+
+class ManifestFrameCountMismatch(ValueError):
+    """视频顺序解码的实际帧数少于 manifest 请求的帧索引。"""
+
+    def __init__(self, video_path: str, decoded_frames: int, seek_error: ValueError):
+        self.video_path = video_path
+        self.decoded_frames = decoded_frames
+        self.seek_error = seek_error
+        super().__init__(
+            f"视频 {video_path} 随机取帧失败（{seek_error}），且顺序解码仅得到 "
+            f"{decoded_frames} 帧。"
+        )
 
 
 def _resolve_path(path: str | Path) -> Path:
@@ -147,11 +162,69 @@ def _decode_cached_frames(video_path: str, frame_indices: list[int]) -> tuple[ob
     except ValueError as seek_error:
         frames = decode_all_frames(video_path, require_open=True)
         if len(frames) <= max(frame_indices):
-            raise ValueError(
-                f"视频 {video_path} 随机取帧失败（{seek_error}），且顺序解码仅得到 "
-                f"{len(frames)} 帧，无法取得第 {max(frame_indices)} 帧。"
-            ) from seek_error
+            raise ManifestFrameCountMismatch(video_path, len(frames), seek_error) from seek_error
         return frames[frame_indices], str(seek_error)
+
+
+def _downsample_indices(num_frames: int, fps: float, target_fps: float = 8.0) -> list[int]:
+    """与 manifest 生成器一致地重算原始帧降采样索引。"""
+
+    if fps < target_fps:
+        raise ValueError(f"视频 fps={fps} 低于目标采样率 {target_fps}")
+    ratio = fps / target_fps
+    indices: list[int] = []
+    step = 0
+    while True:
+        index = round(ratio * step)
+        if index >= num_frames:
+            return indices
+        indices.append(index)
+        step += 1
+
+
+def _compute_windows(indices: list[int], target_fps: float = 8.0) -> dict[str, str | None]:
+    """与 manifest 生成器保持一致，固定种子生成 1-4 秒窗口。"""
+
+    rng = np.random.RandomState(42)
+    output: dict[str, str | None] = {}
+    for seconds in (1, 2, 3, 4):
+        size = int(round(target_fps * seconds))
+        name = f"{seconds}_sec_idxs"
+        if len(indices) < size:
+            output[name] = None
+            continue
+        start = int(rng.randint(0, len(indices) - size + 1))
+        output[name] = json.dumps(indices[start : start + size])
+    return output
+
+
+def _repair_manifest_frame_count(manifest: Path, row: pd.Series, decoded_frames: int) -> pd.Series:
+    """用顺序解码的实际帧数修正一个 manifest 行，并返回更新后的行。"""
+
+    fps = float(row["fps"])
+    indices = _downsample_indices(decoded_frames, fps)
+    updated = row.copy()
+    updated["num_frames"] = decoded_frames
+    updated["duration_seconds"] = decoded_frames / fps
+    updated["downsample_idxs"] = json.dumps(indices)
+    for key, value in _compute_windows(indices).items():
+        updated[key] = value
+
+    lock_path = Path(f"{manifest}.lock")
+    with lock_path.open("a+") as lock_handle:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        try:
+            frame = load_manifest(str(manifest))
+            selector = frame["video_path"].eq(str(row["video_path"]))
+            if int(selector.sum()) != 1:
+                raise ValueError(f"无法唯一定位待修正 manifest 行：{row['video_path']}")
+            for key, value in updated.items():
+                if key in frame.columns:
+                    frame.loc[selector, key] = value
+            frame.to_csv(manifest, index=False)
+        finally:
+            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+    return updated
 
 
 def _write_cached_features(
@@ -203,6 +276,7 @@ def _prefill_manifest_resilient(
     shard_index: int,
     shard_count: int,
     fallback_audit_path: Path,
+    manifest_repair_audit_path: Path,
 ):
     """逐视频构建缓存，在随机定位失败时保留可审计的顺序解码回退。"""
 
@@ -229,7 +303,49 @@ def _prefill_manifest_resilient(
         )
         if cache_entry_is_complete(cache_path, strict=context.strict):
             continue
-        frames, fallback_reason = _decode_cached_frames(video_path, frame_indices)
+        try:
+            frames, fallback_reason = _decode_cached_frames(video_path, frame_indices)
+        except ManifestFrameCountMismatch as mismatch:
+            original_num_frames = int(row["num_frames"])
+            row = _repair_manifest_frame_count(manifest, row, mismatch.decoded_frames)
+            frame_indices = cache_frame_indices(
+                row,
+                duration_sec=duration_sec,
+                compact=False,
+                cache_window_count=cache_window_count,
+            )
+            if not frame_indices:
+                raise ValueError(
+                    f"视频 {video_path} 修正后的实际帧数为 {mismatch.decoded_frames}，"
+                    "不足以构建当前 K 窗口缓存。"
+                ) from mismatch
+            frames_all = decode_all_frames(video_path, require_open=True)
+            if len(frames_all) <= max(frame_indices):
+                raise RuntimeError(f"修正后的 manifest 仍请求不存在的帧：{video_path}") from mismatch
+            frames = frames_all[frame_indices]
+            fallback_reason = str(mismatch.seek_error)
+            _append_csv(
+                manifest_repair_audit_path,
+                {
+                    "manifest": manifest.relative_to(ROOT).as_posix(),
+                    "video_path": video_path,
+                    "manifest_num_frames": str(original_num_frames),
+                    "decoded_num_frames": str(mismatch.decoded_frames),
+                    "reason": str(mismatch.seek_error),
+                },
+                [
+                    "manifest",
+                    "video_path",
+                    "manifest_num_frames",
+                    "decoded_num_frames",
+                    "reason",
+                ],
+            )
+            print(
+                f"已按顺序解码帧数修正 manifest：{video_path} "
+                f"({original_num_frames} -> {mismatch.decoded_frames})",
+                flush=True,
+            )
         if fallback_reason is not None:
             _append_csv(
                 fallback_audit_path,
@@ -378,6 +494,9 @@ def main() -> None:
     fallback_audit_path = (
         cache_dir / "audit" / f"sequential_decode_fallbacks_shard{args.shard_index}.csv"
     )
+    manifest_repair_audit_path = (
+        cache_dir / "audit" / f"manifest_frame_count_repairs_shard{args.shard_index}.csv"
+    )
     completed = 0
     for manifest in manifests:
         missing_before = count_patch_cache_misses(
@@ -397,6 +516,7 @@ def main() -> None:
             shard_index=args.shard_index,
             shard_count=args.shard_count,
             fallback_audit_path=fallback_audit_path,
+            manifest_repair_audit_path=manifest_repair_audit_path,
         ):
             completed += 1
             if completed % 25 == 0:
