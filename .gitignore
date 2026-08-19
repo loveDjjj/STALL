@@ -1,174 +1,18 @@
-# Python bytecode / caches
+# Python 与工具生成文件
 __pycache__/
 *.py[codz]
-*$py.class
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.pyre/
-.pytype/
-.hypothesis/
-.nox/
-.tox/
-.coverage
-.coverage.*
-htmlcov/
-coverage.xml
-nosetests.xml
-*.cover
-*.py.cover
+.coverage*
 
-# Build / packaging
-.Python
-build/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtualenv / local envs
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.pdm-python
-.pdm-build/
-.pixi
-__pypackages__/
-
-# Notebook / editor / misc
+# 本地依赖、数据、特征缓存与运行产物
 .local_tools/
-.ipynb_checkpoints
-profile_default/
-ipython_config.py
-.spyderproject
-.spyproject
-.ropeproject
-.scrapy
-.pybuilder/
-target/
-docs/_build/
-site/
-cython_debug/
-*.log
-pip-log.txt
-pip-delete-this-directory.txt
-db.sqlite3
-db.sqlite3-journal
-instance/
-.webassets-cache
-local_settings.py
-
-# Local DINOv3 clone and weights
 dinov3/
-
-# Runtime data, datasets, caches, outputs
 datasets/
-cache/embeddings/
-cache/d3_frames/
-cache/patch_embeddings/
-cache/patch_embedding_shards_debug/
-cache/indexes/
-results/
-debug_outputs/
-logs/
+cache/
+results/runs/
 
-# Precomputed parameter assets remain local; registered release parameters live
-# under release/<release_id>/params/ instead.
-precomputed/*.npz
-!precomputed/stall_params_vatex_dino_v3.npz
-
-# Keep selected lightweight artifacts under version control
-!results/
-results/*
-!results/README.md
-!results/stall_repro_comparison.md
-!results/alpha_stalled_project_manuscript_zh.md
-!results/alpha_stalled_full_pipeline_flow_zh.svg
-!results/alpha_stalled_manuscript_tables/
-!results/alpha_stalled_manuscript_tables/*.svg
-!results/alpha_stalled_manuscript_tables/*.png
-!results/paper_scores/
-!results/paper_scores/*.csv
-!results/paper_tables/
-!results/paper_tables/*.csv
-!results/paper_tables/*.md
-!results/paper_sweeps/
-!results/paper_sweeps/**/*.csv
-!results/paper_sweeps/**/*.md
-!results/paper_sensitivity/
-!results/paper_sensitivity/**/*.csv
-!results/paper_sensitivity/**/*.md
-!results/paper_figures/
-!results/paper_figures/**/*.svg
-!results/paper_figures/**/*.png
-# Existing tracked journal artifacts remain available, but new experiment outputs
-# stay local until they are intentionally promoted into the compact summary.
-!results/research_summary/
-!results/research_summary/*.csv
-!results/research_summary/*.md
-!results/multi_order_baselines/
-!results/multi_order_baselines/*.csv
-!results/multi_order_baselines/*.md
-# Per-video baseline scores remain local; aggregate metrics stay versioned.
-results/multi_order_baselines/*per_video_scores.csv
-results/multi_order_baselines/per_video_scores.csv
-!results/local_residual/
-results/local_residual/*
-!results/local_residual/dataset_metrics.csv
-!results/local_residual/generator_metrics.csv
-!results/local_residual/bootstrap_deltas.csv
-!results/local_residual/common_mode_analysis.csv
-!results/local_residual/admission_summary.csv
-!results/unified_multiscale_layers/
-results/unified_multiscale_layers/*
-!results/unified_multiscale_layers/README.md
-!results/unified_multiscale_layers/admission_summary.csv
-!results/unified_multiscale_layers/focus_generator_metrics.csv
-!results/unified_multiscale_layers/layer_baseline_false_negatives.csv
-!results/unified_multiscale_layers/layer_bootstrap_deltas.csv
-!results/unified_multiscale_layers/layer_dataset_metrics.csv
-!results/unified_multiscale_layers/layer_generator_deltas.csv
-!results/unified_multiscale_layers/layer_generator_metrics.csv
-!results/unified_multiscale_layers/layer_motion_metrics.csv
-!results/unified_multiscale_layers/multiscale_baseline_false_negatives.csv
-!results/unified_multiscale_layers/multiscale_bootstrap_deltas.csv
-!results/unified_multiscale_layers/multiscale_dataset_metrics.csv
-!results/unified_multiscale_layers/multiscale_generator_deltas.csv
-!results/unified_multiscale_layers/multiscale_generator_metrics.csv
-!results/unified_multiscale_layers/multiscale_motion_metrics.csv
-!results/clean_universal/
-results/clean_universal/*
-!results/clean_universal/README.md
-!results/clean_universal/c2_gate_usage.csv
-!results/clean_universal/calibration_audit.csv
-!results/clean_universal/config_registry.csv
-!results/clean_universal/cross_layer_admission.csv
-!results/clean_universal/cross_layer_bootstrap_deltas.csv
-!results/clean_universal/cross_layer_dataset_metrics.csv
-!results/clean_universal/cross_layer_generator_deltas.csv
-!results/clean_universal/cross_layer_generator_metrics.csv
-!results/clean_universal/cross_layer_motion_metrics.csv
-!results/clean_universal/real_motion_thresholds.csv
-!results/clean_universal/universal_bootstrap_deltas.csv
-!results/clean_universal/universal_dataset_metrics.csv
-!results/clean_universal/universal_generator_deltas.csv
-!results/clean_universal/universal_generator_metrics.csv
-!results/clean_universal/numerical_audit/
-results/clean_universal/numerical_audit/*
-!results/clean_universal/numerical_audit/*.csv
+# 仅在正式冻结发布时纳入版本控制
+release/*
+!release/README.md

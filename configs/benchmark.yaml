@@ -1,0 +1,90 @@
+# 当前活跃 Alpha STALL 实验唯一可编辑的基础配置。
+# 所有 run_*.sh 只通过 --set 覆盖与实验直接相关的字段，绝不原地修改本文件。
+
+# 方法默认定义：默认运行我们的 Global+Local 方法；消融脚本只关闭或调整对应分支。
+method:
+  # 当前仓库只维护这一种方法后端。
+  name: alpha_stall
+  global:
+    # 是否使用我们方法中的 Global Spatial 与 Global T1 证据。
+    enabled: true
+    # Global Spatial 与 Global T1 的融合权重；两者之和应为 1。
+    spatial_weight: 0.5
+    temporal_weight: 0.5
+  local:
+    # 是否启用 Local 证据分支；Global-only 消融会关闭此项。
+    enabled: true
+    # 是否使用局部 patch 空间似然；M02 可单独关闭此项。
+    spatial_enabled: true
+    # 是否使用局部时序动态；关闭后 Local 只保留空间证据。
+    temporal_enabled: true
+    # 局部时序差分阶数：1 是 D1 消融，2 是默认 D2 方法。
+    temporal_order: 2
+    # Local Spatial 与 Local Temporal 的融合权重；两者之和应为 1。
+    spatial_weight: 0.1
+    temporal_weight: 0.9
+  fusion:
+    # 视频级 Global 与 Local 的最终融合权重；两者之和应为 1。
+    global_weight: 0.6
+    local_weight: 0.4
+
+# 统一采样协议。M03 只允许覆盖 num_windows，其他主实验保持默认值。
+sampling:
+  # 每个时间窗口覆盖的视频长度，单位为秒。
+  window_seconds: 2
+  # 每秒采样帧数；与 window_seconds 共同决定每窗口帧数。
+  fps: 8
+  # 每个窗口使用的互异帧数量。
+  frames_per_window: 16
+  # 每个视频的均匀时间窗口数；默认 K=3，M03 K=1 消融会覆盖为 1。
+  num_windows: 3
+  # 窗口在整段视频中的确定性分布策略。
+  strategy: uniform
+
+# 只使用目标域真实视频建立统计参数与经验 CDF，不使用评测集真实视频或生成视频。
+calibration:
+  # 每个数据集使用的真实校准视频数量；M04 会覆盖该值。
+  real_videos_per_dataset: 200
+  # 校准真实视频抽样种子；M04 会覆盖该值以测试稳定性。
+  seed: 17
+  # 强制校准 real 与 evaluation real 的视频身份无交集。
+  disjoint_from_evaluation: true
+  # 视频级重校准规则；须与实际有效窗口数 K 对齐。
+  video_level: effective_k_matched_empirical_cdf
+
+# 当前运行的数据范围与 manifest 根目录。外部实验只覆盖 datasets 字段。
+data:
+  # 默认开发集：ComGenVid、VideoFeedback、GenVideo。
+  datasets: [comgenvid, videofeedback, genvideo]
+  # 三个开发数据集的 calibration/evaluation manifest 所在目录。
+  development_manifests: data/manifests/development
+  # 外部数据集的 calibration/evaluation manifest 所在目录。
+  external_manifests: data/manifests/external
+  # 2 秒窗口不足时的处理。当前固定为 exclude，并在每个 run manifest 记录排除数量。
+  short_video_policy: exclude
+
+# 特征缓存与数值运行资源。完整缓存保存 8 FPS 下采样序列，主 runner 再从中选择 K 个窗口。
+runtime:
+  # 严格缓存根目录；不可与历史 legacy cache 混用。
+  cache_dir: cache/patch_embeddings_current_full_8fps
+  # 缓存验证模式；主实验固定 strict。
+  cache_policy: strict
+  # DINO 特征和高斯评分使用的计算设备。
+  device: cuda:0
+  # 主实验开始前要求目标 GPU 的最小空闲显存，防止与其他任务争抢显存。
+  minimum_free_gib: 12
+  # 每一类高斯白化最多采样的特征行数，控制显存和内存占用。
+  max_features_for_fit: 300000
+
+# 全部方法共享的评价口径；分数越高均表示更接近真实视频。
+metrics:
+  # 固定分数方向，避免不同方法在 AUC/AP 中被反向解释。
+  score_direction: higher_is_real
+  # AP 的正类定义。
+  positive_class: real
+  # 主表必报指标。
+  primary: [auc, ap_real]
+  # 附加运行点指标。
+  additional: [tpr_at_1pct_fpr]
+  # 视频级 paired bootstrap 的重复次数。
+  bootstrap_iterations: 1000
