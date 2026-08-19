@@ -7,4 +7,6 @@
 解释实验目的，并通过 `--set key=value` 覆盖该实验唯一需要改变的字段。每次运行
 都会把最终合并结果写入 `results/runs/<run-name>/resolved_config.yaml`。
 
-原文 STALL 的官方基线不使用本配置，也不在本仓库复现。
+主配置使用 `cache/patch_embeddings_k3_2s_8fps/`：每个视频只保存 K=3 的均匀 2 秒
+窗口并集，`K=1`、`K=2`、`K=3` 消融可共用，避免完整序列缓存占满磁盘。原文 STALL
+的官方基线不使用本配置，也不在本仓库复现。

@@ -142,6 +142,7 @@ def build_feature_cache_contract(
     cache_kind: str,
     frame_batch_size: int,
     video_batch_size: int,
+    frame_selection: Mapping[str, Any] | str = "external_native_frame_indices",
 ) -> dict[str, Any]:
     """Build the immutable root contract for a model-backed feature cache."""
 
@@ -199,7 +200,7 @@ def build_feature_cache_contract(
                 "normalization_std": [0.229, 0.224, 0.225],
             },
             "extraction": {
-                "frame_selection": "external_native_frame_indices",
+                "frame_selection": frame_selection,
                 "frame_grouping": "cross_video_flatten_then_split",
                 "frame_batch_size": frame_batch_size,
                 "video_batch_size": video_batch_size,
@@ -270,6 +271,23 @@ def validate_feature_cache_contract(contract: Mapping[str, Any]) -> str:
     for field in ("frame_batch_size", "video_batch_size"):
         if _nonnegative_integer(extraction[field], f"identity.extraction.{field}") == 0:
             raise ValueError(f"identity.extraction.{field} must be positive")
+    frame_selection = extraction["frame_selection"]
+    if isinstance(frame_selection, str):
+        _string(frame_selection, "identity.extraction.frame_selection")
+    elif isinstance(frame_selection, Mapping):
+        _required(
+            frame_selection,
+            ("mode", "window_count", "window_frames", "strategy", "deduplicate"),
+            "identity.extraction.frame_selection",
+        )
+        _string(frame_selection["mode"], "identity.extraction.frame_selection.mode")
+        _nonnegative_integer(frame_selection["window_count"], "identity.extraction.frame_selection.window_count")
+        _nonnegative_integer(frame_selection["window_frames"], "identity.extraction.frame_selection.window_frames")
+        _string(frame_selection["strategy"], "identity.extraction.frame_selection.strategy")
+        if not isinstance(frame_selection["deduplicate"], bool):
+            raise ValueError("identity.extraction.frame_selection.deduplicate 必须为布尔值")
+    else:
+        raise ValueError("identity.extraction.frame_selection 必须是字符串或对象")
     source_hashes = extraction["extractor_source_sha256"]
     if not isinstance(source_hashes, Mapping) or not source_hashes:
         raise ValueError("identity.extraction.extractor_source_sha256 must be an object")
@@ -387,6 +405,7 @@ def prepare_model_feature_cache(
     cache_kind: str,
     frame_batch_size: int,
     video_batch_size: int,
+    frame_selection: Mapping[str, Any] | str = "external_native_frame_indices",
     policy: str = "auto",
     create: bool = False,
 ) -> CacheContractContext:
@@ -405,6 +424,7 @@ def prepare_model_feature_cache(
         cache_kind=cache_kind,
         frame_batch_size=frame_batch_size,
         video_batch_size=video_batch_size,
+        frame_selection=frame_selection,
     )
     return prepare_feature_cache(
         root,

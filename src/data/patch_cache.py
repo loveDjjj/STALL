@@ -31,6 +31,7 @@ from .cache_contract import (
 )
 from .video import decode_indexed_frames, load_video_frames
 from .manifest import is_missing_window, load_manifest
+from .sampling import WINDOW_FRAMES, cached_uniform_frame_indices
 
 
 def _get_patch_cache_path(
@@ -46,17 +47,56 @@ def _get_patch_cache_path(
     return cache_root / subset / source_model / f"{stem}.pt"
 
 
+def cache_frame_indices(
+    row: pd.Series,
+    *,
+    duration_sec: int,
+    compact: bool,
+    cache_window_count: int | None,
+) -> list[int]:
+    """依据缓存模式返回当前视频必须保存的帧索引。"""
+
+    if compact and cache_window_count is not None:
+        raise ValueError("compact 缓存与多窗口缓存不能同时启用")
+    if compact:
+        value = row.get(f"{duration_sec}_sec_idxs")
+        return [] if is_missing_window(value) else json.loads(value)
+    downsample = json.loads(row["downsample_idxs"])
+    if cache_window_count is None:
+        return downsample
+    return cached_uniform_frame_indices(
+        downsample,
+        cache_window_count=cache_window_count,
+        window_frames=WINDOW_FRAMES,
+    )
+
+
+def cache_frame_selection_identity(cache_window_count: int | None) -> dict[str, object] | str:
+    """生成写入根级 contract 的帧选择协议。"""
+
+    if cache_window_count is None:
+        return "external_native_frame_indices"
+    if cache_window_count < 1:
+        raise ValueError("cache_window_count 必须是正整数")
+    return {
+        "mode": "uniform_window_union",
+        "window_count": cache_window_count,
+        "window_frames": WINDOW_FRAMES,
+        "strategy": "uniform",
+        "deduplicate": True,
+    }
+
+
 def count_patch_cache_misses(
     csv_path: str,
     patch_emb_cache_dir: str,
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    cache_window_count: int | None = None,
     cache_policy: str = "auto",
 ) -> int:
     df = load_manifest(csv_path)
-    window_col = f"{duration_sec}_sec_idxs"
-
     if debug_n is not None:
         df = (
             df.groupby(["subset", "source_model"], group_keys=False)
@@ -69,7 +109,12 @@ def count_patch_cache_misses(
     count = 0
     for _, row in df.iterrows():
         stem = Path(row["video_path"]).stem
-        if compact and is_missing_window(row.get(window_col)):
+        if not cache_frame_indices(
+            row,
+            duration_sec=duration_sec,
+            compact=compact,
+            cache_window_count=cache_window_count,
+        ):
             continue
         cache_path = _get_patch_cache_path(
             cache_root, row["subset"], row["source_model"], stem, duration_sec, compact
@@ -87,6 +132,7 @@ def prefill_patch_emb_cache(
     duration_sec: int = 2,
     debug_n: Optional[int] = None,
     compact: bool = False,
+    cache_window_count: int | None = None,
     num_workers: int = 4,
     video_batch: int = 8,
     cache_policy: str = "auto",
@@ -116,6 +162,7 @@ def prefill_patch_emb_cache(
         cache_kind="patch_embeddings",
         frame_batch_size=batch_size,
         video_batch_size=video_batch,
+        frame_selection=cache_frame_selection_identity(cache_window_count),
         policy=cache_policy,
         create=True,
     )
@@ -127,19 +174,20 @@ def prefill_patch_emb_cache(
         subset = row["subset"]
         source_model = row["source_model"]
 
-        if compact:
-            window_idxs_raw = row[window_col]
-            if is_missing_window(window_idxs_raw):
-                continue
-            frame_idxs_raw = window_idxs_raw
-        else:
-            frame_idxs_raw = row[idx_col]
+        frame_indices = cache_frame_indices(
+            row,
+            duration_sec=duration_sec,
+            compact=compact,
+            cache_window_count=cache_window_count,
+        )
+        if not frame_indices:
+            continue
 
         cache_path = _get_patch_cache_path(
             cache_root, subset, source_model, stem, duration_sec, compact
         )
         if not cache_entry_is_complete(cache_path, strict=cache_context.strict):
-            misses.append((video_path, json.loads(frame_idxs_raw), cache_path))
+            misses.append((video_path, frame_indices, cache_path))
 
     if not misses:
         return

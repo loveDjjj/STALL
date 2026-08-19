@@ -63,10 +63,12 @@ data:
   # 2 秒窗口不足时的处理。当前固定为 exclude，并在每个 run manifest 记录排除数量。
   short_video_policy: exclude
 
-# 特征缓存与数值运行资源。完整缓存保存 8 FPS 下采样序列，主 runner 再从中选择 K 个窗口。
+# 特征缓存与数值运行资源。缓存保存 K=3 均匀窗口并集，避免保存不参与主实验的帧。
 runtime:
   # 严格缓存根目录；不可与历史 legacy cache 混用。
-  cache_dir: cache/patch_embeddings_current_full_8fps
+  cache_dir: cache/patch_embeddings_k3_2s_8fps
+  # 缓存覆盖的最大均匀窗口数；K=1/K=2/K=3 均可直接复用该缓存。
+  cache_window_count: 3
   # 缓存验证模式；主实验固定 strict。
   cache_policy: strict
   # DINO 特征和高斯评分使用的计算设备。

@@ -55,6 +55,34 @@ def uniform_windows(
     return deduplicate_windows(windows)
 
 
+def cached_uniform_frame_indices(
+    downsample_indices: list[int],
+    cache_window_count: int,
+    window_frames: int = WINDOW_FRAMES,
+) -> list[int]:
+    """返回支撑 ``K<=cache_window_count`` 所需的去重缓存帧索引。
+
+    缓存只保存首、中、末等均匀窗口的并集，不再保存整段下采样序列。返回值
+    保留原始时间顺序，可被评分阶段直接索引并由严格元数据校验。
+    """
+
+    if cache_window_count < 1:
+        raise ValueError("cache_window_count 必须是正整数")
+    windows = uniform_windows(
+        downsample_indices,
+        requested_k=cache_window_count,
+        window_frames=window_frames,
+    )
+    selected: list[int] = []
+    seen: set[int] = set()
+    for window in windows:
+        for index in window:
+            if index not in seen:
+                seen.add(index)
+                selected.append(index)
+    return selected
+
+
 def nonoverlap_windows(
     downsample_indices: list[int],
     window_frames: int = WINDOW_FRAMES,

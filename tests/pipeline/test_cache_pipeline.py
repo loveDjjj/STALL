@@ -21,6 +21,7 @@ if str(SRC) not in sys.path:
 
 from config import load_config
 from data.cache_contract import CacheContractContext
+from data.sampling import cached_uniform_frame_indices, uniform_windows
 _PIPELINE_SPEC = importlib.util.spec_from_file_location("alpha_stall_pipeline", SRC / "pipeline.py")
 assert _PIPELINE_SPEC is not None and _PIPELINE_SPEC.loader is not None
 _PIPELINE = importlib.util.module_from_spec(_PIPELINE_SPEC)
@@ -49,6 +50,14 @@ class CachePipelineTests(unittest.TestCase):
             }
             for index, label in enumerate(labels)
         ]
+
+    def test_k3_cache_union_covers_all_k1_to_k3_windows(self) -> None:
+        downsample = list(range(64))
+        cached = set(cached_uniform_frame_indices(downsample, cache_window_count=3))
+        self.assertEqual(len(cached), 48)
+        for requested_k in (1, 2, 3):
+            for window in uniform_windows(downsample, requested_k=requested_k):
+                self.assertTrue(set(window).issubset(cached))
 
     def test_full_pipeline_uses_calibration_only_and_k3_windows(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

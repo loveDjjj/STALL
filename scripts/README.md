@@ -8,7 +8,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_experiment.py` | 唯一 Python runner；合并 `--set` 覆盖并写入运行产物 |
 | `build_manifest.py` | 从原始视频目录生成包含采样帧索引的 manifest |
 | `rebuild_patch_cache.py` | 审计并分批、可续跑地构建严格 DINOv3 Global+patch 缓存 |
-| `run_cache_rebuild.sh` | 使用 `stall` 环境启动当前全部 manifest 的完整 8 FPS 缓存重建 |
+| `run_cache_rebuild.sh` | 使用 `stall` 环境启动当前全部 manifest 的 K=3 均匀窗口缓存重建 |
 | `wait_for_cache_gpu.sh` | 等待 GPU 0 空闲达到阈值后安全启动缓存重建 |
 | `run_alpha_stall.sh` | Alpha STALL 默认方法 |
 | `run_ablation.sh` | 结构与时间覆盖消融 |
@@ -21,7 +21,7 @@ runner 从严格缓存执行完整主方法，导入已有外部方法分数时�
 每次运行都会在 `results/runs/<run-name>/` 保存
 `resolved_config.yaml` 和 `run_manifest.json`。
 
-缓存重建默认写入 `cache/patch_embeddings_current_full_8fps/`，不会复用旧的
+缓存重建默认写入 `cache/patch_embeddings_k3_2s_8fps/`，不会复用旧的
 `cache/patch_embeddings/`。执行前可使用：
 
 ```bash
@@ -29,10 +29,10 @@ bash scripts/run_cache_rebuild.sh --audit-only
 ```
 
 确认显存空闲后再实际启动。缺少 `2_sec_idxs` 的短视频会写入
-`cache/patch_embeddings_current_full_8fps/audit/short_or_ineligible_videos.csv`；它们不
-会被伪装成缓存失败；完整序列仍会缓存，主实验由 `data.short_video_policy` 明确决定
-是否允许评分时排除。
-该缓存保存完整下采样序列；主 runner 会从中按配置选择 K 个 2 秒窗口。
+`cache/patch_embeddings_k3_2s_8fps/audit/short_or_ineligible_videos.csv`；它们不会被
+伪装成缓存失败，也不会写入不能参与 2 秒评测的特征。缓存只保存 K=3 的首、中、末
+均匀窗口帧并去重，因此 K=1/K=2/K=3 均可复用同一严格缓存；超过 K=3 的配置会被
+runner 明确拒绝。
 
 原文 STALL 不在本仓库运行。请使用官方仓库完成基线推理，再把其标准化逐视频分数
 作为外部结果交给论文汇总流程。

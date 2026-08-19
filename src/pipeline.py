@@ -14,7 +14,7 @@ from branches.global_branch import GLOBAL_SPATIAL_AGGREGATION, GLOBAL_TEMPORAL_A
 from branches.local_branch import LOCAL_AGGREGATION, local_d1_features, local_d2_features
 from data.cache_contract import prepare_feature_cache, tensor_descriptor, validate_cache_entry
 from data.manifest import load_manifest
-from data.patch_cache import _get_patch_cache_path
+from data.patch_cache import _get_patch_cache_path, cache_frame_indices
 from data.sampling import parse_indices, uniform_windows
 from math_utils import StableGaussianParams, WhiteningTransform, score_gaussian_aggregate_float64, stable_sorted
 
@@ -81,8 +81,25 @@ def _apply_short_video_policy(frame: pd.DataFrame, dataset: str, split: str, pol
     return frame[usable].reset_index(drop=True), unavailable
 
 
+def _cache_window_count(context) -> int | None:
+    """从根级 contract 读取多窗口缓存协议。"""
+
+    contract = context.contract or {}
+    selection = contract.get("identity", {}).get("extraction", {}).get("frame_selection")
+    if not isinstance(selection, dict):
+        return None
+    if selection.get("mode") != "uniform_window_union":
+        raise ValueError("不支持的严格缓存帧选择协议")
+    count = selection.get("window_count")
+    if not isinstance(count, int) or count < 1:
+        raise ValueError("严格缓存缺少有效的 window_count")
+    if selection.get("window_frames") != 16 or selection.get("strategy") != "uniform":
+        raise ValueError("严格缓存窗口协议与当前 Alpha STALL 采样不兼容")
+    return count
+
+
 def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series, context) -> dict:
-    """读取并逐条验证完整下采样缓存。"""
+    """读取并逐条验证完整或多窗口严格缓存。"""
 
     stem = Path(str(row["video_path"])).stem
     cache_path = _get_patch_cache_path(
@@ -91,7 +108,12 @@ def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series,
     if not cache_path.is_file():
         raise FileNotFoundError(f"严格缓存缺失：{cache_path}")
     payload = torch.load(cache_path, weights_only=True)
-    indices = parse_indices(row["downsample_idxs"])
+    indices = cache_frame_indices(
+        row,
+        duration_sec=2,
+        compact=False,
+        cache_window_count=_cache_window_count(context),
+    )
     validate_cache_entry(
         context,
         cache_path=cache_path,
@@ -322,6 +344,12 @@ def run_from_cache(repository_root: Path, config: dict) -> tuple[pd.DataFrame, p
     runtime = config["runtime"]
     cache_root = repository_root / runtime["cache_dir"]
     context = prepare_feature_cache(cache_root, expected_contract=None, policy="strict", create=False, required_cache_kind="patch_embeddings")
+    cached_window_count = _cache_window_count(context)
+    if cached_window_count is not None and int(config["sampling"]["num_windows"]) > cached_window_count:
+        raise ValueError(
+            f"请求 K={config['sampling']['num_windows']}，但严格缓存只覆盖 K<={cached_window_count}；"
+            "请使用兼容配置或重建缓存。"
+        )
     device = str(runtime["device"])
     if device.startswith("cuda") and not torch.cuda.is_available():
         raise RuntimeError("配置请求 CUDA，但 PyTorch 未检测到 CUDA")

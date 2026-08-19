@@ -3,7 +3,7 @@
 
 此脚本只处理 manifest 中的样本，并使用严格 cache contract 写入根级和
 逐文件元数据。它可以重复执行：已验证完整的条目会跳过，未完成条目继续构建。
-默认保存 8 FPS 的完整下采样序列；主 runner 据此确定性选择 K=1/K=3 窗口。
+默认保存支撑 K=1/K=2/K=3 的 2 秒均匀窗口并集；主 runner 不再依赖完整下采样序列。
 """
 
 from __future__ import annotations
@@ -142,10 +142,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--cache-dir",
         type=Path,
-        default=ROOT / "cache/patch_embeddings_current_full_8fps",
-        help="新的严格完整序列缓存根目录，绝不应指向 legacy patch_embeddings。",
+        default=ROOT / "cache/patch_embeddings_k3_2s_8fps",
+        help="严格 K 窗口缓存根目录，绝不应指向 legacy patch_embeddings 或完整序列缓存。",
     )
     parser.add_argument("--duration-sec", type=int, default=2, choices=(1, 2, 3, 4))
+    parser.add_argument(
+        "--cache-window-count",
+        type=int,
+        default=3,
+        help="每视频缓存的均匀窗口数；默认 K=3，同时覆盖 K=1/K=2 评分。",
+    )
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--frame-batch-size", type=int, default=8)
     parser.add_argument("--video-batch-size", type=int, default=1)
@@ -167,8 +173,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    if args.frame_batch_size < 1 or args.video_batch_size < 1 or args.decode_workers < 1:
-        raise ValueError("batch size 和 decode workers 必须为正整数")
+    if min(args.frame_batch_size, args.video_batch_size, args.decode_workers, args.cache_window_count) < 1:
+        raise ValueError("batch size、decode workers 和 cache_window_count 必须为正整数")
     manifests = [_resolve_path(value) for value in args.manifest] if args.manifest else list(DEFAULT_MANIFESTS)
     manifests = [path.resolve() for path in manifests]
     if len(set(manifests)) != len(manifests):
@@ -218,7 +224,7 @@ def main() -> None:
     for manifest in manifests:
         missing_before = count_patch_cache_misses(
             str(manifest), str(cache_dir), duration_sec=args.duration_sec,
-            compact=False, cache_policy="strict",
+            compact=False, cache_window_count=args.cache_window_count, cache_policy="strict",
         )
         print(f"构建 {manifest.relative_to(ROOT)}：待处理 {missing_before} 条", flush=True)
         for video_path in prefill_patch_emb_cache(
@@ -228,6 +234,7 @@ def main() -> None:
             batch_size=args.frame_batch_size,
             duration_sec=args.duration_sec,
             compact=False,
+            cache_window_count=args.cache_window_count,
             num_workers=args.decode_workers,
             video_batch=args.video_batch_size,
             cache_policy="strict",
@@ -237,7 +244,7 @@ def main() -> None:
                 print(f"已完成 {completed} 条，最近视频：{video_path}", flush=True)
         missing_after = count_patch_cache_misses(
             str(manifest), str(cache_dir), duration_sec=args.duration_sec,
-            compact=False, cache_policy="strict",
+            compact=False, cache_window_count=args.cache_window_count, cache_policy="strict",
         )
         if missing_after:
             raise RuntimeError(f"{manifest} 构建后仍缺少 {missing_after} 条严格缓存")
