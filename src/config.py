@@ -62,8 +62,6 @@ def validate_config(config: dict[str, Any]) -> None:
     method = config["method"]
     if method.get("name") != "alpha_stall":
         raise ValueError("method.name 只能是 alpha_stall")
-    if method.get("covariance_estimator") not in {"empirical", "oas"}:
-        raise ValueError("method.covariance_estimator 只能是 empirical 或 oas")
     windows = config["sampling"].get("num_windows")
     if not isinstance(windows, int) or windows < 1:
         raise ValueError("sampling.num_windows 必须是正整数")
@@ -74,6 +72,16 @@ def validate_config(config: dict[str, Any]) -> None:
     if local.get("enabled", False) and local.get("temporal_enabled", False):
         if local.get("temporal_order") not in {1, 2}:
             raise ValueError("method.local.temporal_order 只能是 1 或 2")
+    if local.get("covariance_estimator") not in {"empirical", "oas"}:
+        raise ValueError("method.local.covariance_estimator 只能是 empirical 或 oas")
+    if global_branch.get("enabled", False):
+        if global_branch.get("parameter_source") != "official_vatex":
+            raise ValueError("method.global.parameter_source 必须是 official_vatex")
+        if not isinstance(global_branch.get("parameters"), str) or not global_branch["parameters"]:
+            raise ValueError("method.global.parameters 必须是官方 VATEX 参数文件路径")
+        digest = global_branch.get("parameters_sha256")
+        if not isinstance(digest, str) or len(digest) != 64:
+            raise ValueError("method.global.parameters_sha256 必须是 64 位 SHA256")
     if config["calibration"].get("real_videos_per_dataset", 0) < 1:
         raise ValueError("calibration.real_videos_per_dataset 必须为正数")
     if config["data"].get("short_video_policy") not in {"error", "exclude"}:

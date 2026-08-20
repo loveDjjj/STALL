@@ -14,14 +14,24 @@ import numpy as np
 import pandas as pd
 import torch
 
-from branches.global_branch import GLOBAL_SPATIAL_AGGREGATION, GLOBAL_TEMPORAL_AGGREGATION
+from branches.global_branch import (
+    GLOBAL_SPATIAL_AGGREGATION,
+    GLOBAL_TEMPORAL_AGGREGATION,
+    load_official_stall_parameters,
+)
 from branches.local_branch import LOCAL_AGGREGATION, local_d1_features, local_d2_features
 from data.cache_contract import prepare_feature_cache, tensor_descriptor, validate_cache_entry
 from data.manifest import load_manifest
 from data.patch_cache import _get_patch_cache_path, cache_frame_indices
 from data.packed_cache import PackedCacheReader
 from data.sampling import parse_indices, uniform_windows
-from math_utils import StableGaussianParams, WhiteningTransform, score_gaussian_aggregate_float64, stable_sorted
+from math_utils import (
+    StableGaussianParams,
+    WhiteningTransform,
+    l2_normalized_first_order,
+    score_gaussian_aggregate_float64,
+    stable_sorted,
+)
 
 
 COMPONENTS = ("global_spatial", "global_t1", "patch_spatial", "patch_temporal")
@@ -200,13 +210,15 @@ def _fit_parameter(
     )
 
 
-def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], config: dict, device: str) -> dict[str, StableGaussianParams]:
+def _fit_local_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], config: dict, device: str) -> dict[str, StableGaussianParams]:
+    """仅用目标域互斥真实视频拟合 Alpha STALL 的 Local 参数。"""
+
     method = config["method"]
-    covariance_estimator = str(method["covariance_estimator"])
+    covariance_estimator = str(method["local"]["covariance_estimator"])
     limit = int(config["runtime"]["max_features_for_fit"])
     if limit < 2:
         raise ValueError("runtime.max_features_for_fit 必须至少为 2")
-    needed = {"global_spatial", "global_t1"} if method["global"]["enabled"] else set()
+    needed: set[str] = set()
     if method["local"]["enabled"]:
         if method["local"]["spatial_enabled"]:
             needed.add("patch_spatial")
@@ -216,11 +228,8 @@ def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], co
     seen = {key: 0 for key in needed}
     rng = np.random.default_rng(int(config["calibration"]["seed"]))
     order = int(method["local"]["temporal_order"])
-    for global_values, patch_values in calibration_windows:
+    for _global_values, patch_values in calibration_windows:
         items: dict[str, np.ndarray] = {}
-        if "global_spatial" in needed:
-            items["global_spatial"] = global_values
-            items["global_t1"] = _temporal_global(global_values)
         if "patch_spatial" in needed:
             items["patch_spatial"] = patch_values
         if "patch_temporal" in needed:
@@ -234,6 +243,24 @@ def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], co
         for name, values in reservoirs.items()
         if values is not None and seen[name] >= 2
     }
+
+
+def _load_global_parameters(repository_root: Path, config: dict) -> dict[str, StableGaussianParams]:
+    """加载并校验严格继承原始 STALL 的独立 VATEX Global 参数。"""
+
+    global_config = config["method"]["global"]
+    if not global_config["enabled"]:
+        return {}
+    parameter_path = repository_root / str(global_config["parameters"])
+    if not parameter_path.is_file():
+        raise FileNotFoundError(f"官方 STALL VATEX 参数文件不存在：{parameter_path}")
+    digest = hashlib.sha256(parameter_path.read_bytes()).hexdigest()
+    if digest != str(global_config["parameters_sha256"]):
+        raise ValueError(
+            "官方 STALL VATEX 参数 SHA256 不匹配："
+            f"期望 {global_config['parameters_sha256']}，实际 {digest}"
+        )
+    return load_official_stall_parameters(parameter_path)
 
 
 def _score_windows(
@@ -289,9 +316,16 @@ def _score_windows(
             patch_values = np.stack([item[2] for item in batch_windows])
             scores: dict[str, np.ndarray] = {}
             if method["global"]["enabled"]:
-                scores["global_spatial_raw"], _ = score_gaussian_aggregate_float64(global_values, parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION, device=device, compute_percentile=False)
-                global_temporal = torch.nn.functional.normalize(torch.from_numpy(global_values[:, 1:] - global_values[:, :-1]), p=2, dim=-1, eps=1e-12).numpy()
-                scores["global_t1_raw"], _ = score_gaussian_aggregate_float64(global_temporal, parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION, device=device, compute_percentile=False)
+                scores["global_spatial_raw"], scores["global_spatial"] = score_gaussian_aggregate_float64(
+                    global_values, parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION, device=device
+                )
+                global_temporal, global_zero_mask = l2_normalized_first_order(
+                    torch.from_numpy(global_values)
+                )
+                scores["global_t1_raw"], scores["global_t1"] = score_gaussian_aggregate_float64(
+                    global_temporal, parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION,
+                    device=device, invalid_mask=global_zero_mask,
+                )
             patch_tensor = torch.from_numpy(patch_values)
             if method["local"]["enabled"] and method["local"]["spatial_enabled"]:
                 scores["patch_spatial_raw"], _ = score_gaussian_aggregate_float64(patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
@@ -443,8 +477,6 @@ def _calibrate_and_aggregate(calibration: pd.DataFrame, evaluation: pd.DataFrame
     calibration = calibration.copy()
     evaluation = evaluation.copy()
     active_raw = []
-    if method["global"]["enabled"]:
-        active_raw += ["global_spatial_raw", "global_t1_raw"]
     if method["local"]["enabled"] and method["local"]["spatial_enabled"]:
         active_raw.append("patch_spatial_raw")
     if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
@@ -564,8 +596,9 @@ def run_from_cache(
             if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
                 report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
         if report:
-            report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] 拟合 Global/Local 高斯参数"})
-        parameters = _fit_parameters(calibration_windows_features, config, devices[0])
+            report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] 拟合 Local 高斯参数；Global 固定加载官方 VATEX 参数"})
+        parameters = _load_global_parameters(repository_root, config)
+        parameters.update(_fit_local_parameters(calibration_windows_features, config, devices[0]))
         if report:
             report({"current_dataset": dataset, "phase": "calibration_score", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 评分校准窗口"})
         calibration_started = monotonic()

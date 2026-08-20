@@ -5,18 +5,22 @@
 method:
   # 当前仓库只维护这一种方法后端。
   name: alpha_stall
-  # 高维真实特征的协方差估计。oas 会数据驱动地收缩病态尾部方向，避免经验协方差
-  # 将微小特征值过度放大并造成评测集 CDF 下界饱和；empirical 仅用于复核旧实现。
-  covariance_estimator: oas
   global:
-    # 是否使用我们方法中的 Global Spatial 与 Global T1 证据。
+    # 是否使用严格继承官方 STALL 的 Global Spatial 与 Global T1 证据。
     enabled: true
+    # Global 固定加载官方发布的独立 VATEX 白化与 CDF 参数，不得用目标数据集重拟合。
+    parameter_source: official_vatex
+    parameters: precomputed/stall_params_vatex_dino_v3.npz
+    # 官方参数文件的内容校验值，防止误用自建或历史实验参数。
+    parameters_sha256: beede546ca4385242c2a26075b8087ab51bee709549fc4ddc79d0eef5acce240
     # Global Spatial 与 Global T1 的融合权重；两者之和应为 1。
     spatial_weight: 0.5
     temporal_weight: 0.5
   local:
     # 是否启用 Local 证据分支；Global-only 消融会关闭此项。
     enabled: true
+    # Local 仅由目标域互斥真实校准视频拟合；默认经验协方差与锁定方案一致。
+    covariance_estimator: empirical
     # 是否使用局部 patch 空间似然；M02 可单独关闭此项。
     spatial_enabled: true
     # 是否使用局部时序动态；关闭后 Local 只保留空间证据。

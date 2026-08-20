@@ -145,6 +145,9 @@ class CachePipelineTests(unittest.TestCase):
                 "short_video_policy": "error",
             }
             config["calibration"]["real_videos_per_dataset"] = 4
+            # 该测试故意使用 3 维伪特征，只验证 Local 数据流；官方 VATEX
+            # Global 参数固定为 1024 维，另由专门的一致性测试覆盖。
+            config["method"]["global"]["enabled"] = False
             config["metrics"]["bootstrap_iterations"] = 4
             config["runtime"] = {
                 "cache_dir": "cache/mock",
@@ -195,6 +198,11 @@ class CachePipelineTests(unittest.TestCase):
             {**common, "video_id": "r1", "video_path": "mock/eval_real.mp4", "global_spatial_raw": 0.3, "global_t1_raw": 0.3, "patch_temporal_raw": 0.4},
             {**common, "video_id": "f1", "subset": "annotated", "source_model": "fake_source", "video_path": "mock/eval_fake.mp4", "global_spatial_raw": -0.3, "global_t1_raw": -0.2, "patch_temporal_raw": -0.1},
         ])
+        # Global 的窗口 CDF 已由官方 VATEX 参数在评分阶段生成；这里直接提供
+        # 已校准列，以便本测试只覆盖视频级聚合的分支开关。
+        for frame in (calibration, evaluation):
+            frame["global_spatial"] = frame["global_spatial_raw"]
+            frame["global_t1"] = frame["global_t1_raw"]
         for global_enabled, local_enabled in ((True, False), (False, True)):
             config = __import__("copy").deepcopy(base)
             config["method"]["global"]["enabled"] = global_enabled
@@ -221,6 +229,9 @@ class CachePipelineTests(unittest.TestCase):
             {**records[0], "video_id": "r1", "video_path": "mock/r1.mp4"},
             *[{**records[index], "video_id": "f1", "subset": "annotated", "source_model": "fake_source", "video_path": "mock/f1.mp4"} for index in range(3)],
         ])
+        for frame in (calibration, evaluation):
+            frame["global_spatial"] = frame["global_spatial_raw"]
+            frame["global_t1"] = frame["global_t1_raw"]
         _, videos = calibrate_and_aggregate(calibration, evaluation, config)
         self.assertEqual(set(videos["effective_k"]), {1, 3})
         self.assertTrue(np.isfinite(videos["final_score"]).all())
