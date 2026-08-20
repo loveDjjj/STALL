@@ -62,6 +62,8 @@ def validate_config(config: dict[str, Any]) -> None:
     method = config["method"]
     if method.get("name") != "alpha_stall":
         raise ValueError("method.name 只能是 alpha_stall")
+    if method.get("covariance_estimator") not in {"empirical", "oas"}:
+        raise ValueError("method.covariance_estimator 只能是 empirical 或 oas")
     windows = config["sampling"].get("num_windows")
     if not isinstance(windows, int) or windows < 1:
         raise ValueError("sampling.num_windows 必须是正整数")

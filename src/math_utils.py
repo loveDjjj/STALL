@@ -44,6 +44,7 @@ class WhiteningTransform:
         data: np.ndarray | torch.Tensor,
         n_components: int | None = None,
         device: str | torch.device | None = None,
+        covariance_estimator: str = "empirical",
     ):
         """拟合 PCA 白化；调用方可显式指定设备以避免隐式占用 CUDA。"""
 
@@ -57,13 +58,21 @@ class WhiteningTransform:
         )
         if values.ndim != 2 or len(values) < 2:
             raise ValueError("白化拟合需要至少两条二维特征")
+        if covariance_estimator not in {"empirical", "oas"}:
+            raise ValueError("covariance_estimator 只能是 empirical 或 oas")
         self.n_components = n_components
+        self.covariance_estimator = covariance_estimator
         self._fit(values)
 
     def _fit(self, values: torch.Tensor) -> None:
         self.mean_ = values.mean(dim=0)
         centered = values - self.mean_
-        eigenvalues, eigenvectors = torch.linalg.eigh(torch.cov(centered.T))
+        if self.covariance_estimator == "empirical":
+            covariance = torch.cov(centered.T)
+            self.shrinkage_ = 0.0
+        else:
+            covariance, self.shrinkage_ = self._oas_covariance(centered)
+        eigenvalues, eigenvectors = torch.linalg.eigh(covariance)
         order = torch.argsort(eigenvalues, descending=True)
         eigenvalues, eigenvectors = eigenvalues[order], eigenvectors[:, order]
         rank = min(len(values) - 1, values.shape[1])
@@ -80,6 +89,32 @@ class WhiteningTransform:
         self.whitening_matrix_ = self.eigenvectors_ @ torch.diag(
             1.0 / torch.sqrt(self.eigenvalues_ + 1e-5)
         )
+
+    @staticmethod
+    def _oas_covariance(centered: torch.Tensor) -> tuple[torch.Tensor, float]:
+        """计算 OAS 收缩协方差，公式与 sklearn 的实现一致。
+
+        使用极大似然协方差 ``1/n``，随后向 ``trace(S)/p * I`` 收缩。与仅对
+        特征值加极小常数相比，OAS 会根据样本数和维度主动抑制高维尾部噪声方向。
+        """
+
+        samples, dimensions = centered.shape
+        covariance = centered.T @ centered / float(samples)
+        if dimensions == 1:
+            return covariance, 0.0
+        mean_variance = torch.trace(covariance) / float(dimensions)
+        alpha = torch.mean(covariance.square())
+        numerator = alpha + mean_variance.square()
+        denominator = (samples + 1.0) * (
+            alpha - mean_variance.square() / float(dimensions)
+        )
+        if float(denominator.detach().cpu()) <= 0.0:
+            shrinkage = 1.0
+        else:
+            shrinkage = min(float((numerator / denominator).detach().cpu()), 1.0)
+        covariance = (1.0 - shrinkage) * covariance
+        covariance.diagonal().add_(shrinkage * mean_variance)
+        return covariance, shrinkage
 
     def transform(self, values: np.ndarray | torch.Tensor) -> torch.Tensor:
         tensor = torch.as_tensor(values, dtype=torch.float32, device=self.mean_.device)

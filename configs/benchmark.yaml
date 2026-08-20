@@ -5,6 +5,9 @@
 method:
   # 当前仓库只维护这一种方法后端。
   name: alpha_stall
+  # 高维真实特征的协方差估计。oas 会数据驱动地收缩病态尾部方向，避免经验协方差
+  # 将微小特征值过度放大并造成评测集 CDF 下界饱和；empirical 仅用于复核旧实现。
+  covariance_estimator: oas
   global:
     # 是否使用我们方法中的 Global Spatial 与 Global T1 证据。
     enabled: true

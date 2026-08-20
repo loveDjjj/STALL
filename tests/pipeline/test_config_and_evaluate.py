@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +17,7 @@ if str(SRC) not in sys.path:
 
 from config import apply_overrides, load_config, validate_config
 from evaluation.tables import build_metric_tables, normalize_scores
+from math_utils import WhiteningTransform
 
 
 class ConfigAndEvaluateTests(unittest.TestCase):
@@ -46,6 +48,18 @@ class ConfigAndEvaluateTests(unittest.TestCase):
         )
         self.assertEqual(config["method"]["local"]["temporal_order"], 1)
         self.assertEqual(config["sampling"]["num_windows"], 1)
+
+    def test_oas_whitening_regularizes_ill_conditioned_covariance(self) -> None:
+        rng = np.random.default_rng(23)
+        shared = rng.normal(size=(128, 1))
+        # 后三维几乎重复，经验协方差会产生非常小的特征值。
+        values = np.concatenate(
+            [shared, shared + rng.normal(scale=1e-6, size=(128, 3))], axis=1
+        ).astype(np.float32)
+        empirical = WhiteningTransform(values, device="cpu")
+        oas = WhiteningTransform(values, device="cpu", covariance_estimator="oas")
+        self.assertGreater(oas.shrinkage_, 0.0)
+        self.assertGreater(float(oas.eigenvalues_.min()), float(empirical.eigenvalues_.min()))
 
     def test_standard_score_csv_produces_dataset_and_generator_tables(self) -> None:
         scores = normalize_scores(

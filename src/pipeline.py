@@ -178,8 +178,12 @@ def _reservoir_add(reservoir: np.ndarray | None, values: np.ndarray, limit: int,
     return reservoir, seen
 
 
-def _fit_parameter(features: np.ndarray, device: str) -> StableGaussianParams:
-    transform = WhiteningTransform(features, device=device)
+def _fit_parameter(
+    features: np.ndarray, device: str, covariance_estimator: str
+) -> StableGaussianParams:
+    transform = WhiteningTransform(
+        features, device=device, covariance_estimator=covariance_estimator
+    )
     return StableGaussianParams(
         mean=transform.mean_.detach().cpu().numpy().astype(np.float64),
         whitening=transform.whitening_matrix_.detach().cpu().numpy().astype(np.float64),
@@ -189,6 +193,7 @@ def _fit_parameter(features: np.ndarray, device: str) -> StableGaussianParams:
 
 def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], config: dict, device: str) -> dict[str, StableGaussianParams]:
     method = config["method"]
+    covariance_estimator = str(method["covariance_estimator"])
     limit = int(config["runtime"]["max_features_for_fit"])
     if limit < 2:
         raise ValueError("runtime.max_features_for_fit 必须至少为 2")
@@ -214,7 +219,9 @@ def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], co
         for name, values in items.items():
             reservoirs[name], seen[name] = _reservoir_add(reservoirs[name], values, limit, seen[name], rng)
     return {
-        name: _fit_parameter(values[: min(limit, seen[name])], device)
+        name: _fit_parameter(
+            values[: min(limit, seen[name])], device, covariance_estimator
+        )
         for name, values in reservoirs.items()
         if values is not None and seen[name] >= 2
     }
