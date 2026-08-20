@@ -306,9 +306,16 @@ def _score_rows_worker(
 ) -> pd.DataFrame:
     """独立 CUDA 进程的评测分片入口；必须保持模块级以支持 spawn。"""
 
+    # 每个 worker 最多发约 100 次进度。batch 大小未必整除该步长，必须按“跨过步长”而非
+    # “恰好整除”判断，否则运行正常时 progress.json 也可能长期停在 0%。
+    report_stride = max(1, len(rows) // 100)
+    last_reported = 0
+
     def worker_report(done: int, total: int) -> None:
-        if progress_queue is not None and (done == total or done % max(1, total // 100) == 0):
+        nonlocal last_reported
+        if progress_queue is not None and (done == total or done - last_reported >= report_stride):
             progress_queue.put((device, done, total))
+            last_reported = done
 
     return _score_windows(
         Path(repository_root), rows, Path(cache_root), context, dataset, config,
