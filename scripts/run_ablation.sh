@@ -3,7 +3,7 @@ set -euo pipefail
 
 # 我们方法的结构与时间覆盖消融：每个 variant 仅改变下方明确列出的基础配置字段。
 # 可透传：--dry-run、--overwrite、--set runtime.device=cuda:1、
-# --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=4。
+# --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=1。
 # 用法示例：bash scripts/run_ablation.sh local_d1 --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ $# -lt 1 ]]; then

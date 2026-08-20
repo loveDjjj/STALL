@@ -3,7 +3,7 @@ set -euo pipefail
 
 # 外部泛化实验：保持检测器配置冻结，仅切换指定外部数据集及其真实校准数据。
 # 可透传：--dry-run、--overwrite、--set runtime.device=cuda:1、
-# --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=4。
+# --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=1。
 # 用法示例：bash scripts/run_external.sh genvidbench --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATASET="${1:?usage: run_external.sh <dataset-id> [runner args]}"
