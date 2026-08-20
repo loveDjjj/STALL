@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import multiprocessing
-from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, as_completed, wait
 from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic
@@ -132,6 +132,15 @@ def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series,
         if metadata["frame_indices"] != indices or metadata["payload"] != descriptor:
             raise ValueError("packed cache 条目与当前 manifest 或 payload 不一致")
     return payload
+
+
+def _cache_key(cache_root: Path, row: pd.Series) -> str:
+    """计算严格缓存键；集中定义以保证 shard 调度与常规读取完全一致。"""
+
+    stem = Path(str(row["video_path"])).stem
+    return _get_patch_cache_path(
+        cache_root, str(row["subset"]), str(row["source_model"]), stem, 2, False
+    ).relative_to(cache_root).as_posix()
 
 
 def _window_features(payload: dict, row: pd.Series, requested_k: int) -> list[tuple[np.ndarray, np.ndarray]]:
@@ -300,6 +309,138 @@ def _score_windows(
     return pd.DataFrame(records)
 
 
+def _score_payload_batch(
+    payload_rows: list[tuple[int, pd.Series, dict]],
+    dataset: str,
+    config: dict,
+    parameters: dict[str, StableGaussianParams],
+    device: str,
+) -> list[dict]:
+    """对已在 RAM 中的若干视频评分，不做任何文件读取。"""
+
+    method = config["method"]
+    requested_k = int(config["sampling"]["num_windows"])
+    batch_windows: list[tuple[dict, np.ndarray, np.ndarray]] = []
+    for position, row, payload in payload_rows:
+        for window_id, (global_values, patch_values) in enumerate(
+            _window_features(payload, row, requested_k)
+        ):
+            batch_windows.append(({
+                "video_id": _video_id(dataset, str(row["video_path"])),
+                "dataset": dataset,
+                "subset": str(row["subset"]),
+                "source_model": str(row["source_model"]),
+                "video_path": str(row["video_path"]),
+                "window_id": window_id,
+                "_input_order": position,
+            }, global_values, patch_values))
+    global_values = np.stack([item[1] for item in batch_windows])
+    patch_values = np.stack([item[2] for item in batch_windows])
+    scores: dict[str, np.ndarray] = {}
+    if method["global"]["enabled"]:
+        scores["global_spatial_raw"], _ = score_gaussian_aggregate_float64(
+            global_values, parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION,
+            device=device, compute_percentile=False,
+        )
+        global_temporal = torch.nn.functional.normalize(
+            torch.from_numpy(global_values[:, 1:] - global_values[:, :-1]),
+            p=2, dim=-1, eps=1e-12,
+        ).numpy()
+        scores["global_t1_raw"], _ = score_gaussian_aggregate_float64(
+            global_temporal, parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION,
+            device=device, compute_percentile=False,
+        )
+    patch_tensor = torch.from_numpy(patch_values)
+    if method["local"]["enabled"] and method["local"]["spatial_enabled"]:
+        scores["patch_spatial_raw"], _ = score_gaussian_aggregate_float64(
+            patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION,
+            device=device, compute_percentile=False,
+        )
+    if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
+        temporal_features = (
+            local_d1_features(patch_tensor)
+            if int(method["local"]["temporal_order"]) == 1
+            else local_d2_features(patch_tensor)
+        )
+        scores["patch_temporal_raw"], _ = score_gaussian_aggregate_float64(
+            temporal_features, parameters["patch_temporal"], LOCAL_AGGREGATION,
+            device=device, compute_percentile=False,
+        )
+    records = []
+    for index, (record, _, _) in enumerate(batch_windows):
+        record.update({name: float(values[index]) for name, values in scores.items()})
+        records.append(record)
+    return records
+
+
+def _score_evaluation_by_shard(
+    repository_root: Path,
+    rows: pd.DataFrame,
+    cache_root: Path,
+    context,
+    dataset: str,
+    config: dict,
+    parameters: dict[str, StableGaussianParams],
+    devices: list[str],
+    report: Callable[[int, int], None],
+) -> pd.DataFrame | None:
+    """按 shard 单次顺序读取，并在内存中向多 GPU 分发评分批次。
+
+    机械盘上的 1 GiB 级 shard 不适合由多个进程交错读取。本函数让主进程成为唯一
+    读取者：一个 shard 读入 RAM 后，其中的视频批才交给各 GPU 线程，因此不会重复 I/O。
+    返回 ``None`` 表示缓存没有 packed index，由调用方回退到兼容路径。
+    """
+
+    reader = PackedCacheReader(cache_root, max_shards=1)
+    locations: list[tuple[str, int]] = []
+    for _, row in rows.iterrows():
+        location = reader.location(_cache_key(cache_root, row))
+        if location is None:
+            return None
+        locations.append(location)
+    grouped: dict[str, list[tuple[int, pd.Series, int]]] = {}
+    for position, ((_, row), (shard_name, entry_position)) in enumerate(
+        zip(rows.iterrows(), locations)
+    ):
+        grouped.setdefault(shard_name, []).append((position, row, entry_position))
+
+    batch_size = int(config["runtime"]["score_batch_size"])
+    records: list[dict] = []
+    completed = 0
+    report(0, len(rows))
+    # index 写入时即以 shard 名的连续编号表达 manifest 顺序，按名称排序可避免机械盘寻道。
+    for shard_name in sorted(grouped):
+        shard = reader.load_shard(shard_name)
+        payload_rows = [
+            (
+                position,
+                row,
+                _load_cache_payload(
+                    repository_root, cache_root, row, context, reader
+                ),
+            )
+            for position, row, _ in grouped[shard_name]
+        ]
+        batches = [
+            payload_rows[offset: offset + batch_size]
+            for offset in range(0, len(payload_rows), batch_size)
+        ]
+        with ThreadPoolExecutor(max_workers=len(devices)) as executor:
+            futures = [
+                executor.submit(
+                    _score_payload_batch, batch, dataset, config, parameters,
+                    devices[index % len(devices)],
+                )
+                for index, batch in enumerate(batches)
+            ]
+            for future in as_completed(futures):
+                records.extend(future.result())
+        # 一个 shard 的所有视频已完成；按 shard 边界上报可避免小批次频繁写 progress.json。
+        completed += len(payload_rows)
+        report(completed, len(rows))
+    return pd.DataFrame(records).sort_values(["_input_order", "window_id"]).reset_index(drop=True)
+
+
 def _score_rows_worker(
     repository_root: str,
     cache_root: str,
@@ -342,6 +483,13 @@ def _score_evaluation(
     report: Callable[[int, int], None],
 ) -> pd.DataFrame:
     """单卡使用预取流水线；双卡按稳定行序切分 evaluation 并合并。"""
+
+    shard_ordered = _score_evaluation_by_shard(
+        repository_root, rows, cache_root, context, dataset, config, parameters,
+        devices, report,
+    )
+    if shard_ordered is not None:
+        return shard_ordered
 
     if len(devices) == 1 or len(rows) < 2:
         return _score_windows(repository_root, rows, cache_root, context, dataset, config, parameters, devices[0], report=report)

@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+import torch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,6 +22,7 @@ if str(SRC) not in sys.path:
 
 from config import load_config
 from data.cache_contract import CacheContractContext
+from data.packed_cache import FORMAT, PackedCacheReader, packed_root, write_index
 from data.sampling import cached_uniform_frame_indices, uniform_windows
 from math_utils import StableGaussianParams, score_gaussian_aggregate_float64
 _PIPELINE_SPEC = importlib.util.spec_from_file_location("alpha_stall_pipeline", SRC / "pipeline.py")
@@ -59,6 +61,36 @@ class CachePipelineTests(unittest.TestCase):
         for requested_k in (1, 2, 3):
             for window in uniform_windows(downsample, requested_k=requested_k):
                 self.assertTrue(set(window).issubset(cached))
+
+    def test_packed_reader_exposes_stable_entry_location(self) -> None:
+        """顺序 shard 调度必须能先定位条目、后只读取一次对应 shard。"""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            cache_root = Path(temporary)
+            shard_name = "development/demo/evaluation/shard-00000.pt"
+            root = packed_root(cache_root)
+            target = root / shard_name
+            target.parent.mkdir(parents=True)
+            torch.save(
+                {
+                    "format": FORMAT,
+                    "entries": [
+                        {"cache_key": "real/source/demo.pt", "payload": {"value": torch.tensor(1)}}
+                    ],
+                },
+                target,
+            )
+            write_index(
+                cache_root,
+                {
+                    "format": FORMAT,
+                    "entries": {"real/source/demo.pt": {"shard": shard_name, "position": 0}},
+                    "shards": {shard_name: {"entries": 1}},
+                },
+            )
+            reader = PackedCacheReader(cache_root, max_shards=1)
+            self.assertEqual(reader.location("real/source/demo.pt"), (shard_name, 0))
+            self.assertEqual(int(reader.get("real/source/demo.pt")["payload"]["value"]), 1)
 
     def test_batched_float64_scoring_matches_individual_windows(self) -> None:
         rng = np.random.default_rng(7)

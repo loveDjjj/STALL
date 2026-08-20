@@ -55,6 +55,25 @@ class PackedCacheReader:
         if item is None:
             return None
         shard_name = item["shard"]
+        shard = self.load_shard(shard_name)
+        entry = shard["entries"][int(item["position"])]
+        if entry["cache_key"] != cache_key:
+            raise ValueError("packed cache 索引与 shard 条目不一致")
+        return entry
+
+    def location(self, cache_key: str) -> tuple[str, int] | None:
+        """返回条目所属 shard 与位置，供顺序 shard 调度使用。"""
+
+        if self.index is None:
+            return None
+        item = self.index["entries"].get(cache_key)
+        if item is None:
+            return None
+        return str(item["shard"]), int(item["position"])
+
+    def load_shard(self, shard_name: str) -> dict[str, Any]:
+        """完整读取一个 shard，并维持有限 LRU。"""
+
         with self._lock:
             shard = self._shards.pop(shard_name, None)
             if shard is None:
@@ -67,7 +86,4 @@ class PackedCacheReader:
             self._shards[shard_name] = shard
             while len(self._shards) > self.max_shards:
                 self._shards.popitem(last=False)
-        entry = shard["entries"][int(item["position"])]
-        if entry["cache_key"] != cache_key:
-            raise ValueError("packed cache 索引与 shard 条目不一致")
-        return entry
+        return shard
