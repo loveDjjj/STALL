@@ -203,24 +203,21 @@ def score_gaussian_aggregate_float64(
         params.whitening, dtype=torch.float64, device=target
     )
     constant = float(whitening.shape[1]) * np.log(2.0 * np.pi)
-    raw = np.empty(len(values), dtype=np.float64)
-    for index, sample in enumerate(values):
-        flat = sample.reshape(-1, sample.shape[-1]).to(
-            device=target, dtype=torch.float64
-        )
-        white = torch.mm(flat - mean, whitening)
-        likelihood = -0.5 * (constant + torch.sum(white * white, dim=1))
-        if mask is not None:
-            likelihood = likelihood.masked_fill(
-                mask[index].reshape(-1).to(target), float("inf")
-            )
-        if aggregation == "mean":
-            aggregate = likelihood.mean(dtype=torch.float64)
-        elif aggregation == "min":
-            aggregate = likelihood.amin()
-        else:
-            aggregate = likelihood.amax()
-        raw[index] = float(aggregate.cpu())
+    # 批量传输和一次矩阵乘法让 GPU 看到足够大的工作单元；每个样本仍沿自身
+    # 位置维度独立做相同的 mean/min/max 聚合，不改变视频或窗口的统计定义。
+    shape = values.shape
+    flat = values.reshape(len(values), -1, shape[-1]).to(device=target, dtype=torch.float64)
+    white = torch.matmul(flat - mean, whitening)
+    likelihood = -0.5 * (constant + torch.sum(white * white, dim=-1))
+    if mask is not None:
+        likelihood = likelihood.masked_fill(mask.reshape(len(values), -1).to(target), float("inf"))
+    if aggregation == "mean":
+        aggregate = likelihood.mean(dim=1, dtype=torch.float64)
+    elif aggregation == "min":
+        aggregate = likelihood.amin(dim=1)
+    else:
+        aggregate = likelihood.amax(dim=1)
+    raw = aggregate.cpu().numpy().astype(np.float64, copy=False)
     percentile = (
         empirical_cdf_right_inclusive(raw, params.calibration_raw)
         if compute_percentile

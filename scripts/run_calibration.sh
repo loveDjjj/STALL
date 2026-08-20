@@ -2,6 +2,8 @@
 set -euo pipefail
 
 # 校准可靠性实验：仅改变真实校准视频数量和抽样种子，方法与评测身份保持固定。
+# 可透传：--dry-run、--overwrite、--set runtime.device=cuda:1、
+# --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=4。
 # 用法示例：bash scripts/run_calibration.sh 17 200 --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SEED="${1:?usage: run_calibration.sh <seed> <real-video-count> [runner args]}"

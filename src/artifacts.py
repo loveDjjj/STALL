@@ -48,6 +48,13 @@ def create_run_directory(repository_root: Path, run_name: str, *, overwrite: boo
     directory = run_directory(repository_root, run_name)
     if directory.exists() and not overwrite:
         raise FileExistsError(f"run 结果目录已存在：{directory}")
+    if directory.exists() and overwrite:
+        # --overwrite 表示开始一条全新的候选运行，不能让旧 CSV、进度或日志混入。
+        for child in directory.iterdir():
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
     directory.mkdir(parents=True, exist_ok=True)
     return directory
 
@@ -85,6 +92,17 @@ def write_run_manifest(
 
 def write_csv(output_dir: Path, name: str, frame: pd.DataFrame) -> None:
     frame.to_csv(output_dir / name, index=False)
+
+
+def write_progress(output_dir: Path, payload: dict[str, Any]) -> None:
+    """原子写入可观察的运行进度，避免监控端读到半个 JSON。"""
+
+    destination = output_dir / "progress.json"
+    temporary = destination.with_suffix(".tmp.json")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    temporary.replace(destination)
 
 
 def freeze_run(repository_root: Path, run_name: str, release_name: str) -> Path:

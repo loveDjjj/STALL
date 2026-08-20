@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import multiprocessing
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from pathlib import Path
+from time import monotonic
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -15,6 +19,7 @@ from branches.local_branch import LOCAL_AGGREGATION, local_d1_features, local_d2
 from data.cache_contract import prepare_feature_cache, tensor_descriptor, validate_cache_entry
 from data.manifest import load_manifest
 from data.patch_cache import _get_patch_cache_path, cache_frame_indices
+from data.packed_cache import PackedCacheReader
 from data.sampling import parse_indices, uniform_windows
 from math_utils import StableGaussianParams, WhiteningTransform, score_gaussian_aggregate_float64, stable_sorted
 
@@ -98,34 +103,34 @@ def _cache_window_count(context) -> int | None:
     return count
 
 
-def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series, context) -> dict:
+def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series, context, reader: PackedCacheReader | None = None) -> dict:
     """读取并逐条验证完整或多窗口严格缓存。"""
 
     stem = Path(str(row["video_path"])).stem
     cache_path = _get_patch_cache_path(
         cache_root, str(row["subset"]), str(row["source_model"]), stem, 2, False
     )
-    if not cache_path.is_file():
-        raise FileNotFoundError(f"严格缓存缺失：{cache_path}")
-    payload = torch.load(cache_path, weights_only=True)
+    cache_key = cache_path.relative_to(cache_root).as_posix()
+    packed = reader.get(cache_key) if reader is not None else None
+    if packed is not None:
+        payload = packed["payload"]
+    else:
+        if not cache_path.is_file():
+            raise FileNotFoundError(f"严格缓存缺失：{cache_path}")
+        payload = torch.load(cache_path, weights_only=True)
     indices = cache_frame_indices(
         row,
         duration_sec=2,
         compact=False,
         cache_window_count=_cache_window_count(context),
     )
-    validate_cache_entry(
-        context,
-        cache_path=cache_path,
-        source_video_path=str(repository_root / row["video_path"]),
-        frame_indices=indices,
-        payload={
-            "format": "torch_dict_global_patch_v1",
-            "global": tensor_descriptor(payload["global"]),
-            "patch": tensor_descriptor(payload["patch"]),
-            "grid_size": [int(value) for value in payload["grid_size"]],
-        },
-    )
+    descriptor = {"format": "torch_dict_global_patch_v1", "global": tensor_descriptor(payload["global"]), "patch": tensor_descriptor(payload["patch"]), "grid_size": [int(value) for value in payload["grid_size"]]}
+    if packed is None:
+        validate_cache_entry(context, cache_path=cache_path, source_video_path=str(repository_root / row["video_path"]), frame_indices=indices, payload=descriptor)
+    else:
+        metadata = packed["entry_metadata"]
+        if metadata["frame_indices"] != indices or metadata["payload"] != descriptor:
+            raise ValueError("packed cache 条目与当前 manifest 或 payload 不一致")
     return payload
 
 
@@ -215,38 +220,150 @@ def _fit_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray]], co
     }
 
 
-def _score_windows(repository_root: Path, rows: pd.DataFrame, cache_root: Path, context, dataset: str, config: dict, parameters: dict[str, StableGaussianParams], device: str) -> pd.DataFrame:
+def _score_windows(
+    repository_root: Path,
+    rows: pd.DataFrame,
+    cache_root: Path,
+    context,
+    dataset: str,
+    config: dict,
+    parameters: dict[str, StableGaussianParams],
+    device: str,
+    *,
+    report: Callable[[int, int], None] | None = None,
+) -> pd.DataFrame:
+    """预取严格缓存后逐窗口评分；窗口的浮点计算顺序保持不变。"""
+
     method = config["method"]
     requested_k = int(config["sampling"]["num_windows"])
     records: list[dict] = []
-    for _, row in rows.iterrows():
-        payload = _load_cache_payload(repository_root, cache_root, row, context)
-        windows = _window_features(payload, row, requested_k)
-        for window_id, (global_values, patch_values) in enumerate(windows):
-            record = {
-                "video_id": _video_id(dataset, str(row["video_path"])),
-                "dataset": dataset,
-                "subset": str(row["subset"]),
-                "source_model": str(row["source_model"]),
-                "video_path": str(row["video_path"]),
-                "window_id": window_id,
-            }
+    batch_size = int(config["runtime"].get("score_batch_size", 1))
+    io_workers = int(config["runtime"].get("cache_io_workers", 1))
+    indexed_rows = list(rows.iterrows())
+    packed_reader = PackedCacheReader(cache_root)
+
+    def load_batch(batch: list[tuple[int, pd.Series]]) -> list[tuple[int, pd.Series, dict]]:
+        def load(item: tuple[int, pd.Series]) -> tuple[int, pd.Series, dict]:
+            position, row = item
+            return position, row, _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
+        with ThreadPoolExecutor(max_workers=min(io_workers, len(batch))) as executor:
+            return list(executor.map(load, batch))
+
+    batches = [indexed_rows[offset: offset + batch_size] for offset in range(0, len(indexed_rows), batch_size)]
+    completed = 0
+    # 下一批读取和当前批评分并行，减少 GPU 等待缓存 I/O 的空档。
+    with ThreadPoolExecutor(max_workers=1) as prefetcher:
+        future = prefetcher.submit(load_batch, batches[0]) if batches else None
+        for batch_index in range(len(batches)):
+            loaded = future.result()
+            future = prefetcher.submit(load_batch, batches[batch_index + 1]) if batch_index + 1 < len(batches) else None
+            batch_windows: list[tuple[dict, np.ndarray, np.ndarray]] = []
+            for position, row, payload in loaded:
+                for window_id, (global_values, patch_values) in enumerate(_window_features(payload, row, requested_k)):
+                    batch_windows.append(({
+                        "video_id": _video_id(dataset, str(row["video_path"])),
+                        "dataset": dataset,
+                        "subset": str(row["subset"]),
+                        "source_model": str(row["source_model"]),
+                        "video_path": str(row["video_path"]),
+                        "window_id": window_id,
+                        "_input_order": position,
+                    }, global_values, patch_values))
+            global_values = np.stack([item[1] for item in batch_windows])
+            patch_values = np.stack([item[2] for item in batch_windows])
+            scores: dict[str, np.ndarray] = {}
             if method["global"]["enabled"]:
-                spatial, _ = score_gaussian_aggregate_float64(global_values[None], parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION, device=device, compute_percentile=False)
-                temporal, _ = score_gaussian_aggregate_float64(_temporal_global(global_values)[None], parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION, device=device, compute_percentile=False)
-                record["global_spatial_raw"] = float(spatial[0])
-                record["global_t1_raw"] = float(temporal[0])
+                scores["global_spatial_raw"], _ = score_gaussian_aggregate_float64(global_values, parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION, device=device, compute_percentile=False)
+                global_temporal = torch.nn.functional.normalize(torch.from_numpy(global_values[:, 1:] - global_values[:, :-1]), p=2, dim=-1, eps=1e-12).numpy()
+                scores["global_t1_raw"], _ = score_gaussian_aggregate_float64(global_temporal, parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION, device=device, compute_percentile=False)
+            patch_tensor = torch.from_numpy(patch_values)
             if method["local"]["enabled"] and method["local"]["spatial_enabled"]:
-                spatial, _ = score_gaussian_aggregate_float64(patch_values[None], parameters["patch_spatial"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
-                record["patch_spatial_raw"] = float(spatial[0])
+                scores["patch_spatial_raw"], _ = score_gaussian_aggregate_float64(patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
             if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
-                temporal_features = _temporal_patch(patch_values, int(method["local"]["temporal_order"]))
-                temporal, _ = score_gaussian_aggregate_float64(temporal_features[None], parameters["patch_temporal"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
-                record["patch_temporal_raw"] = float(temporal[0])
-            records.append(record)
+                temporal_features = local_d1_features(patch_tensor) if int(method["local"]["temporal_order"]) == 1 else local_d2_features(patch_tensor)
+                scores["patch_temporal_raw"], _ = score_gaussian_aggregate_float64(temporal_features, parameters["patch_temporal"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
+            for index, (record, _, _) in enumerate(batch_windows):
+                record.update({name: float(values[index]) for name, values in scores.items()})
+                records.append(record)
+            completed += len(loaded)
+            if report is not None:
+                report(completed, len(indexed_rows))
     if not records:
         raise ValueError(f"{dataset} 没有满足 16 帧窗口条件的视频")
     return pd.DataFrame(records)
+
+
+def _score_rows_worker(
+    repository_root: str,
+    cache_root: str,
+    context,
+    dataset: str,
+    config: dict,
+    parameters: dict[str, StableGaussianParams],
+    device: str,
+    rows: pd.DataFrame,
+    progress_queue=None,
+) -> pd.DataFrame:
+    """独立 CUDA 进程的评测分片入口；必须保持模块级以支持 spawn。"""
+
+    def worker_report(done: int, total: int) -> None:
+        if progress_queue is not None and (done == total or done % max(1, total // 100) == 0):
+            progress_queue.put((device, done, total))
+
+    return _score_windows(
+        Path(repository_root), rows, Path(cache_root), context, dataset, config,
+        parameters, device, report=worker_report if progress_queue is not None else None,
+    )
+
+
+def _score_evaluation(
+    repository_root: Path,
+    rows: pd.DataFrame,
+    cache_root: Path,
+    context,
+    dataset: str,
+    config: dict,
+    parameters: dict[str, StableGaussianParams],
+    devices: list[str],
+    report: Callable[[int, int], None],
+) -> pd.DataFrame:
+    """单卡使用预取流水线；双卡按稳定行序切分 evaluation 并合并。"""
+
+    if len(devices) == 1 or len(rows) < 2:
+        return _score_windows(repository_root, rows, cache_root, context, dataset, config, parameters, devices[0], report=report)
+    chunks = [chunk.copy() for chunk in np.array_split(rows, len(devices)) if not chunk.empty]
+    report(0, len(rows))
+    # Manager 队列可安全传给 spawn 子进程；主进程据此持续写 progress.json。
+    with multiprocessing.Manager() as manager, ProcessPoolExecutor(
+        max_workers=len(chunks), mp_context=multiprocessing.get_context("spawn")
+    ) as executor:
+        progress_queue = manager.Queue()
+        futures = {
+            executor.submit(
+                _score_rows_worker, str(repository_root), str(cache_root), context,
+                dataset, config, parameters, device, chunk, progress_queue,
+            ): (device, len(chunk))
+            for device, chunk in zip(devices, chunks)
+        }
+        local_progress = {device: 0 for device, _ in futures.values()}
+        outputs = []
+        pending = set(futures)
+        while pending:
+            try:
+                device, done, _ = progress_queue.get(timeout=0.5)
+                local_progress[device] = max(local_progress[device], done)
+                report(sum(local_progress.values()), len(rows))
+            except Exception as error:
+                # Queue 超时是正常轮询；子进程异常由 future.result() 原样抛出。
+                if error.__class__.__name__ != "Empty":
+                    raise
+            completed, pending = wait(pending, timeout=0, return_when=FIRST_COMPLETED)
+            for future in completed:
+                device, size = futures[future]
+                outputs.append(future.result())
+                local_progress[device] = size
+                report(sum(local_progress.values()), len(rows))
+    return pd.concat(outputs, ignore_index=True).sort_values(["_input_order", "window_id"]).reset_index(drop=True)
 
 
 def _calibrate_component(target: pd.Series, reference: pd.Series) -> np.ndarray:
@@ -338,7 +455,12 @@ def _calibrate_and_aggregate(calibration: pd.DataFrame, evaluation: pd.DataFrame
     return calibration, pd.concat(outputs, ignore_index=True)
 
 
-def run_from_cache(repository_root: Path, config: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+def run_from_cache(
+    repository_root: Path,
+    config: dict,
+    *,
+    report: Callable[[dict], None] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
     """执行配置指定的全部数据集，返回逐窗口、逐视频分数和运行元信息。"""
 
     runtime = config["runtime"]
@@ -350,22 +472,25 @@ def run_from_cache(repository_root: Path, config: dict) -> tuple[pd.DataFrame, p
             f"请求 K={config['sampling']['num_windows']}，但严格缓存只覆盖 K<={cached_window_count}；"
             "请使用兼容配置或重建缓存。"
         )
-    device = str(runtime["device"])
-    if device.startswith("cuda") and not torch.cuda.is_available():
+    devices = [str(item) for item in runtime.get("devices", [])] or [str(runtime["device"])]
+    if any(device.startswith("cuda") for device in devices) and not torch.cuda.is_available():
         raise RuntimeError("配置请求 CUDA，但 PyTorch 未检测到 CUDA")
-    if device.startswith("cuda"):
-        index = torch.device(device).index or 0
-        free_bytes, _ = torch.cuda.mem_get_info(index)
-        required_gib = float(runtime["minimum_free_gib"])
-        free_gib = free_bytes / 1024**3
-        if free_gib < required_gib:
-            raise RuntimeError(
-                f"GPU {index} 仅空闲 {free_gib:.1f} GiB，低于主实验安全阈值 "
-                f"{required_gib:.1f} GiB；拒绝开始评分以避免争抢显存。"
-            )
+    for device in devices:
+        if device.startswith("cuda"):
+            index = torch.device(device).index or 0
+            free_bytes, _ = torch.cuda.mem_get_info(index)
+            required_gib = float(runtime["minimum_free_gib"])
+            free_gib = free_bytes / 1024**3
+            if free_gib < required_gib:
+                raise RuntimeError(
+                    f"GPU {index} 仅空闲 {free_gib:.1f} GiB，低于主实验安全阈值 "
+                    f"{required_gib:.1f} GiB；拒绝开始评分以避免争抢显存。"
+                )
     all_windows, all_videos = [], []
+    packed_reader = PackedCacheReader(cache_root)
     metadata: dict[str, object] = {"cache_root": str(cache_root), "cache_contract_sha256": context.contract_sha256, "datasets": {}}
     for dataset in config["data"]["datasets"]:
+        dataset = str(dataset)
         manifests = resolve_dataset_manifests(repository_root, config, str(dataset))
         calibration = load_manifest(str(manifests.calibration))
         evaluation = load_manifest(str(manifests.evaluation))
@@ -374,13 +499,36 @@ def run_from_cache(repository_root: Path, config: dict) -> tuple[pd.DataFrame, p
         calibration, excluded_calibration = _apply_short_video_policy(calibration, str(dataset), "calibration", policy)
         evaluation, excluded_evaluation = _apply_short_video_policy(evaluation, str(dataset), "evaluation", policy)
         selected_calibration = _choose_calibration(calibration, str(dataset), int(config["calibration"]["real_videos_per_dataset"]), int(config["calibration"]["seed"]))
+        if report:
+            report({"current_dataset": dataset, "phase": "calibration_load", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 读取 {len(selected_calibration)} 条真实校准视频"})
         calibration_windows_features = []
-        for _, row in selected_calibration.iterrows():
-            payload = _load_cache_payload(repository_root, cache_root, row, context)
+        for completed, (_, row) in enumerate(selected_calibration.iterrows(), start=1):
+            payload = _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
             calibration_windows_features.extend(_window_features(payload, row, int(config["sampling"]["num_windows"])))
-        parameters = _fit_parameters(calibration_windows_features, config, device)
-        calibration_windows = _score_windows(repository_root, selected_calibration, cache_root, context, str(dataset), config, parameters, device)
-        evaluation_windows = _score_windows(repository_root, evaluation, cache_root, context, str(dataset), config, parameters, device)
+            if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
+                report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
+        if report:
+            report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] 拟合 Global/Local 高斯参数"})
+        parameters = _fit_parameters(calibration_windows_features, config, devices[0])
+        if report:
+            report({"current_dataset": dataset, "phase": "calibration_score", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 评分校准窗口"})
+        calibration_started = monotonic()
+        calibration_windows = _score_windows(
+            repository_root, selected_calibration, cache_root, context, dataset, config, parameters, devices[0],
+            report=(lambda done, total: report({"current_dataset": dataset, "phase": "calibration_score", "completed": done, "total": total, "message": f"[{dataset}] 校准评分 {done}/{total}"}) if report and (done == total or done % max(1, total // 20) == 0) else None),
+        )
+        if report:
+            report({"current_dataset": dataset, "phase": "evaluation_score", "completed": 0, "total": len(evaluation), "message": f"[{dataset}] 使用 {', '.join(devices)} 评分 evaluation（{len(evaluation)} 条）"})
+        evaluation_started = monotonic()
+        def evaluation_progress(done: int, total: int) -> None:
+            if report and (done == total or done % max(1, total // 100) == 0):
+                elapsed = max(monotonic() - evaluation_started, 1e-6)
+                rate = done / elapsed
+                eta = (total - done) / rate if rate else 0.0
+                report({"current_dataset": dataset, "phase": "evaluation_score", "completed": done, "total": total, "rate_videos_per_second": rate, "eta_seconds": eta, "message": f"[{dataset}] evaluation {done}/{total} ({done / total:.1%})，{rate:.2f} 视频/秒，ETA {eta / 60:.1f} 分钟"})
+        evaluation_windows = _score_evaluation(repository_root, evaluation, cache_root, context, dataset, config, parameters, devices, evaluation_progress)
+        if report:
+            report({"current_dataset": dataset, "phase": "aggregate", "message": f"[{dataset}] 仅用 calibration real 执行窗口校准和视频聚合"})
         calibrated_windows, videos = _calibrate_and_aggregate(calibration_windows, evaluation_windows, config)
         calibrated_windows["split"] = "calibration"
         evaluation_windows["split"] = "evaluation"
@@ -392,8 +540,15 @@ def run_from_cache(repository_root: Path, config: dict) -> tuple[pd.DataFrame, p
             "excluded_short_calibration_videos": excluded_calibration,
             "excluded_short_evaluation_videos": excluded_evaluation,
             "parameters": sorted(parameters),
+            "devices": devices,
+            "calibration_score_seconds": monotonic() - calibration_started,
+            "evaluation_score_seconds": monotonic() - evaluation_started,
         }
-    return pd.concat(all_windows, ignore_index=True), pd.concat(all_videos, ignore_index=True), metadata
+        if report:
+            report({"current_dataset": dataset, "phase": "dataset_completed", "message": f"[{dataset}] 完成：evaluation {len(videos)} 条视频"})
+    windows = pd.concat(all_windows, ignore_index=True)
+    windows = windows.drop(columns=["_input_order"], errors="ignore")
+    return windows, pd.concat(all_videos, ignore_index=True), metadata
 
 
 def build_bootstrap(videos: pd.DataFrame, config: dict) -> pd.DataFrame:

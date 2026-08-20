@@ -14,8 +14,9 @@ bash scripts/run_alpha_stall.sh --dry-run
 bash scripts/run_ablation.sh local_d1 --dry-run
 ```
 
-`--dry-run` 会在 `results/runs/<run-name>/` 写出完整的
-`resolved_config.yaml` 与 `run_manifest.json`，但不会读取视频或启动模型。
+`--dry-run` 只验证最终配置并打印执行计划，不会创建结果目录、读取缓存或启动计算。
+正式运行一开始就会在 `results/runs/<run-name>/` 写入 `resolved_config.yaml`、
+`run_manifest.json`、`progress.json`、`command.txt` 和 `logs/run.log`；终端输出会同步到日志。
 
 正常主实验会从严格 DINOv3 特征缓存读取完整 8 FPS 下采样序列，确定性选择 K=1/K=3
 窗口，以 calibration real 拟合参数与两级 CDF，再生成逐窗口分数、逐视频分数、数据集
@@ -48,10 +49,12 @@ bash scripts/run_alpha_stall.sh \
 | `scripts/` | Conda 启动脚本和唯一 Python CLI，不放算法实现 |
 | `src/` | Alpha STALL 源码；根目录放执行与算法主链，子目录按数据、分支和评测组织 |
 | `data/manifests/` | 开发与外部数据集的校准/评测身份清单，不存放视频 |
-| `cache/patch_embeddings_current_full_8fps/` | 严格、可验证且 K=1/K=3 共用的 Global+patch 特征缓存 |
+| `cache/patch_embeddings_k3_2s_8fps/` | 严格、可验证且 K=1/K=2/K=3 共用的 Global+patch 特征缓存 |
 | `datasets/` | 原始视频数据；仅保留当前开发和外部评测所需子集 |
 | `results/runs/` | 每次运行的可追溯结果 |
 | `release/` | 已确认实验的冻结版本 |
+| `logs/` | 监督与概略修复记录；原始运行日志仍在 `results/runs/*/logs/` |
+| `analysis/` | 已完成运行的结果解读与跨实验结论 |
 
 ## 运行命名
 

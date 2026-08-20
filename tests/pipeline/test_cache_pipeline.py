@@ -22,6 +22,7 @@ if str(SRC) not in sys.path:
 from config import load_config
 from data.cache_contract import CacheContractContext
 from data.sampling import cached_uniform_frame_indices, uniform_windows
+from math_utils import StableGaussianParams, score_gaussian_aggregate_float64
 _PIPELINE_SPEC = importlib.util.spec_from_file_location("alpha_stall_pipeline", SRC / "pipeline.py")
 assert _PIPELINE_SPEC is not None and _PIPELINE_SPEC.loader is not None
 _PIPELINE = importlib.util.module_from_spec(_PIPELINE_SPEC)
@@ -59,6 +60,19 @@ class CachePipelineTests(unittest.TestCase):
             for window in uniform_windows(downsample, requested_k=requested_k):
                 self.assertTrue(set(window).issubset(cached))
 
+    def test_batched_float64_scoring_matches_individual_windows(self) -> None:
+        rng = np.random.default_rng(7)
+        features = rng.normal(size=(4, 3, 5)).astype(np.float32)
+        params = StableGaussianParams(
+            mean=rng.normal(size=5), whitening=np.eye(5), calibration_raw=np.array([0.0, 1.0]),
+        )
+        batched, _ = score_gaussian_aggregate_float64(features, params, "mean", device="cpu", compute_percentile=False)
+        individual = np.array([
+            score_gaussian_aggregate_float64(item[None], params, "mean", device="cpu", compute_percentile=False)[0][0]
+            for item in features
+        ])
+        np.testing.assert_allclose(batched, individual, rtol=0.0, atol=1e-12)
+
     def test_full_pipeline_uses_calibration_only_and_k3_windows(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             temp = Path(temporary)
@@ -94,7 +108,7 @@ class CachePipelineTests(unittest.TestCase):
 
             context = CacheContractContext(temp / "cache", "strict", True, {"identity": {}}, "mock")
             with patch("alpha_stall_pipeline.prepare_feature_cache", return_value=context), patch(
-                "alpha_stall_pipeline._load_cache_payload", side_effect=lambda _repo, _root, row, _context: payload_for(row)
+                "alpha_stall_pipeline._load_cache_payload", side_effect=lambda _repo, _root, row, _context, _reader=None: payload_for(row)
             ):
                 windows, videos, metadata = run_from_cache(ROOT, config)
 

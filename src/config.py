@@ -85,6 +85,14 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ValueError("runtime.max_features_for_fit 必须至少为 2")
     if not isinstance(runtime.get("minimum_free_gib"), (int, float)) or runtime["minimum_free_gib"] <= 0:
         raise ValueError("runtime.minimum_free_gib 必须为正数")
+    for key in ("score_batch_size", "cache_io_workers"):
+        if not isinstance(runtime.get(key), int) or runtime[key] < 1:
+            raise ValueError(f"runtime.{key} 必须是正整数")
+    devices = runtime.get("devices", [])
+    if not isinstance(devices, list) or any(not isinstance(item, str) or not item for item in devices):
+        raise ValueError("runtime.devices 必须是由非空设备名组成的列表")
+    if len(devices) > 2:
+        raise ValueError("当前运行器最多支持两张评分卡")
 
 
 def dump_config(path: Path, config: dict[str, Any]) -> None:

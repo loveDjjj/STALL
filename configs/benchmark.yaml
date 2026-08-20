@@ -73,10 +73,17 @@ runtime:
   cache_policy: strict
   # DINO 特征和高斯评分使用的计算设备。
   device: cuda:0
+  # 可选的评分设备列表。留空时仅使用 device；填入两个设备时只并行 evaluation 评分。
+  # 示例：[cuda:0, cuda:1]。校准参数仍在第一张卡拟合，保证统计定义不变。
+  devices: []
   # 主实验开始前要求目标 GPU 的最小空闲显存，防止与其他任务争抢显存。
   minimum_free_gib: 12
   # 每一类高斯白化最多采样的特征行数，控制显存和内存占用。
   max_features_for_fit: 300000
+  # 单批预取的视频数；只影响缓存读取与数据传输吞吐，不改变任一窗口的评分公式。
+  score_batch_size: 16
+  # 同时读取严格缓存的线程数。过高会增加随机 I/O 竞争，建议从 4 开始测试。
+  cache_io_workers: 4
 
 # 全部方法共享的评价口径；分数越高均表示更接近真实视频。
 metrics:

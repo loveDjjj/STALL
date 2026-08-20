@@ -49,6 +49,7 @@ def main() -> None:
         dry_run=args.dry_run,
         overwrite=args.overwrite,
         scores_csv=scores_csv,
+        command=[sys.executable, *sys.argv],
     )
     print(output_dir.relative_to(ROOT))
 
