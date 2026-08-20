@@ -58,7 +58,10 @@ class PackedCacheReader:
         with self._lock:
             shard = self._shards.pop(shard_name, None)
             if shard is None:
-                shard = torch.load(packed_root(self.cache_root) / shard_name, weights_only=True, mmap=True)
+                # 评分会访问一个 shard 内的大量非连续张量。mmap 会把这些访问变成同步缺页，
+                # 双卡同时跨 shard 时容易把机械盘拖入长时间 I/O 等待；直接读入内存可由 LRU
+                # 和操作系统页缓存共同复用可用内存。
+                shard = torch.load(packed_root(self.cache_root) / shard_name, weights_only=True)
                 if shard.get("format") != FORMAT:
                     raise ValueError(f"packed shard 格式不匹配：{shard_name}")
             self._shards[shard_name] = shard
