@@ -92,6 +92,33 @@ class CachePipelineTests(unittest.TestCase):
             self.assertEqual(reader.location("real/source/demo.pt"), (shard_name, 0))
             self.assertEqual(int(reader.get("real/source/demo.pt")["payload"]["value"]), 1)
 
+    def test_packed_shard_split_keeps_each_shard_in_one_worker(self) -> None:
+        """双卡任务边界不得切开一个物理 shard。"""
+
+        with tempfile.TemporaryDirectory() as temporary:
+            cache_root = Path(temporary)
+            root = packed_root(cache_root)
+            entries = {}
+            shards = {}
+            for shard_index, names in enumerate((("a", "b"), ("c",))):
+                shard_name = f"development/demo/evaluation/shard-{shard_index:05d}.pt"
+                target = root / shard_name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shard_entries = []
+                for position, name in enumerate(names):
+                    key = f"real/source/{name}.pt"
+                    entries[key] = {"shard": shard_name, "position": position}
+                    shard_entries.append({"cache_key": key, "payload": {}})
+                torch.save({"format": FORMAT, "entries": shard_entries}, target)
+                shards[shard_name] = {"entries": len(shard_entries)}
+            write_index(cache_root, {"format": FORMAT, "entries": entries, "shards": shards})
+            rows = pd.DataFrame([
+                {"video_path": f"mock/{name}.mp4", "subset": "real", "source_model": "source"}
+                for name in ("c", "a", "b")
+            ])
+            chunks = _PIPELINE._split_rows_by_packed_shard(rows, cache_root, workers=2)
+            self.assertEqual([chunk.index.tolist() for chunk in chunks], [[1, 2], [0]])
+
     def test_batched_float64_scoring_matches_individual_windows(self) -> None:
         rng = np.random.default_rng(7)
         features = rng.normal(size=(4, 3, 5)).astype(np.float32)

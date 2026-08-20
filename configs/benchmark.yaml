@@ -87,8 +87,8 @@ runtime:
   score_batch_size: 16
   # 同时读取严格缓存的线程数。packed shard 已按顺序完整读入内存，机械盘环境下单线程更稳定。
   cache_io_workers: 1
-  # evaluation 遇到 packed index 时，运行器自动按 shard 顺序单次读取，再在 RAM 中向多 GPU
-  # 分发评分批，避免多个进程在机械盘上交错加载 1 GiB 级 shard；无需手动开关。
+  # evaluation 遇到 packed index 时，运行器自动按连续且互斥的 shard 区间分配 GPU worker，
+  # 避免多个进程在机械盘上交错加载同一个 1 GiB 级 shard；无需手动开关。
 
 # 全部方法共享的评价口径；分数越高均表示更接近真实视频。
 metrics:
