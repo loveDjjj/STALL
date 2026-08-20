@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from config import apply_overrides, load_config
-from runner import run
+from runner import resume_bootstrap, run
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,6 +30,10 @@ def parse_args() -> argparse.Namespace:
         help="覆盖 YAML 字段，例如 sampling.num_windows=1",
     )
     parser.add_argument("--scores-csv", type=Path)
+    parser.add_argument(
+        "--resume-bootstrap", action="store_true",
+        help="只为同配置的 interrupted run 补跑 bootstrap，不重新读取缓存或评分",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -37,6 +41,19 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.resume_bootstrap:
+        if args.dry_run or args.overwrite or args.scores_csv is not None:
+            raise ValueError("--resume-bootstrap 不能与 --dry-run、--overwrite 或 --scores-csv 同时使用")
+        # 恢复必须复用当时落盘的完整配置，包括设备等运行时覆盖，不能退回基础 YAML。
+        resolved_path = ROOT / "results" / "runs" / args.run_name / "resolved_config.yaml"
+        if not resolved_path.is_file():
+            raise FileNotFoundError("--resume-bootstrap 需要已有的 resolved_config.yaml")
+        config = apply_overrides(load_config(resolved_path), args.overrides)
+        output_dir = resume_bootstrap(
+            ROOT, args.run_name, config, command=[sys.executable, *sys.argv]
+        )
+        print(output_dir.relative_to(ROOT))
+        return
     config_path = args.config if args.config.is_absolute() else ROOT / args.config
     config = apply_overrides(load_config(config_path), args.overrides)
     scores_csv = args.scores_csv

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import shlex
 import sys
 from datetime import datetime, timezone
@@ -10,7 +11,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from artifacts import create_run_directory, write_csv, write_progress, write_run_manifest
+from artifacts import (
+    create_run_directory,
+    run_directory,
+    write_csv,
+    write_progress,
+    write_run_manifest,
+)
+from config import config_digest
 from pipeline import build_bootstrap, run_from_cache
 from evaluation.tables import build_metric_tables, normalize_scores
 
@@ -105,5 +113,61 @@ def run(
             progress.update({"status": "interrupted", "phase": "interrupted"})
             write_progress(output_dir, progress)
             write_run_manifest(output_dir, repository_root, run_name, config, status="interrupted", input_scores=str(scores_csv) if scores_csv is not None else None, pipeline_metadata=pipeline_metadata)
+            raise
+    return output_dir
+
+
+def resume_bootstrap(
+    repository_root: Path,
+    run_name: str,
+    config: dict,
+    *,
+    command: list[str],
+) -> Path:
+    """仅补齐中断运行的 bootstrap，绝不重新读取特征缓存或评分。"""
+
+    output_dir = run_directory(repository_root, run_name)
+    manifest_path = output_dir / "run_manifest.json"
+    scores_path = output_dir / "video_scores.csv"
+    if not manifest_path.is_file() or not scores_path.is_file():
+        raise FileNotFoundError("补跑 bootstrap 需要已有 run manifest 和 video_scores.csv")
+    previous = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if previous.get("status") != "interrupted":
+        raise ValueError("仅允许为状态为 interrupted 的运行补跑 bootstrap")
+    if previous.get("config_hash") != config_digest(config):
+        raise ValueError("当前配置与中断运行不一致，拒绝将不同实验的 bootstrap 混入同一结果目录")
+
+    logs_dir = output_dir / "logs"
+    logs_dir.mkdir(exist_ok=True)
+    with (logs_dir / "run.log").open("a", encoding="utf-8", buffering=1) as log, \
+         contextlib.redirect_stdout(_Tee(sys.stdout, log)), \
+         contextlib.redirect_stderr(_Tee(sys.stderr, log)):
+        print("[恢复] 仅补跑 paired bootstrap，不重读缓存或重新评分", flush=True)
+        progress = {
+            "status": "running", "run_name": run_name,
+            "phase": "bootstrap", "message": "[恢复] 计算 paired bootstrap",
+        }
+        write_progress(output_dir, progress)
+        try:
+            scores = normalize_scores(pd.read_csv(scores_path))
+            bootstrap = build_bootstrap(scores, config)
+            if not bootstrap.empty:
+                write_csv(output_dir, "bootstrap_metrics.csv", bootstrap)
+            progress.update({"status": "completed", "phase": "completed"})
+            write_progress(output_dir, progress)
+            write_run_manifest(
+                output_dir, repository_root, run_name, config, status="completed",
+                pipeline_metadata=previous.get("pipeline"),
+            )
+            with (output_dir / "command.txt").open("a", encoding="utf-8") as command_log:
+                command_log.write("恢复命令：" + " ".join(shlex.quote(item) for item in command) + "\n")
+            print(f"[完成] bootstrap 已补齐：{output_dir}", flush=True)
+        except BaseException:
+            progress.update({"status": "interrupted", "phase": "interrupted"})
+            write_progress(output_dir, progress)
+            write_run_manifest(
+                output_dir, repository_root, run_name, config, status="interrupted",
+                pipeline_metadata=previous.get("pipeline"),
+            )
             raise
     return output_dir

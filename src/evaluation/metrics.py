@@ -33,7 +33,8 @@ def binary_metrics(frame: pd.DataFrame, score_column: str = "final_score") -> di
 
 def _seed(seed: int, *parts: str) -> int:
     digest = hashlib.sha256("\0".join((str(seed), *parts)).encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "little")
+    # Pandas 的 random_state 仍使用 MT19937，种子必须落在无符号 32 位范围内。
+    return int.from_bytes(digest[:8], "little") % (2**32)
 
 
 def _generator_pairs(frame: pd.DataFrame, seed: int) -> list[pd.DataFrame]:
