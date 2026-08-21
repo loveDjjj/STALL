@@ -132,9 +132,9 @@ def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series,
         cache_root, str(row["subset"]), str(row["source_model"]), stem, 2, False
     )
     cache_key = cache_path.relative_to(cache_root).as_posix()
-    # 锁定 U0 的帧索引仅有一条视频超出当前 K=3 缓存并集。覆盖缓存由专用脚本
-    # 以同一 DINO 配置生成，优先读取但不改变原严格缓存或 packed index。
-    locked_override = cache_root / "locked_u0_overrides" / cache_key
+    # 锁定 U0 的帧索引仅有一条视频超出当前 K=3 缓存并集。其覆盖特征作为
+    # 版本化预计算资产保存，优先读取但不改变原严格缓存或 packed index。
+    locked_override = repository_root / "precomputed" / "locked_u0" / "cache_overrides" / cache_key
     if locked_override.is_file():
         return torch.load(locked_override, weights_only=True)
     packed = reader.get(cache_key) if reader is not None else None
@@ -718,17 +718,25 @@ def run_from_cache(
         selected_calibration = _choose_calibration(calibration, str(dataset), int(config["calibration"]["real_videos_per_dataset"]), int(config["calibration"]["seed"]))
         if report:
             report({"current_dataset": dataset, "phase": "calibration_load", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 读取 {len(selected_calibration)} 条真实校准视频"})
+        local_config = config["method"]["local"]
         calibration_windows_features = []
-        if config["method"]["local"].get("parameter_source") == "fit_real_only":
+        if local_config.get("enabled") and local_config.get("parameter_source") == "fit_real_only":
             for completed, (_, row) in enumerate(selected_calibration.iterrows(), start=1):
                 payload = _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
                 calibration_windows_features.extend(_window_features(payload, row, int(config["sampling"]["num_windows"])))
                 if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
                     report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
         if report:
-            report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] 拟合 Local 高斯参数；Global 固定加载官方 VATEX 参数"})
+            local_message = (
+                "加载锁定 Local 参数与独立 K=1 CDF"
+                if local_config.get("enabled") and local_config.get("parameter_source") == "locked_u0"
+                else "拟合 Local 高斯参数"
+            )
+            report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] {local_message}；Global 固定加载官方 VATEX 参数"})
         parameters = _load_global_parameters(repository_root, config)
-        if config["method"]["local"].get("parameter_source") == "locked_u0":
+        if not local_config.get("enabled"):
+            pass
+        elif local_config.get("parameter_source") == "locked_u0":
             parameters.update(_load_locked_local_parameters(repository_root, config, dataset))
         else:
             parameters.update(_fit_local_parameters(calibration_windows_features, config, devices[0]))
