@@ -74,6 +74,12 @@ def validate_config(config: dict[str, Any]) -> None:
             raise ValueError("method.local.temporal_order 只能是 1 或 2")
     if local.get("covariance_estimator") not in {"empirical", "oas"}:
         raise ValueError("method.local.covariance_estimator 只能是 empirical 或 oas")
+    if local.get("parameter_source") not in {"locked_u0", "fit_real_only"}:
+        raise ValueError("method.local.parameter_source 只能是 locked_u0 或 fit_real_only")
+    if local.get("parameter_source") == "locked_u0":
+        for key in ("locked_parameters_dir", "locked_frame_indices"):
+            if not isinstance(local.get(key), str) or not local[key]:
+                raise ValueError(f"method.local.{key} 必须是非空路径")
     if global_branch.get("enabled", False):
         if global_branch.get("parameter_source") != "official_vatex":
             raise ValueError("method.global.parameter_source 必须是 official_vatex")
@@ -86,6 +92,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise ValueError("calibration.real_videos_per_dataset 必须为正数")
     if config["data"].get("short_video_policy") not in {"error", "exclude"}:
         raise ValueError("data.short_video_policy 只能是 error 或 exclude")
+    if not isinstance(config["metrics"].get("pairwise_seed"), int):
+        raise ValueError("metrics.pairwise_seed 必须是整数")
     runtime = config["runtime"]
     if not isinstance(runtime.get("cache_dir"), str) or not runtime["cache_dir"]:
         raise ValueError("runtime.cache_dir 必须是非空路径")

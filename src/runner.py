@@ -22,7 +22,7 @@ from artifacts import (
 )
 from config import config_digest
 from pipeline import build_bootstrap, run_from_cache
-from evaluation.tables import build_metric_tables, normalize_scores
+from evaluation.tables import build_metric_tables, build_pairwise_metric_table, normalize_scores
 
 
 class RunTerminated(RuntimeError):
@@ -115,11 +115,15 @@ def run(
                 scores = scores[scores["dataset"].isin(selected)].copy()
                 if scores.empty:
                     raise ValueError("分数 CSV 不包含当前配置数据集的任何记录")
-            report({"phase": "metrics", "message": "[汇总] 计算数据集与生成器指标"})
+            report({"phase": "metrics", "message": "[汇总] 计算 pooled、生成器与论文配对宏平均指标"})
             dataset_metrics, generator_metrics = build_metric_tables(scores, run_name)
+            pairwise_metrics = build_pairwise_metric_table(
+                scores, run_name, int(config["metrics"]["pairwise_seed"])
+            )
             write_csv(output_dir, "video_scores.csv", scores)
             write_csv(output_dir, "dataset_metrics.csv", dataset_metrics)
             write_csv(output_dir, "generator_metrics.csv", generator_metrics)
+            write_csv(output_dir, "pairwise_metrics.csv", pairwise_metrics)
             if windows is not None:
                 write_csv(output_dir, "window_scores.csv", windows)
                 report({"phase": "bootstrap", "message": "[汇总] 计算 paired bootstrap"})

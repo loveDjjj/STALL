@@ -19,8 +19,8 @@ bash scripts/run_ablation.sh local_d1 --dry-run
 `run_manifest.json`、`progress.json`、`command.txt` 和 `logs/run.log`；终端输出会同步到日志。
 
 正常主实验会从严格 DINOv3 特征缓存读取完整 8 FPS 下采样序列，确定性选择 K=1/K=3
-窗口，以 calibration real 拟合参数与两级 CDF，再生成逐窗口分数、逐视频分数、数据集
-指标、生成器指标和 bootstrap 对比：
+窗口，以 calibration real 拟合参数与两级 CDF，再生成逐窗口分数、逐视频分数、pooled
+数据集指标、论文配对宏平均指标、生成器指标和 bootstrap 对比：
 
 ```bash
 bash scripts/run_cache_rebuild.sh

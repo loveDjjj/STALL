@@ -1,4 +1,4 @@
-"""将规范化逐视频分数转换为数据集级和生成器级指标表。"""
+"""将规范化逐视频分数转换为诊断表与论文口径指标表。"""
 
 from __future__ import annotations
 
@@ -58,3 +58,67 @@ def build_metric_tables(scores: pd.DataFrame, run_name: str) -> tuple[pd.DataFra
                 }
             )
     return pd.DataFrame(dataset_rows), pd.DataFrame(generator_rows)
+
+
+def _balanced_real_pair(
+    real: pd.DataFrame, fake: pd.DataFrame, seed: int
+) -> pd.DataFrame:
+    """按锁定论文协议构建一个生成器的真实/生成平衡配对。
+
+    真实视频有多个来源时，先为每个来源分配相同配额，再以固定种子打乱；
+    这避免真实来源比例随生成器规模而改变。该规则与历史 U0 主表一致。
+    """
+
+    target = min(len(real), len(fake))
+    if target == 0:
+        raise ValueError("生成器配对同时需要真实与生成视频")
+    groups = [
+        group.sample(n=min(len(group), max(1, target // real["source_model"].nunique())), random_state=seed)
+        for _, group in real.groupby("source_model", sort=True)
+    ]
+    sampled_real = pd.concat(groups, ignore_index=True).sample(
+        n=min(target, sum(len(group) for group in groups)), random_state=seed
+    )
+    return pd.concat([sampled_real, fake.head(len(sampled_real))], ignore_index=True)
+
+
+def build_pairwise_metric_table(
+    scores: pd.DataFrame, run_name: str, pairwise_seed: int
+) -> pd.DataFrame:
+    """生成论文主表使用的生成器配对宏平均 AUC 与 real-positive AP。"""
+
+    rows: list[dict] = []
+    for dataset, dataset_frame in scores.groupby("dataset", sort=True):
+        real = dataset_frame[dataset_frame["subset"].eq("real")]
+        generator_rows = []
+        for _, fake in dataset_frame[dataset_frame["subset"].eq("annotated")].groupby("source_model", sort=True):
+            pair = _balanced_real_pair(real, fake, pairwise_seed)
+            generator_rows.append((pair, binary_metrics(pair, "final_score")))
+        if not generator_rows:
+            raise ValueError(f"{dataset} 没有可用于论文配对指标的生成器")
+        rows.append(
+            {
+                "run_name": run_name,
+                "scope": "generator_pairwise_dataset_macro",
+                "dataset": dataset,
+                "auc": float(sum(item[1]["auc"] for item in generator_rows) / len(generator_rows)),
+                "ap_real": float(sum(item[1]["real_positive_ap"] for item in generator_rows) / len(generator_rows)),
+                "n_generators": len(generator_rows),
+                "n_pairwise_real": int(sum(len(item[0][item[0]["subset"].eq("real")]) for item in generator_rows)),
+                "n_pairwise_fake": int(sum(len(item[0][item[0]["subset"].eq("annotated")]) for item in generator_rows)),
+                "pairwise_seed": pairwise_seed,
+            }
+        )
+    table = pd.DataFrame(rows)
+    macro = {
+        "run_name": run_name,
+        "scope": "generator_pairwise_macro3",
+        "dataset": "Macro-3",
+        "auc": float(table["auc"].mean()),
+        "ap_real": float(table["ap_real"].mean()),
+        "n_generators": int(table["n_generators"].sum()),
+        "n_pairwise_real": int(table["n_pairwise_real"].sum()),
+        "n_pairwise_fake": int(table["n_pairwise_fake"].sum()),
+        "pairwise_seed": pairwise_seed,
+    }
+    return pd.concat([table, pd.DataFrame([macro])], ignore_index=True)

@@ -19,4 +19,5 @@ conda run --no-capture-output -n "${STALL_ENV:-stall}" python "$ROOT/scripts/run
   --run-name "alpha_stall_seed${SEED}_n${COUNT}" \
   --set "calibration.seed=${SEED}" \
   --set "calibration.real_videos_per_dataset=${COUNT}" \
+  --set method.local.parameter_source=fit_real_only \
   "$@"

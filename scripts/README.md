@@ -6,6 +6,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | 脚本 | 用途 |
 |---|---|
 | `run_experiment.py` | 唯一 Python runner；合并 `--set` 覆盖并写入运行产物 |
+| `build_paper_tables.py` | 从已有逐视频分数增量生成论文配对宏平均表，不重跑 GPU |
 | `build_manifest.py` | 从原始视频目录生成包含采样帧索引的 manifest |
 | `rebuild_patch_cache.py` | 审计并分批、可续跑地构建严格 DINOv3 Global+patch 缓存 |
 | `run_cache_rebuild.sh` | 使用 `stall` 环境启动当前全部 manifest 的 K=3 均匀窗口缓存重建 |
@@ -66,3 +67,11 @@ runner 明确拒绝。
 
 原文 STALL 不在本仓库运行。请使用官方仓库完成基线推理，再把其标准化逐视频分数
 作为外部结果交给论文汇总流程。
+
+`dataset_metrics.csv` 是全量唯一视频 pooled 指标，适合检查运行和真实类别比例；它的
+AP 会受类别不平衡影响，不能直接写入论文主表。论文使用每个生成器与等量真实视频配对
+后再做生成器宏平均的 `pairwise_metrics.csv`。已完成 run 可直接补写该表：
+
+```bash
+conda run -n stall python scripts/build_paper_tables.py --run-name alpha_stall
+```

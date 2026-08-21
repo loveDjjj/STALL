@@ -148,6 +148,7 @@ class CachePipelineTests(unittest.TestCase):
             # 该测试故意使用 3 维伪特征，只验证 Local 数据流；官方 VATEX
             # Global 参数固定为 1024 维，另由专门的一致性测试覆盖。
             config["method"]["global"]["enabled"] = False
+            config["method"]["local"]["parameter_source"] = "fit_real_only"
             config["metrics"]["bootstrap_iterations"] = 4
             config["runtime"] = {
                 "cache_dir": "cache/mock",
@@ -207,6 +208,7 @@ class CachePipelineTests(unittest.TestCase):
             config = __import__("copy").deepcopy(base)
             config["method"]["global"]["enabled"] = global_enabled
             config["method"]["local"]["enabled"] = local_enabled
+            config["method"]["local"]["parameter_source"] = "fit_real_only"
             if local_enabled:
                 config["method"]["local"]["spatial_enabled"] = False
                 config["method"]["local"]["temporal_enabled"] = True
@@ -215,6 +217,7 @@ class CachePipelineTests(unittest.TestCase):
 
     def test_k1_evaluation_uses_k1_subset_of_k3_calibration_reference(self) -> None:
         config = load_config(ROOT / "configs/benchmark.yaml")
+        config["method"]["local"]["parameter_source"] = "fit_real_only"
         records = []
         for video_id, offset in (("c1", 0.0), ("c2", 1.0)):
             for window_id in range(3):

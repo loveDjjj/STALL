@@ -132,6 +132,11 @@ def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series,
         cache_root, str(row["subset"]), str(row["source_model"]), stem, 2, False
     )
     cache_key = cache_path.relative_to(cache_root).as_posix()
+    # 锁定 U0 的帧索引仅有一条视频超出当前 K=3 缓存并集。覆盖缓存由专用脚本
+    # 以同一 DINO 配置生成，优先读取但不改变原严格缓存或 packed index。
+    locked_override = cache_root / "locked_u0_overrides" / cache_key
+    if locked_override.is_file():
+        return torch.load(locked_override, weights_only=True)
     packed = reader.get(cache_key) if reader is not None else None
     if packed is not None:
         payload = packed["payload"]
@@ -164,9 +169,18 @@ def _cache_key(cache_root: Path, row: pd.Series) -> str:
     ).relative_to(cache_root).as_posix()
 
 
-def _window_features(payload: dict, row: pd.Series, requested_k: int) -> list[tuple[np.ndarray, np.ndarray]]:
+def _window_features(
+    payload: dict,
+    row: pd.Series,
+    requested_k: int,
+    locked_windows: list[list[int]] | None = None,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """按当前协议或锁定 U0 索引选择每个视频的窗口特征。"""
+
     downsample = parse_indices(row["downsample_idxs"])
-    windows = uniform_windows(downsample, requested_k, window_frames=16)
+    windows = locked_windows if locked_windows is not None else uniform_windows(
+        downsample, requested_k, window_frames=16
+    )
     position = {frame: index for index, frame in enumerate(payload["frame_indices"])}
     output: list[tuple[np.ndarray, np.ndarray]] = []
     for window in windows:
@@ -256,6 +270,65 @@ def _fit_local_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray
     }
 
 
+def _load_locked_local_parameters(
+    repository_root: Path, config: dict, dataset: str
+) -> dict[str, StableGaussianParams]:
+    """加载锁定 U0 的 Local 参数及其独立 K1 窗口 CDF 原始参考。"""
+
+    directory = repository_root / str(config["method"]["local"]["locked_parameters_dir"])
+    path = directory / f"{dataset}_region1_mean.npz"
+    required = {
+        "mu_patch_spat", "W_patch_spat", "calib_patch_spat_scores",
+        "mu_patch_temp", "W_patch_temp", "calib_patch_temp_scores",
+    }
+    with np.load(path, allow_pickle=False) as data:
+        missing = required.difference(data.files)
+        if missing:
+            raise ValueError(f"锁定 Local 参数缺少字段：{sorted(missing)}")
+        return {
+            "patch_spatial": StableGaussianParams(
+                mean=np.asarray(data["mu_patch_spat"], dtype=np.float64),
+                whitening=np.asarray(data["W_patch_spat"], dtype=np.float64),
+                calibration_raw=stable_sorted(np.asarray(data["calib_patch_spat_scores"], dtype=np.float64)),
+            ),
+            "patch_temporal": StableGaussianParams(
+                mean=np.asarray(data["mu_patch_temp"], dtype=np.float64),
+                whitening=np.asarray(data["W_patch_temp"], dtype=np.float64),
+                calibration_raw=stable_sorted(np.asarray(data["calib_patch_temp_scores"], dtype=np.float64)),
+            ),
+        }
+
+
+def _locked_video_id(dataset: str, row: pd.Series) -> str:
+    """计算锁定帧索引使用的稳定视频身份。"""
+
+    identity = "|".join((
+        dataset, str(row["subset"]), str(row["source_model"]),
+        Path(str(row["video_path"])).name,
+    ))
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
+def _locked_windows(
+    repository_root: Path, config: dict
+) -> dict[str, list[list[int]]] | None:
+    """默认 K=3 主实验读取不可变 U0 选帧索引。"""
+
+    local = config["method"]["local"]
+    if local.get("parameter_source") != "locked_u0" or int(config["sampling"]["num_windows"]) != 3:
+        return None
+    path = repository_root / str(local["locked_frame_indices"])
+    with path.open(encoding="utf-8") as handle:
+        payload = json.load(handle)
+    videos = payload.get("videos")
+    if not isinstance(videos, dict):
+        raise ValueError("锁定帧索引缺少 videos 映射")
+    return {
+        str(video_id): [[int(frame) for frame in window] for window in windows]
+        for video_id, windows in videos.items()
+    }
+
+
 def _load_global_parameters(repository_root: Path, config: dict) -> dict[str, StableGaussianParams]:
     """加载并校验严格继承原始 STALL 的独立 VATEX Global 参数。"""
 
@@ -291,6 +364,7 @@ def _score_windows(
 
     method = config["method"]
     requested_k = int(config["sampling"]["num_windows"])
+    locked_window_map = _locked_windows(repository_root, config)
     records: list[dict] = []
     batch_size = int(config["runtime"].get("score_batch_size", 1))
     io_workers = int(config["runtime"].get("cache_io_workers", 1))
@@ -316,7 +390,15 @@ def _score_windows(
             future = prefetcher.submit(load_batch, batches[batch_index + 1]) if batch_index + 1 < len(batches) else None
             batch_windows: list[tuple[dict, np.ndarray, np.ndarray]] = []
             for position, row, payload in loaded:
-                for window_id, (global_values, patch_values) in enumerate(_window_features(payload, row, requested_k)):
+                locked = (
+                    locked_window_map.get(_locked_video_id(dataset, row))
+                    if locked_window_map is not None else None
+                )
+                if locked_window_map is not None and locked is None:
+                    raise ValueError(f"锁定帧索引缺少视频：{row['video_path']}")
+                for window_id, (global_values, patch_values) in enumerate(
+                    _window_features(payload, row, requested_k, locked)
+                ):
                     batch_windows.append(({
                         "video_id": _video_id(dataset, str(row["video_path"])),
                         "dataset": dataset,
@@ -343,11 +425,18 @@ def _score_windows(
                     allow_positive_infinity_percentile=True,
                 )
             patch_tensor = torch.from_numpy(patch_values)
+            locked_local = method["local"].get("parameter_source") == "locked_u0"
             if method["local"]["enabled"] and method["local"]["spatial_enabled"]:
-                scores["patch_spatial_raw"], _ = score_gaussian_aggregate_float64(patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
+                scores["patch_spatial_raw"], scores["patch_spatial"] = score_gaussian_aggregate_float64(
+                    patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION,
+                    device=device, compute_percentile=locked_local,
+                )
             if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
                 temporal_features = local_d1_features(patch_tensor) if int(method["local"]["temporal_order"]) == 1 else local_d2_features(patch_tensor)
-                scores["patch_temporal_raw"], _ = score_gaussian_aggregate_float64(temporal_features, parameters["patch_temporal"], LOCAL_AGGREGATION, device=device, compute_percentile=False)
+                scores["patch_temporal_raw"], scores["patch_temporal"] = score_gaussian_aggregate_float64(
+                    temporal_features, parameters["patch_temporal"], LOCAL_AGGREGATION,
+                    device=device, compute_percentile=locked_local,
+                )
             for index, (record, _, _) in enumerate(batch_windows):
                 record.update({name: float(values[index]) for name, values in scores.items()})
                 records.append(record)
@@ -522,10 +611,11 @@ def _calibrate_and_aggregate(calibration: pd.DataFrame, evaluation: pd.DataFrame
     reference = calibration[calibration["subset"].eq("real")]
     if reference.empty:
         raise ValueError("校准窗口中没有真实视频")
-    for raw in active_raw:
-        calibrated = raw.removesuffix("_raw")
-        calibration[calibrated] = _calibrate_component(calibration[raw], reference[raw])
-        evaluation[calibrated] = _calibrate_component(evaluation[raw], reference[raw])
+    if method["local"].get("parameter_source") == "fit_real_only":
+        for raw in active_raw:
+            calibrated = raw.removesuffix("_raw")
+            calibration[calibrated] = _calibrate_component(calibration[raw], reference[raw])
+            evaluation[calibrated] = _calibrate_component(evaluation[raw], reference[raw])
     for frame in (calibration, evaluation):
         if method["global"]["enabled"]:
             frame["global_score_window"] = _weighted(frame, ["global_spatial", "global_t1"], [float(method["global"]["spatial_weight"]), float(method["global"]["temporal_weight"])])
@@ -629,15 +719,19 @@ def run_from_cache(
         if report:
             report({"current_dataset": dataset, "phase": "calibration_load", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 读取 {len(selected_calibration)} 条真实校准视频"})
         calibration_windows_features = []
-        for completed, (_, row) in enumerate(selected_calibration.iterrows(), start=1):
-            payload = _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
-            calibration_windows_features.extend(_window_features(payload, row, int(config["sampling"]["num_windows"])))
-            if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
-                report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
+        if config["method"]["local"].get("parameter_source") == "fit_real_only":
+            for completed, (_, row) in enumerate(selected_calibration.iterrows(), start=1):
+                payload = _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
+                calibration_windows_features.extend(_window_features(payload, row, int(config["sampling"]["num_windows"])))
+                if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
+                    report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
         if report:
             report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] 拟合 Local 高斯参数；Global 固定加载官方 VATEX 参数"})
         parameters = _load_global_parameters(repository_root, config)
-        parameters.update(_fit_local_parameters(calibration_windows_features, config, devices[0]))
+        if config["method"]["local"].get("parameter_source") == "locked_u0":
+            parameters.update(_load_locked_local_parameters(repository_root, config, dataset))
+        else:
+            parameters.update(_fit_local_parameters(calibration_windows_features, config, devices[0]))
         if report:
             report({"current_dataset": dataset, "phase": "calibration_score", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 评分校准窗口"})
         calibration_started = monotonic()

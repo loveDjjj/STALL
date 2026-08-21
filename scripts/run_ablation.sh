@@ -25,15 +25,15 @@ case "$VARIANT" in
     RUN_NAME=alpha_stall_global_only
     ;;
   local_d1)
-    SETS=(--set method.global.enabled=false --set method.local.temporal_order=1 --set method.local.spatial_enabled=false)
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=false)
     RUN_NAME=alpha_stall_local_d1
     ;;
   local_d2)
-    SETS=(--set method.global.enabled=false --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
     RUN_NAME=alpha_stall_local_d2
     ;;
   combined_local_d2)
-    SETS=(--set method.local.temporal_order=2 --set method.local.spatial_enabled=true)
+    SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=true)
     RUN_NAME=alpha_stall_combined_local_d2
     ;;
   global_k1)
@@ -41,7 +41,7 @@ case "$VARIANT" in
     RUN_NAME=alpha_stall_global_k1
     ;;
   full_k1)
-    SETS=(--set sampling.num_windows=1)
+    SETS=(--set method.local.parameter_source=fit_real_only --set sampling.num_windows=1)
     RUN_NAME=alpha_stall_full_k1
     ;;
   full_k3)

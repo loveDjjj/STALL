@@ -14,7 +14,7 @@ for argument in "$@"; do
     exit 2
   fi
 done
-SETS=(--set "data.datasets=[${DATASET}]")
+SETS=(--set "data.datasets=[${DATASET}]" --set method.local.parameter_source=fit_real_only)
 # 当前 GenVidBench 外部真实校准集固定为 199 条；开发集仍使用基础配置的 200 条。
 if [[ "$DATASET" == "genvidbench" ]]; then
   SETS+=(--set calibration.real_videos_per_dataset=199)

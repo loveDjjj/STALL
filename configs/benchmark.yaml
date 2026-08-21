@@ -19,6 +19,11 @@ method:
   local:
     # 是否启用 Local 证据分支；Global-only 消融会关闭此项。
     enabled: true
+    # locked_u0 读取论文锁定资产；fit_real_only 用当前 real-only calibration 重拟合。
+    parameter_source: locked_u0
+    # 锁定 Local 参数与 K=3 帧索引。不使用已废弃的 release/ 目录。
+    locked_parameters_dir: precomputed/locked_u0/local
+    locked_frame_indices: data/protocols/locked_u0/frame_indices.json
     # Local 仅由目标域互斥真实校准视频拟合；默认经验协方差与锁定方案一致。
     covariance_estimator: empirical
     # 是否使用局部 patch 空间似然；M02 可单独关闭此项。
@@ -100,6 +105,9 @@ metrics:
   score_direction: higher_is_real
   # AP 的正类定义。
   positive_class: real
+  # 论文配对宏平均：每个生成器与等量真实视频配对时使用的固定抽样种子。
+  # 该值与锁定 U0 主表一致，不能隐式复用 calibration.seed。
+  pairwise_seed: 42
   # 主表必报指标。
   primary: [auc, ap_real]
   # 附加运行点指标。

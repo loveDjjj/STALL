@@ -18,7 +18,7 @@ from config import config_digest, dump_config
 _RUN_NAME = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 REQUIRED_RUN_ARTIFACTS = (
     "resolved_config.yaml", "run_manifest.json", "video_scores.csv",
-    "dataset_metrics.csv", "generator_metrics.csv",
+    "dataset_metrics.csv", "generator_metrics.csv", "pairwise_metrics.csv",
 )
 OPTIONAL_RUN_ARTIFACTS = (
     "window_scores.csv",

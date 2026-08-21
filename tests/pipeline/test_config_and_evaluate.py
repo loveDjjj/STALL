@@ -16,7 +16,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from config import apply_overrides, load_config, validate_config
-from evaluation.tables import build_metric_tables, normalize_scores
+from evaluation.tables import build_metric_tables, build_pairwise_metric_table, normalize_scores
 from evaluation.metrics import paired_bootstrap
 from math_utils import WhiteningTransform
 
@@ -77,6 +77,23 @@ class ConfigAndEvaluateTests(unittest.TestCase):
         self.assertEqual(dataset_metrics.loc[0, "dataset"], "demo")
         self.assertEqual(float(dataset_metrics.loc[0, "auc"]), 1.0)
         self.assertEqual(generator_metrics.loc[0, "generator"], "generator_a")
+
+    def test_pairwise_table_balances_each_generator_and_adds_macro3(self) -> None:
+        scores = normalize_scores(
+            pd.DataFrame(
+                [
+                    {"video_id": "r1", "dataset": "demo", "subset": "real", "source_model": "real_a", "final_score": 0.9},
+                    {"video_id": "r2", "dataset": "demo", "subset": "real", "source_model": "real_b", "final_score": 0.8},
+                    {"video_id": "f1", "dataset": "demo", "subset": "annotated", "source_model": "generator_a", "final_score": 0.2},
+                    {"video_id": "f2", "dataset": "demo", "subset": "annotated", "source_model": "generator_a", "final_score": 0.1},
+                ]
+            )
+        )
+        table = build_pairwise_metric_table(scores, "smoke", 42)
+        self.assertEqual(table["dataset"].tolist(), ["demo", "Macro-3"])
+        self.assertEqual(table.loc[0, "n_pairwise_real"], 2)
+        self.assertEqual(table.loc[0, "n_pairwise_fake"], 2)
+        self.assertEqual(float(table.loc[1, "auc"]), 1.0)
 
     def test_bootstrap_accepts_deterministic_hashed_seed(self) -> None:
         scores = pd.DataFrame(
