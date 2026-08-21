@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import multiprocessing
+import os
+import traceback
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +38,14 @@ from math_utils import (
 
 
 COMPONENTS = ("global_spatial", "global_t1", "patch_spatial", "patch_temporal")
+
+
+def _write_worker_event(path: Path, payload: dict) -> None:
+    """顺序追加单个 worker 的诊断事件，避免多进程争写同一文件。"""
+
+    record = {"timestamp_monotonic": monotonic(), "pid": os.getpid(), **payload}
+    with path.open("a", encoding="utf-8", buffering=1) as handle:
+        handle.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 @dataclass(frozen=True)
@@ -274,6 +285,7 @@ def _score_windows(
     device: str,
     *,
     report: Callable[[int, int], None] | None = None,
+    diagnostic: Callable[[dict], None] | None = None,
 ) -> pd.DataFrame:
     """预取严格缓存后逐窗口评分；窗口的浮点计算顺序保持不变。"""
 
@@ -299,6 +311,8 @@ def _score_windows(
         future = prefetcher.submit(load_batch, batches[0]) if batches else None
         for batch_index in range(len(batches)):
             loaded = future.result()
+            if batch_index == 0 and diagnostic is not None:
+                diagnostic({"event": "first_batch_loaded", "videos": len(loaded)})
             future = prefetcher.submit(load_batch, batches[batch_index + 1]) if batch_index + 1 < len(batches) else None
             batch_windows: list[tuple[dict, np.ndarray, np.ndarray]] = []
             for position, row, payload in loaded:
@@ -336,6 +350,8 @@ def _score_windows(
                 record.update({name: float(values[index]) for name, values in scores.items()})
                 records.append(record)
             completed += len(loaded)
+            if batch_index == 0 and diagnostic is not None:
+                diagnostic({"event": "first_batch_scored", "videos": completed, "windows": len(batch_windows)})
             if report is not None:
                 report(completed, len(indexed_rows))
     if not records:
@@ -384,8 +400,19 @@ def _score_rows_worker(
     device: str,
     rows: pd.DataFrame,
     progress_queue=None,
+    worker_log_path: str | None = None,
 ) -> pd.DataFrame:
     """独立 CUDA 进程的评测分片入口；必须保持模块级以支持 spawn。"""
+
+    log_path = Path(worker_log_path) if worker_log_path is not None else None
+
+    def diagnostic(payload: dict) -> None:
+        if log_path is not None:
+            _write_worker_event(log_path, {"device": device, "dataset": dataset, **payload})
+
+    reader = PackedCacheReader(Path(cache_root))
+    first_shard = reader.location(_cache_key(Path(cache_root), rows.iloc[0])) if not rows.empty else None
+    diagnostic({"event": "worker_started", "videos": len(rows), "first_shard": first_shard[0] if first_shard else None})
 
     # 每个 worker 最多发约 100 次进度。batch 大小未必整除该步长，必须按“跨过步长”而非
     # “恰好整除”判断，否则运行正常时 progress.json 也可能长期停在 0%。
@@ -398,10 +425,17 @@ def _score_rows_worker(
             progress_queue.put((device, done, total))
             last_reported = done
 
-    return _score_windows(
-        Path(repository_root), rows, Path(cache_root), context, dataset, config,
-        parameters, device, report=worker_report if progress_queue is not None else None,
-    )
+    try:
+        result = _score_windows(
+            Path(repository_root), rows, Path(cache_root), context, dataset, config,
+            parameters, device, report=worker_report if progress_queue is not None else None,
+            diagnostic=diagnostic,
+        )
+    except BaseException as error:
+        diagnostic({"event": "worker_failed", "exception_type": type(error).__name__, "message": str(error), "traceback": traceback.format_exc()})
+        raise
+    diagnostic({"event": "worker_completed", "videos": len(rows)})
+    return result
 
 
 def _score_evaluation(
@@ -414,6 +448,7 @@ def _score_evaluation(
     parameters: dict[str, StableGaussianParams],
     devices: list[str],
     report: Callable[[int, int], None],
+    worker_log_dir: Path | None = None,
 ) -> pd.DataFrame:
     """单卡使用预取流水线；双卡按互斥连续 shard 区间评分并合并。"""
 
@@ -432,6 +467,7 @@ def _score_evaluation(
             executor.submit(
                 _score_rows_worker, str(repository_root), str(cache_root), context,
                 dataset, config, parameters, device, chunk, progress_queue,
+                str(worker_log_dir / f"worker_{dataset}_{device.replace(':', '_')}.jsonl") if worker_log_dir else None,
             ): (device, len(chunk))
             for device, chunk in zip(devices, chunks)
         }
@@ -548,6 +584,7 @@ def run_from_cache(
     config: dict,
     *,
     report: Callable[[dict], None] | None = None,
+    worker_log_dir: Path | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
     """执行配置指定的全部数据集，返回逐窗口、逐视频分数和运行元信息。"""
 
@@ -615,7 +652,10 @@ def run_from_cache(
                 rate = done / elapsed
                 eta = (total - done) / rate if rate else 0.0
                 report({"current_dataset": dataset, "phase": "evaluation_score", "completed": done, "total": total, "rate_videos_per_second": rate, "eta_seconds": eta, "message": f"[{dataset}] evaluation {done}/{total} ({done / total:.1%})，{rate:.2f} 视频/秒，ETA {eta / 60:.1f} 分钟"})
-        evaluation_windows = _score_evaluation(repository_root, evaluation, cache_root, context, dataset, config, parameters, devices, evaluation_progress)
+        evaluation_windows = _score_evaluation(
+            repository_root, evaluation, cache_root, context, dataset, config,
+            parameters, devices, evaluation_progress, worker_log_dir=worker_log_dir,
+        )
         if report:
             report({"current_dataset": dataset, "phase": "aggregate", "message": f"[{dataset}] 仅用 calibration real 执行窗口校准和视频聚合"})
         calibrated_windows, videos = _calibrate_and_aggregate(calibration_windows, evaluation_windows, config)

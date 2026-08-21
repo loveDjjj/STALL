@@ -5,7 +5,9 @@ from __future__ import annotations
 import contextlib
 import json
 import shlex
+import signal
 import sys
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +23,14 @@ from artifacts import (
 from config import config_digest
 from pipeline import build_bootstrap, run_from_cache
 from evaluation.tables import build_metric_tables, normalize_scores
+
+
+class RunTerminated(RuntimeError):
+    """将可捕获的外部终止信号转换为可落盘的运行失败记录。"""
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 class _Tee:
@@ -68,6 +78,17 @@ def run(
     write_run_manifest(output_dir, repository_root, run_name, config, status="running")
     progress = {"status": "running", "run_name": run_name, "current_dataset": None, "phase": "initializing"}
     write_progress(output_dir, progress)
+    received_signal: int | None = None
+    previous_handlers: dict[int, object] = {}
+
+    def on_signal(signum, _frame) -> None:
+        nonlocal received_signal
+        received_signal = int(signum)
+        raise RunTerminated(f"运行器收到外部信号 {signal.Signals(signum).name}")
+
+    for signum in (signal.SIGHUP, signal.SIGINT, signal.SIGTERM):
+        previous_handlers[signum] = signal.getsignal(signum)
+        signal.signal(signum, on_signal)
 
     def report(event: dict) -> None:
         progress.update(event)
@@ -109,11 +130,25 @@ def run(
             write_progress(output_dir, progress)
             write_run_manifest(output_dir, repository_root, run_name, config, status="completed", input_scores=str(scores_csv) if scores_csv is not None else None, pipeline_metadata=pipeline_metadata)
             print(f"[完成] 结果已写入 {output_dir}", flush=True)
-        except BaseException:
+        except BaseException as error:
+            failure = {
+                "exception_type": type(error).__name__,
+                "message": str(error),
+                "received_signal": signal.Signals(received_signal).name if received_signal else None,
+                "occurred_at_utc": datetime.now(timezone.utc).isoformat(),
+                "traceback": traceback.format_exc(),
+            }
+            _write_json(output_dir / "failure.json", failure)
+            if received_signal:
+                _write_json(output_dir / "termination.json", failure)
+            print(f"[中断] {failure['exception_type']}: {failure['message']}", flush=True)
             progress.update({"status": "interrupted", "phase": "interrupted"})
             write_progress(output_dir, progress)
             write_run_manifest(output_dir, repository_root, run_name, config, status="interrupted", input_scores=str(scores_csv) if scores_csv is not None else None, pipeline_metadata=pipeline_metadata)
             raise
+        finally:
+            for signum, handler in previous_handlers.items():
+                signal.signal(signum, handler)
     return output_dir
 
 
