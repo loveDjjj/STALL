@@ -727,11 +727,12 @@ def run_from_cache(
                 if report and (completed == len(selected_calibration) or completed % max(1, len(selected_calibration) // 20) == 0):
                     report({"current_dataset": dataset, "phase": "calibration_load", "completed": completed, "total": len(selected_calibration), "message": f"[{dataset}] 校准缓存 {completed}/{len(selected_calibration)}"})
         if report:
-            local_message = (
-                "加载锁定 Local 参数与独立 K=1 CDF"
-                if local_config.get("enabled") and local_config.get("parameter_source") == "locked_u0"
-                else "拟合 Local 高斯参数"
-            )
+            if not local_config.get("enabled"):
+                local_message = "Local 分支已关闭"
+            elif local_config.get("parameter_source") == "locked_u0":
+                local_message = "加载锁定 Local 参数与独立 K=1 CDF"
+            else:
+                local_message = "拟合 Local 高斯参数"
             report({"current_dataset": dataset, "phase": "fit", "message": f"[{dataset}] {local_message}；Global 固定加载官方 VATEX 参数"})
         parameters = _load_global_parameters(repository_root, config)
         if not local_config.get("enabled"):
