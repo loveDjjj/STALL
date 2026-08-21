@@ -17,7 +17,11 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from branches.global_branch import load_official_stall_parameters
-from math_utils import l2_normalized_first_order, score_gaussian_aggregate_float64
+from math_utils import (
+    StableGaussianParams,
+    l2_normalized_first_order,
+    score_gaussian_aggregate_float64,
+)
 
 
 class OfficialGlobalTests(unittest.TestCase):
@@ -73,6 +77,27 @@ class OfficialGlobalTests(unittest.TestCase):
         np.testing.assert_allclose(temporal_raw, [expected_temporal], rtol=0.0, atol=1e-12)
         self.assertEqual(float(spatial_cdf[0]), 1.0)
         self.assertEqual(float(temporal_cdf[0]), 1.0)
+
+    def test_all_zero_temporal_window_maps_positive_infinity_to_one(self) -> None:
+        """全静态窗口也应遵循官方的 ``+inf -> CDF 1`` 规则。"""
+
+        parameters = StableGaussianParams(
+            mean=np.zeros(2, dtype=np.float64),
+            whitening=np.eye(2, dtype=np.float64),
+            calibration_raw=np.array([-8.0, -4.0], dtype=np.float64),
+        )
+        features = torch.zeros((1, 3, 2), dtype=torch.float32)
+        temporal, zero_mask = l2_normalized_first_order(features)
+        raw, cdf = score_gaussian_aggregate_float64(
+            temporal,
+            parameters,
+            "min",
+            device="cpu",
+            invalid_mask=zero_mask,
+            allow_positive_infinity_percentile=True,
+        )
+        self.assertTrue(np.isposinf(raw[0]))
+        self.assertEqual(float(cdf[0]), 1.0)
 
 
 if __name__ == "__main__":

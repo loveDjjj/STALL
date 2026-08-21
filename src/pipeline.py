@@ -339,6 +339,8 @@ def _score_windows(
                 scores["global_t1_raw"], scores["global_t1"] = score_gaussian_aggregate_float64(
                     global_temporal, parameters["global_t1"], GLOBAL_TEMPORAL_AGGREGATION,
                     device=device, invalid_mask=global_zero_mask,
+                    # 原始 STALL: 整窗零差分的 min 聚合结果为 +inf，CDF 应为 1。
+                    allow_positive_infinity_percentile=True,
                 )
             patch_tensor = torch.from_numpy(patch_values)
             if method["local"]["enabled"] and method["local"]["spatial_enabled"]:

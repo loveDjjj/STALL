@@ -151,6 +151,28 @@ def empirical_cdf_right_inclusive(
     return np.searchsorted(reference, values, side="right") / float(len(reference))
 
 
+def empirical_cdf_with_positive_infinity(
+    scores: np.ndarray, reference_sorted: np.ndarray
+) -> np.ndarray:
+    """计算右包含经验 CDF，并将协议定义的 ``+inf`` 映射为 1。
+
+    Global T1 对严格为零的相邻帧差分不定义方向。原始 STALL 在最小
+    似然聚合前将这些位置置为 ``+inf``，使其不影响其他有效转移；若
+    一个窗口全部为零差分，则其聚合值仍为 ``+inf``，对应最高 CDF。
+    ``NaN`` 与 ``-inf`` 不属于该协议，必须继续显式报错。
+    """
+
+    values = np.asarray(scores, dtype=np.float64)
+    if np.isnan(values).any() or np.isneginf(values).any():
+        raise ValueError("CDF values contain NaN or negative infinity")
+    result = np.ones(len(values), dtype=np.float64)
+    finite = np.isfinite(values)
+    result[finite] = empirical_cdf_right_inclusive(
+        values[finite], reference_sorted
+    )
+    return result
+
+
 def l2_normalized_second_order(patch: torch.Tensor) -> torch.Tensor:
     """Compute same-grid D2 in the input dtype, then feature-wise L2 normalize."""
     if patch.ndim != 4 or patch.shape[1] < 3:
@@ -211,6 +233,7 @@ def score_gaussian_aggregate_float64(
     device: str | torch.device = "cuda:0",
     invalid_mask: torch.Tensor | np.ndarray | None = None,
     compute_percentile: bool = True,
+    allow_positive_infinity_percentile: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Score each sample independently with a fixed-shape float64 GEMM.
 
@@ -218,6 +241,7 @@ def score_gaussian_aggregate_float64(
     a sample before applying mean, min, or max likelihood aggregation. An
     optional mask marks likelihood positions as positive infinity, matching
     STALL's treatment of exact zero temporal differences under min aggregation.
+    ``allow_positive_infinity_percentile`` 仅供该 Global T1 协议使用。
     """
     values = torch.as_tensor(features, dtype=torch.float32, device="cpu")
     if values.ndim < 3:
@@ -253,11 +277,14 @@ def score_gaussian_aggregate_float64(
     else:
         aggregate = likelihood.amax(dim=1)
     raw = aggregate.cpu().numpy().astype(np.float64, copy=False)
-    percentile = (
-        empirical_cdf_right_inclusive(raw, params.calibration_raw)
-        if compute_percentile
-        else np.full(len(raw), np.nan, dtype=np.float64)
-    )
+    if compute_percentile:
+        percentile = (
+            empirical_cdf_with_positive_infinity(raw, params.calibration_raw)
+            if allow_positive_infinity_percentile
+            else empirical_cdf_right_inclusive(raw, params.calibration_raw)
+        )
+    else:
+        percentile = np.full(len(raw), np.nan, dtype=np.float64)
     return raw, percentile
 
 
@@ -393,6 +420,7 @@ __all__ = [
     "bottomk_mean",
     "configure_strict_fp32",
     "empirical_cdf_right_inclusive",
+    "empirical_cdf_with_positive_infinity",
     "l2_normalized_first_order",
     "l2_normalized_patch_first_order",
     "l2_normalized_second_order",
