@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 我们方法的结构与时间覆盖消融：每个 variant 仅改变下方明确列出的基础配置字段。
+# 我们方法的结构与时间覆盖消融。锁定 D2 变体复用主实验的固定 Local 参数与独立 K=1 CDF；
+# D1 和 K=1 没有对应锁定资产，必须使用互斥真实 calibration 重拟合，并在运行名中显式标明。
 # 可透传：--dry-run、--overwrite、--set runtime.device=cuda:1、
 # --set 'runtime.devices=[cuda:0,cuda:1]'、--set runtime.score_batch_size=16、--set runtime.cache_io_workers=1。
-# 用法示例：bash scripts/run_ablation.sh local_d1 --dry-run
+# 用法示例：bash scripts/run_ablation.sh local_d1_refit --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ $# -lt 1 ]]; then
-  echo "用法：run_ablation.sh <global_only|local_d1|local_d2|combined_local_d2|global_k1|full_k1|full_k3> [runner 参数]" >&2
+  echo "用法：run_ablation.sh <global_only|local_d1_refit|local_d2_locked|full_d1_refit|full_k1_refit|full_k3_locked> [runner 参数]" >&2
   exit 2
 fi
 VARIANT="$1"
@@ -24,29 +25,30 @@ case "$VARIANT" in
     SETS=(--set method.local.enabled=false)
     RUN_NAME=alpha_stall_global_only
     ;;
-  local_d1)
+  local_d1_refit)
     SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=false)
-    RUN_NAME=alpha_stall_local_d1
+    RUN_NAME=alpha_stall_local_d1_refit
     ;;
-  local_d2)
-    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
-    RUN_NAME=alpha_stall_local_d2
+  local_d2_locked)
+    # 只移除 Global；D2 参数、K=3 锁定帧索引与 Local K=1 CDF 均与主实验一致。
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=locked_u0 --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
+    RUN_NAME=alpha_stall_local_d2_locked
     ;;
-  combined_local_d2)
-    SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=true)
-    RUN_NAME=alpha_stall_combined_local_d2
+  full_d1_refit)
+    # 与完整方法相比只改用 D1；因无锁定 D1 参数，Local 分支由 calibration real 重拟合。
+    SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=true)
+    RUN_NAME=alpha_stall_full_d1_refit
     ;;
-  global_k1)
-    SETS=(--set method.local.enabled=false --set sampling.num_windows=1)
-    RUN_NAME=alpha_stall_global_k1
-    ;;
-  full_k1)
+  full_k1_refit)
+    # 当前仓库没有历史锁定 K=1 evaluation 帧索引，故这是可复现的 K=1 重拟合参考，
+    # 不可标注为“仅改变 K”的严格锁定因子对照。
     SETS=(--set method.local.parameter_source=fit_real_only --set sampling.num_windows=1)
-    RUN_NAME=alpha_stall_full_k1
+    RUN_NAME=alpha_stall_full_k1_refit
     ;;
-  full_k3)
+  full_k3_locked)
+    # 已完成的 alpha_stall_locked_u0 就是该配置；仅在明确需要独立重复时才运行。
     SETS=(--set sampling.num_windows=3)
-    RUN_NAME=alpha_stall_full_k3
+    RUN_NAME=alpha_stall_full_k3_locked
     ;;
   *)
     echo "未知消融名称：$VARIANT" >&2

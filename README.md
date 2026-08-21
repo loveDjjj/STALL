@@ -11,7 +11,7 @@
 
 ```bash
 bash scripts/run_alpha_stall.sh --dry-run
-bash scripts/run_ablation.sh local_d1 --dry-run
+bash scripts/run_ablation.sh local_d1_refit --dry-run
 ```
 
 `--dry-run` 只验证最终配置并打印执行计划，不会创建结果目录、读取缓存或启动计算。
