@@ -124,7 +124,14 @@ def _cache_window_count(context) -> int | None:
     return count
 
 
-def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series, context, reader: PackedCacheReader | None = None) -> dict:
+def _load_cache_payload(
+    repository_root: Path,
+    cache_root: Path,
+    row: pd.Series,
+    context,
+    reader: PackedCacheReader | None = None,
+    use_locked_override: bool = False,
+) -> dict:
     """读取并逐条验证完整或多窗口严格缓存。"""
 
     stem = Path(str(row["video_path"])).stem
@@ -132,10 +139,10 @@ def _load_cache_payload(repository_root: Path, cache_root: Path, row: pd.Series,
         cache_root, str(row["subset"]), str(row["source_model"]), stem, 2, False
     )
     cache_key = cache_path.relative_to(cache_root).as_posix()
-    # 锁定 U0 的帧索引仅有一条视频超出当前 K=3 缓存并集。其覆盖特征作为
-    # 版本化预计算资产保存，优先读取但不改变原严格缓存或 packed index。
+    # 锁定 U0 的帧索引仅有一条视频超出当前 K=3 缓存并集。覆盖特征只可用于
+    # 锁定帧协议；refit 实验必须读取通用缓存，不能混入该条专用帧集合。
     locked_override = repository_root / "precomputed" / "locked_u0" / "cache_overrides" / cache_key
-    if locked_override.is_file():
+    if use_locked_override and locked_override.is_file():
         return torch.load(locked_override, weights_only=True)
     packed = reader.get(cache_key) if reader is not None else None
     if packed is not None:
@@ -374,7 +381,10 @@ def _score_windows(
     def load_batch(batch: list[tuple[int, pd.Series]]) -> list[tuple[int, pd.Series, dict]]:
         def load(item: tuple[int, pd.Series]) -> tuple[int, pd.Series, dict]:
             position, row = item
-            return position, row, _load_cache_payload(repository_root, cache_root, row, context, packed_reader)
+            return position, row, _load_cache_payload(
+                repository_root, cache_root, row, context, packed_reader,
+                use_locked_override=locked_window_map is not None,
+            )
         with ThreadPoolExecutor(max_workers=min(io_workers, len(batch))) as executor:
             return list(executor.map(load, batch))
 
