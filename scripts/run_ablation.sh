@@ -8,7 +8,7 @@ set -euo pipefail
 # 用法示例：bash scripts/run_ablation.sh local_d1_refit --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ $# -lt 1 ]]; then
-  echo "用法：run_ablation.sh <global_only|local_d1_refit|local_d2_locked|full_d1_refit|full_k1_refit|full_k3_locked> [runner 参数]" >&2
+  echo "用法：run_ablation.sh <global_only|local_d1_refit|local_d2_locked|local_d2_refit|full_d1_refit|full_d2_k3_refit|full_k1_refit|full_k3_locked> [runner 参数]" >&2
   exit 2
 fi
 VARIANT="$1"
@@ -34,10 +34,21 @@ case "$VARIANT" in
     SETS=(--set method.global.enabled=false --set method.local.parameter_source=locked_u0 --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
     RUN_NAME=alpha_stall_local_d2_locked
     ;;
+  local_d2_refit)
+    # 与 local_d1_refit 共用通用 K=3 窗口和 real-only 参数拟合，只将时序阶数改为 D2。
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
+    RUN_NAME=alpha_stall_local_d2_refit
+    ;;
   full_d1_refit)
     # 与完整方法相比只改用 D1；因无锁定 D1 参数，Local 分支由 calibration real 重拟合。
     SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=true)
     RUN_NAME=alpha_stall_full_d1_refit
+    ;;
+  full_d2_k3_refit)
+    # 与 full_d1_refit、full_k1_refit 共用 real-only 拟合协议；此项固定 D2 和 K=3。
+    # 它分别是 D2-vs-D1 与 K=3-vs-K1 的受控参照，不能与 locked U0 主表混称同一协议。
+    SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=true --set sampling.num_windows=3)
+    RUN_NAME=alpha_stall_full_d2_k3_refit
     ;;
   full_k1_refit)
     # 当前仓库没有历史锁定 K=1 evaluation 帧索引，故这是可复现的 K=1 重拟合参考，
