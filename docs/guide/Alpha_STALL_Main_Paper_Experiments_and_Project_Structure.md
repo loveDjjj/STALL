@@ -22,6 +22,11 @@
 每次运行输出到 `results/runs/<run-name>/`。论文表格从这些标准化 CSV 汇总，
 而不是从按实验命名的源码或历史工具中读取。
 
+完成 `local_d1_refit`、`local_d2_refit`、`full_d1_refit`、`full_d2_k3_refit` 与
+`full_k1_refit` 后，运行 `python scripts/build_ablation_refit_comparisons.py`。它不重跑
+特征和评分，只对齐既有 `video_scores.csv`，将差值与 AUC bootstrap 写入
+`results/runs/ablation_refit_comparisons/`。
+
 ## 执行顺序
 
 1. 先确认完整 Alpha STALL 方法在三个开发数据集都能跑通。
