@@ -69,11 +69,17 @@ def _balanced_real_pair(
     这避免真实来源比例随生成器规模而改变。该规则与历史 U0 主表一致。
     """
 
+    # 抽样随机数会作用于当前行位置。先按不可变视频身份排序并重置索引，保证内存
+    # DataFrame 与从 video_scores.csv 重读的 DataFrame 得到完全相同的论文配对。
+    real = real.sort_values("video_id", kind="stable").reset_index(drop=True)
+    fake = fake.sort_values("video_id", kind="stable").reset_index(drop=True)
     target = min(len(real), len(fake))
     if target == 0:
         raise ValueError("生成器配对同时需要真实与生成视频")
     groups = [
-        group.sample(n=min(len(group), max(1, target // real["source_model"].nunique())), random_state=seed)
+        group.sort_values("video_id", kind="stable").reset_index(drop=True).sample(
+            n=min(len(group), max(1, target // real["source_model"].nunique())), random_state=seed
+        )
         for _, group in real.groupby("source_model", sort=True)
     ]
     sampled_real = pd.concat(groups, ignore_index=True).sample(

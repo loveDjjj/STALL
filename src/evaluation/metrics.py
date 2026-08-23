@@ -38,9 +38,13 @@ def _seed(seed: int, *parts: str) -> int:
 
 
 def _generator_pairs(frame: pd.DataFrame, seed: int) -> list[pd.DataFrame]:
-    real = frame[frame["subset"].eq("real")]
+    # 与论文配对表一样固定行顺序，避免 CSV 重读后的索引变化影响 bootstrap 抽样。
+    real = frame[frame["subset"].eq("real")].sort_values(
+        "video_id", kind="stable"
+    ).reset_index(drop=True)
     pairs: list[pd.DataFrame] = []
     for generator, fake in frame[frame["subset"].eq("annotated")].groupby("source_model", sort=True):
+        fake = fake.sort_values("video_id", kind="stable").reset_index(drop=True)
         count = min(len(real), len(fake))
         if count == 0:
             continue
