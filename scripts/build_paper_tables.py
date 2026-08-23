@@ -30,7 +30,8 @@ def main() -> None:
     if not config_path.is_file() or not scores_path.is_file():
         raise FileNotFoundError("run 必须包含 resolved_config.yaml 与 video_scores.csv")
     config = load_config(config_path)
-    scores = normalize_scores(pd.read_csv(scores_path))
+    # round_trip 保留运行时 float64 分数，避免 CDF 并列附近的末位变化影响排序指标。
+    scores = normalize_scores(pd.read_csv(scores_path, float_precision="round_trip"))
     # 早于本脚本的已完成 run 尚未保存该字段；历史 U0 论文协议固定使用 42。
     pairwise_seed = int(config["metrics"].get("pairwise_seed", 42))
     table = build_pairwise_metric_table(

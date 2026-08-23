@@ -72,7 +72,9 @@ def _load_run(name: str) -> tuple[pd.DataFrame, dict]:
     config_path = directory / "resolved_config.yaml"
     if not scores_path.is_file() or not config_path.is_file():
         raise FileNotFoundError(f"比较输入 run 缺少分数或配置：{name}")
-    return normalize_scores(pd.read_csv(scores_path)), load_config(config_path)
+    return normalize_scores(
+        pd.read_csv(scores_path, float_precision="round_trip")
+    ), load_config(config_path)
 
 
 def _align(candidate: pd.DataFrame, baseline: pd.DataFrame, comparison: Comparison) -> pd.DataFrame:

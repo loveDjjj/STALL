@@ -110,7 +110,7 @@ def run(
                 windows, scores, pipeline_metadata = run_from_cache(repository_root, config, report=report)
             else:
                 report({"phase": "loading_scores", "message": "[输入] 读取外部分数 CSV"})
-                scores = normalize_scores(pd.read_csv(scores_csv))
+                scores = normalize_scores(pd.read_csv(scores_csv, float_precision="round_trip"))
                 selected = config["data"]["datasets"]
                 scores = scores[scores["dataset"].isin(selected)].copy()
                 if scores.empty:
@@ -188,7 +188,7 @@ def resume_bootstrap(
         }
         write_progress(output_dir, progress)
         try:
-            scores = normalize_scores(pd.read_csv(scores_path))
+            scores = normalize_scores(pd.read_csv(scores_path, float_precision="round_trip"))
             bootstrap = build_bootstrap(scores, config)
             if not bootstrap.empty:
                 write_csv(output_dir, "bootstrap_metrics.csv", bootstrap)
