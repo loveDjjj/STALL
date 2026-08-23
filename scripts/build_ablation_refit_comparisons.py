@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从已完成的重拟合 run 构建 D1/D2 与 K1/K3 的配对差值和 bootstrap 表。"""
+"""从已完成的重拟合 run 构建 D1/D2、K1/K3 与 Spatial 的配对统计表。"""
 
 from __future__ import annotations
 
@@ -48,6 +48,31 @@ COMPARISONS = (
         "full_d2_k3_refit_vs_full_k1_refit",
         "alpha_stall_full_d2_k3_refit",
         "alpha_stall_full_k1_refit",
+    ),
+    Comparison(
+        "local_d2_refit_vs_local_spatial_only_refit",
+        "alpha_stall_local_d2_refit",
+        "alpha_stall_local_spatial_only_refit",
+    ),
+    Comparison(
+        "local_spatial_d2_refit_vs_local_d2_refit",
+        "alpha_stall_local_spatial_d2_refit",
+        "alpha_stall_local_d2_refit",
+    ),
+    Comparison(
+        "full_d2_k3_refit_vs_full_d2_k3_no_spatial_refit",
+        "alpha_stall_full_d2_k3_refit",
+        "alpha_stall_full_d2_k3_no_spatial_refit",
+    ),
+    Comparison(
+        "full_d2_k3_no_spatial_refit_vs_global_only_k3_refit",
+        "alpha_stall_full_d2_k3_no_spatial_refit",
+        "alpha_stall_global_only_k3_refit",
+    ),
+    Comparison(
+        "full_d2_k3_refit_vs_global_only_k3_refit",
+        "alpha_stall_full_d2_k3_refit",
+        "alpha_stall_global_only_k3_refit",
     ),
 )
 
@@ -239,7 +264,7 @@ def _bootstrap_auc(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="构建重拟合 D1/D2 与 K1/K3 的跨运行配对比较，不重跑缓存或评分。"
+        description="构建重拟合 D1/D2、K1/K3 与 Spatial 的跨运行配对比较，不重跑缓存或评分。"
     )
     parser.add_argument(
         "--output-run-name", default="ablation_refit_comparisons",

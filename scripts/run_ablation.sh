@@ -8,7 +8,7 @@ set -euo pipefail
 # 用法示例：bash scripts/run_ablation.sh local_d1_refit --dry-run
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ $# -lt 1 ]]; then
-  echo "用法：run_ablation.sh <global_only|local_d1_refit|local_d2_locked|local_d2_refit|full_d1_refit|full_d2_k3_refit|full_k1_refit|full_k3_locked> [runner 参数]" >&2
+  echo "用法：run_ablation.sh <global_only|global_only_k3_refit|local_spatial_only_refit|local_d1_refit|local_d2_locked|local_d2_refit|local_spatial_d2_refit|full_d1_refit|full_d2_k3_refit|full_d2_k3_no_spatial_refit|full_k1_refit|full_k3_locked> [runner 参数]" >&2
   exit 2
 fi
 VARIANT="$1"
@@ -25,6 +25,16 @@ case "$VARIANT" in
     SETS=(--set method.local.enabled=false)
     RUN_NAME=alpha_stall_global_only
     ;;
+  global_only_k3_refit)
+    # 与全部 refit 消融共用通用 K=3 窗口；Local 关闭，因此不会拟合或评分局部参数。
+    SETS=(--set method.local.enabled=false --set method.local.parameter_source=fit_real_only --set sampling.num_windows=3)
+    RUN_NAME=alpha_stall_global_only_k3_refit
+    ;;
+  local_spatial_only_refit)
+    # 仅保留 Local Spatial，用于测量单帧 patch 外观证据的独立检测能力。
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.spatial_enabled=true --set method.local.temporal_enabled=false --set sampling.num_windows=3)
+    RUN_NAME=alpha_stall_local_spatial_only_refit
+    ;;
   local_d1_refit)
     SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=false)
     RUN_NAME=alpha_stall_local_d1_refit
@@ -39,6 +49,11 @@ case "$VARIANT" in
     SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=false)
     RUN_NAME=alpha_stall_local_d2_refit
     ;;
+  local_spatial_d2_refit)
+    # 与 local_d2_refit 相比只启用 Local Spatial，检验 0.1/0.9 局部融合是否必要。
+    SETS=(--set method.global.enabled=false --set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=true --set method.local.temporal_enabled=true --set sampling.num_windows=3)
+    RUN_NAME=alpha_stall_local_spatial_d2_refit
+    ;;
   full_d1_refit)
     # 与完整方法相比只改用 D1；因无锁定 D1 参数，Local 分支由 calibration real 重拟合。
     SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=1 --set method.local.spatial_enabled=true)
@@ -49,6 +64,11 @@ case "$VARIANT" in
     # 它分别是 D2-vs-D1 与 K=3-vs-K1 的受控参照，不能与 locked U0 主表混称同一协议。
     SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=true --set sampling.num_windows=3)
     RUN_NAME=alpha_stall_full_d2_k3_refit
+    ;;
+  full_d2_k3_no_spatial_refit)
+    # 与 full_d2_k3_refit 相比只关闭 Local Spatial；这是决定最终方法是否保留该分支的主对照。
+    SETS=(--set method.local.parameter_source=fit_real_only --set method.local.temporal_order=2 --set method.local.spatial_enabled=false --set method.local.temporal_enabled=true --set sampling.num_windows=3)
+    RUN_NAME=alpha_stall_full_d2_k3_no_spatial_refit
     ;;
   full_k1_refit)
     # 当前仓库没有历史锁定 K=1 evaluation 帧索引，故这是可复现的 K=1 重拟合参考，
