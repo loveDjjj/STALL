@@ -22,6 +22,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_calibration.sh` | 校准种子与样本量实验 |
 | `run_external.sh` | 冻结方法的外部评测 |
 | `run_external_control_matrix.sh` | GenVidBench 最终 K3、受控 K1 与 Global-only 外部验证 |
+| `build_external_genvidbench_comparisons.py` | 对齐外部 run，生成 K3/K1 与 Final/Global 的 AUC/AP bootstrap CI |
 | `freeze_release.sh` | 将一个已完成 run 冻结为正式发布版本 |
 
 脚本默认通过 `conda run -n stall` 执行。先用 `--dry-run` 检查最终配置；它不会创建

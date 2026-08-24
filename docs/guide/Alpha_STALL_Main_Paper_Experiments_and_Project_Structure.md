@@ -39,3 +39,7 @@
 5. 执行 `run_final_no_spatial_matrix.sh`，重新建立无 Spatial 方法的 D1/D2 与 K1/K3 对照。
 6. 执行真实校准 split 与数量稳定性实验。
 7. 冻结最终方法版本，再执行 `run_external_control_matrix.sh`；官方 STALL 基线在其官方仓库单独完成。
+
+外部矩阵完成后运行 `python scripts/build_external_genvidbench_comparisons.py`，将同一
+600 条视频上的 K3/K1 与 Final/Global 差值及 bootstrap CI 写入
+`results/runs/external_genvidbench_comparisons/`。
