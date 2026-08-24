@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Alpha STALL 默认主方法：使用 benchmark.yaml 中的 Global + Local D2 + K=3 配置。
+# Alpha STALL 默认主方法：使用 benchmark.yaml 中的 Global + Local D2-only + K=3 配置。
 # 可透传 runner 参数：--dry-run（只检查计划）、--overwrite（明确覆盖同名未冻结结果）、
 # --set KEY=VALUE（覆盖运行资源或受控实验参数）、--scores-csv PATH（导入外部分数）。
 # 单卡示例：bash scripts/run_alpha_stall.sh --set runtime.device=cuda:1

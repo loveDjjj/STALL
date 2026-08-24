@@ -1,7 +1,7 @@
 # 当前活跃 Alpha STALL 实验唯一可编辑的基础配置。
 # 所有 run_*.sh 只通过 --set 覆盖与实验直接相关的字段，绝不原地修改本文件。
 
-# 方法默认定义：默认运行我们的 Global+Local 方法；消融脚本只关闭或调整对应分支。
+# 方法默认定义：默认运行消融确认后的 Global+Local D2-only + K=3 方法。
 method:
   # 当前仓库只维护这一种方法后端。
   name: alpha_stall
@@ -19,22 +19,22 @@ method:
   local:
     # 是否启用 Local 证据分支；Global-only 消融会关闭此项。
     enabled: true
-    # locked_u0 读取论文锁定资产；fit_real_only 用当前 real-only calibration 重拟合。
-    parameter_source: locked_u0
+    # 最终方法用当前 real-only calibration 重拟合；locked_u0 仅供历史 U0 对照。
+    parameter_source: fit_real_only
     # 锁定 Local 参数与 K=3 帧索引。不使用已废弃的 release/ 目录。
     locked_parameters_dir: precomputed/locked_u0/local
     locked_frame_indices: data/protocols/locked_u0/frame_indices.json
     # Local 仅由目标域互斥真实校准视频拟合；默认经验协方差与锁定方案一致。
     covariance_estimator: empirical
-    # 是否使用局部 patch 空间似然；M02 可单独关闭此项。
-    spatial_enabled: true
+    # Spatial factorial 显示该分支稳定降低最终 Macro 指标，因此正式方法关闭它。
+    spatial_enabled: false
     # 是否使用局部时序动态；关闭后 Local 只保留空间证据。
     temporal_enabled: true
     # 局部时序差分阶数：1 是 D1 消融，2 是默认 D2 方法。
     temporal_order: 2
-    # Local Spatial 与 Local Temporal 的融合权重；两者之和应为 1。
-    spatial_weight: 0.1
-    temporal_weight: 0.9
+    # 最终 Local 只保留 D2；历史 Spatial+D2 变体在脚本中显式覆盖为 0.1/0.9。
+    spatial_weight: 0.0
+    temporal_weight: 1.0
   fusion:
     # 视频级 Global 与 Local 的最终融合权重；两者之和应为 1。
     global_weight: 0.6

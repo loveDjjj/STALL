@@ -35,6 +35,16 @@ class ConfigAndEvaluateTests(unittest.TestCase):
         validate_config(config)
         self.assertFalse(config["method"]["local"]["enabled"])
 
+    def test_default_method_is_refit_d2_only_k3(self) -> None:
+        local = self.config["method"]["local"]
+        self.assertEqual(local["parameter_source"], "fit_real_only")
+        self.assertFalse(local["spatial_enabled"])
+        self.assertTrue(local["temporal_enabled"])
+        self.assertEqual(local["temporal_order"], 2)
+        self.assertEqual(local["spatial_weight"], 0.0)
+        self.assertEqual(local["temporal_weight"], 1.0)
+        self.assertEqual(self.config["sampling"]["num_windows"], 3)
+
     def test_method_requires_at_least_one_evidence_branch(self) -> None:
         with self.assertRaisesRegex(ValueError, "至少必须启用"):
             apply_overrides(

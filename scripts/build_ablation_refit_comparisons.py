@@ -74,6 +74,16 @@ COMPARISONS = (
         "alpha_stall_full_d2_k3_refit",
         "alpha_stall_global_only_k3_refit",
     ),
+    Comparison(
+        "full_d2_k3_no_spatial_refit_vs_full_d1_k3_no_spatial_refit",
+        "alpha_stall_full_d2_k3_no_spatial_refit",
+        "alpha_stall_full_d1_k3_no_spatial_refit",
+    ),
+    Comparison(
+        "full_d2_k3_no_spatial_refit_vs_full_d2_k1_no_spatial_refit",
+        "alpha_stall_full_d2_k3_no_spatial_refit",
+        "alpha_stall_full_d2_k1_no_spatial_refit",
+    ),
 )
 
 KEY_COLUMNS = ("video_id", "dataset", "subset", "source_model", "video_path")

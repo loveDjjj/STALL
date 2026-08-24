@@ -171,7 +171,8 @@ class CachePipelineTests(unittest.TestCase):
 
             context = CacheContractContext(temp / "cache", "strict", True, {"identity": {}}, "mock")
             with patch("alpha_stall_pipeline.prepare_feature_cache", return_value=context), patch(
-                "alpha_stall_pipeline._load_cache_payload", side_effect=lambda _repo, _root, row, _context, _reader=None: payload_for(row)
+                "alpha_stall_pipeline._load_cache_payload",
+                side_effect=lambda _repo, _root, row, _context, _reader=None, use_locked_override=False: payload_for(row),
             ):
                 windows, videos, metadata = run_from_cache(ROOT, config)
 

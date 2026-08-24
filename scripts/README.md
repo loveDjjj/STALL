@@ -14,9 +14,10 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `wait_for_cache_gpu.sh` | 等待 GPU 0 空闲达到阈值后安全启动缓存重建 |
 | `run_alpha_stall.sh` | Alpha STALL 默认方法 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
-| `run_development_matrix.sh` | 顺序执行开发集核心消融矩阵，复用已完成的完整 K=3 主实验 |
-| `run_refit_control_matrix.sh` | 补齐 D1/D2 与 K1/K3 的受控重拟合比较，不混用 locked U0 资产 |
+| `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
+| `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |
 | `run_spatial_control_matrix.sh` | 补齐 Local Spatial 独立能力、局部融合和最终模型必要性 factorial |
+| `run_final_no_spatial_matrix.sh` | 为最终 Global+D2-only 方法补齐 Full D1 与 K=1 严格对照 |
 | `build_ablation_refit_comparisons.py` | 从已完成 run 增量构建 D1/D2、K1/K3、Spatial 的配对差值和 AUC bootstrap 数据 |
 | `run_calibration.sh` | 校准种子与样本量实验 |
 | `run_external.sh` | 冻结方法的外部评测 |

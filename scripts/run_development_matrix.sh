@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 开发集核心实验矩阵：依次运行 Global、Local 时序和 K=1 参考，不并发抢占两张评分卡。
-# 完整锁定 K=3 主实验复用 results/runs/alpha_stall_locked_u0，不在此重复运行。
-# D1 与 K=1 的运行名含 refit，表示 Local 参数仅由各数据集互斥 calibration real 重新拟合。
+# 开发集核心实验矩阵：依次运行最终无 Spatial 方法的 Global、Local、D1 和 K=1 对照。
+# 完整 D2 K=3 主方法由 run_alpha_stall.sh 单独运行，不在此重复；全部对照使用 real-only refit。
 # 默认双卡示例：bash scripts/run_development_matrix.sh
 # 指定单卡示例：bash scripts/run_development_matrix.sh --set 'runtime.devices=[cuda:0]'
 # 预检示例：bash scripts/run_development_matrix.sh --dry-run
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VARIANTS=(global_only local_d2_locked local_d1_refit full_d1_refit full_k1_refit)
+VARIANTS=(
+  global_only_k3_refit
+  local_d1_refit
+  local_d2_refit
+  full_d1_k3_no_spatial_refit
+  full_d2_k1_no_spatial_refit
+)
 
 for variant in "${VARIANTS[@]}"; do
   echo "[矩阵] 开始 ${variant}" >&2
