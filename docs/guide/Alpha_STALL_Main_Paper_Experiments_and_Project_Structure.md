@@ -20,6 +20,7 @@
 | Local 与时间覆盖归因 | `run_ablation.sh` | Local 是否启用、`sampling.num_windows`；K=1 无锁定帧协议时必须标为 `refit` |
 | 校准稳定性与样本量 | `run_calibration.sh` | 校准 seed 与真实视频数量 |
 | 外部泛化 | `run_external.sh` | 外部数据集身份及其真实校准数据 |
+| 外部控制矩阵 | `run_external_control_matrix.sh` | GenVidBench 最终 K3、同方法 K1 和 Global-only K3 |
 
 每次运行输出到 `results/runs/<run-name>/`。论文表格从这些标准化 CSV 汇总，
 而不是从按实验命名的源码或历史工具中读取。
@@ -37,4 +38,4 @@
 4. Spatial factorial 已确认 Spatial 稳定降低 Macro 指标；正式方法固定为 Global+D2-only。
 5. 执行 `run_final_no_spatial_matrix.sh`，重新建立无 Spatial 方法的 D1/D2 与 K1/K3 对照。
 6. 执行真实校准 split 与数量稳定性实验。
-7. 冻结最终方法版本，再执行外部泛化；官方 STALL 基线在其官方仓库单独完成。
+7. 冻结最终方法版本，再执行 `run_external_control_matrix.sh`；官方 STALL 基线在其官方仓库单独完成。

@@ -21,6 +21,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `build_ablation_refit_comparisons.py` | 从已完成 run 增量构建 D1/D2、K1/K3、Spatial 的配对差值和 AUC bootstrap 数据 |
 | `run_calibration.sh` | 校准种子与样本量实验 |
 | `run_external.sh` | 冻结方法的外部评测 |
+| `run_external_control_matrix.sh` | GenVidBench 最终 K3、受控 K1 与 Global-only 外部验证 |
 | `freeze_release.sh` | 将一个已完成 run 冻结为正式发布版本 |
 
 脚本默认通过 `conda run -n stall` 执行。先用 `--dry-run` 检查最终配置；它不会创建
