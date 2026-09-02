@@ -16,6 +16,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 import torch
+import yaml
 
 from branches.global_branch import (
     GLOBAL_SPATIAL_AGGREGATION,
@@ -39,6 +40,9 @@ from math_utils import (
 
 
 COMPONENTS = ("global_spatial", "global_t1", "patch_spatial", "patch_temporal")
+GLOBAL_WINDOW_COLUMNS = (
+    "global_spatial_raw", "global_spatial", "global_t1_raw", "global_t1"
+)
 
 
 def _write_worker_event(path: Path, payload: dict) -> None:
@@ -374,6 +378,85 @@ def _load_global_parameters(repository_root: Path, config: dict) -> dict[str, St
     return load_official_stall_parameters(parameter_path)
 
 
+def _load_reused_global_windows(
+    repository_root: Path, config: dict, cache_contract_sha256: str | None
+) -> tuple[pd.DataFrame | None, dict[str, object] | None]:
+    """读取并验证一个已完成 run 的逐窗口 Global 分数。"""
+
+    run_name = config["runtime"].get("reuse_global_run")
+    if run_name is None:
+        return None, None
+    directory = repository_root / "results" / "runs" / str(run_name)
+    required_files = (
+        directory / "progress.json",
+        directory / "run_manifest.json",
+        directory / "resolved_config.yaml",
+        directory / "window_scores.csv",
+    )
+    missing = [str(path) for path in required_files if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"复用 Global 的来源 run 缺少文件：{missing}")
+    progress = json.loads(required_files[0].read_text(encoding="utf-8"))
+    manifest = json.loads(required_files[1].read_text(encoding="utf-8"))
+    if progress.get("status") != "completed" or manifest.get("status") != "completed":
+        raise ValueError(f"复用 Global 的来源 run 尚未完成：{run_name}")
+    source_config = yaml.safe_load(required_files[2].read_text(encoding="utf-8"))
+    checks = {
+        "method.global": (source_config["method"]["global"], config["method"]["global"]),
+        "sampling": (source_config["sampling"], config["sampling"]),
+        "calibration": (source_config["calibration"], config["calibration"]),
+        "data": (source_config["data"], config["data"]),
+        "runtime.cache_dir": (
+            source_config["runtime"]["cache_dir"], config["runtime"]["cache_dir"]
+        ),
+    }
+    mismatched = [name for name, (left, right) in checks.items() if left != right]
+    if mismatched:
+        raise ValueError(f"复用 Global 的来源配置不兼容：{mismatched}")
+    source_contract = manifest.get("pipeline", {}).get("cache_contract_sha256")
+    if source_contract != cache_contract_sha256:
+        raise ValueError("复用 Global 的来源 cache contract 与当前严格缓存不一致")
+
+    windows = pd.read_csv(required_files[3], float_precision="round_trip")
+    keys = ["dataset", "split", "video_id", "window_id"]
+    required_columns = set(keys).union(GLOBAL_WINDOW_COLUMNS)
+    missing_columns = required_columns.difference(windows.columns)
+    if missing_columns:
+        raise ValueError(f"复用 Global 的窗口表缺少字段：{sorted(missing_columns)}")
+    if windows.duplicated(keys).any():
+        raise ValueError("复用 Global 的窗口表含重复窗口身份")
+    selected = windows[keys + list(GLOBAL_WINDOW_COLUMNS)].copy()
+    identity = {
+        "run_name": str(run_name),
+        "git_commit": manifest.get("git_commit"),
+        "config_hash": manifest.get("config_hash"),
+        "window_scores_sha256": hashlib.sha256(required_files[3].read_bytes()).hexdigest(),
+    }
+    return selected, identity
+
+
+def _attach_reused_global(
+    frame: pd.DataFrame,
+    source: pd.DataFrame,
+    *,
+    dataset: str,
+    split: str,
+) -> pd.DataFrame:
+    """按唯一窗口身份一一附加 Global 分数，拒绝缺失或多余窗口。"""
+
+    keys = ["dataset", "video_id", "window_id"]
+    reference = source[
+        source["dataset"].eq(dataset) & source["split"].eq(split)
+    ].drop(columns="split")
+    merged = frame.merge(reference, on=keys, how="left", validate="one_to_one", sort=False)
+    if len(merged) != len(frame) or merged[list(GLOBAL_WINDOW_COLUMNS)].isna().any().any():
+        raise ValueError(f"{dataset} {split} 无法与复用 Global 窗口一一对齐")
+    # merge 保留主表原始顺序，但显式恢复内部 input order 以防 pandas 版本差异。
+    if "_input_order" in merged:
+        merged = merged.sort_values(["_input_order", "window_id"], kind="mergesort")
+    return merged.reset_index(drop=True)
+
+
 def _save_fitted_local_artifacts(
     output_dir: Path,
     dataset: str,
@@ -441,6 +524,7 @@ def _score_windows(
     parameters: dict[str, StableGaussianParams],
     device: str,
     *,
+    score_global: bool = True,
     report: Callable[[int, int], None] | None = None,
     diagnostic: Callable[[dict], None] | None = None,
 ) -> pd.DataFrame:
@@ -498,7 +582,7 @@ def _score_windows(
             global_values = np.stack([item[1] for item in batch_windows])
             patch_values = np.stack([item[2] for item in batch_windows])
             scores: dict[str, np.ndarray] = {}
-            if method["global"]["enabled"]:
+            if method["global"]["enabled"] and score_global:
                 scores["global_spatial_raw"], scores["global_spatial"] = score_gaussian_aggregate_float64(
                     global_values, parameters["global_spatial"], GLOBAL_SPATIAL_AGGREGATION, device=device
                 )
@@ -580,6 +664,7 @@ def _score_rows_worker(
     parameters: dict[str, StableGaussianParams],
     device: str,
     rows: pd.DataFrame,
+    score_global: bool = True,
     progress_queue=None,
     worker_log_path: str | None = None,
 ) -> pd.DataFrame:
@@ -610,7 +695,7 @@ def _score_rows_worker(
         result = _score_windows(
             Path(repository_root), rows, Path(cache_root), context, dataset, config,
             parameters, device, report=worker_report if progress_queue is not None else None,
-            diagnostic=diagnostic,
+            diagnostic=diagnostic, score_global=score_global,
         )
     except BaseException as error:
         diagnostic({"event": "worker_failed", "exception_type": type(error).__name__, "message": str(error), "traceback": traceback.format_exc()})
@@ -630,11 +715,15 @@ def _score_evaluation(
     devices: list[str],
     report: Callable[[int, int], None],
     worker_log_dir: Path | None = None,
+    score_global: bool = True,
 ) -> pd.DataFrame:
     """单卡使用预取流水线；双卡按互斥连续 shard 区间评分并合并。"""
 
     if len(devices) == 1 or len(rows) < 2:
-        return _score_windows(repository_root, rows, cache_root, context, dataset, config, parameters, devices[0], report=report)
+        return _score_windows(
+            repository_root, rows, cache_root, context, dataset, config,
+            parameters, devices[0], report=report, score_global=score_global,
+        )
     chunks = _split_rows_by_packed_shard(rows, cache_root, len(devices))
     if chunks is None:
         chunks = [chunk.copy() for chunk in np.array_split(rows, len(devices)) if not chunk.empty]
@@ -647,7 +736,7 @@ def _score_evaluation(
         futures = {
             executor.submit(
                 _score_rows_worker, str(repository_root), str(cache_root), context,
-                dataset, config, parameters, device, chunk, progress_queue,
+                dataset, config, parameters, device, chunk, score_global, progress_queue,
                 str(worker_log_dir / f"worker_{dataset}_{device.replace(':', '_')}.jsonl") if worker_log_dir else None,
             ): (device, len(chunk))
             for device, chunk in zip(devices, chunks)
@@ -774,6 +863,9 @@ def run_from_cache(
     runtime = config["runtime"]
     cache_root = repository_root / runtime["cache_dir"]
     context = prepare_feature_cache(cache_root, expected_contract=None, policy="strict", create=False, required_cache_kind="patch_embeddings")
+    reused_global, reused_global_identity = _load_reused_global_windows(
+        repository_root, config, context.contract_sha256
+    )
     cached_window_count = _cache_window_count(context)
     if cached_window_count is not None and int(config["sampling"]["num_windows"]) > cached_window_count:
         raise ValueError(
@@ -796,7 +888,12 @@ def run_from_cache(
                 )
     all_windows, all_videos = [], []
     packed_reader = PackedCacheReader(cache_root)
-    metadata: dict[str, object] = {"cache_root": str(cache_root), "cache_contract_sha256": context.contract_sha256, "datasets": {}}
+    metadata: dict[str, object] = {
+        "cache_root": str(cache_root),
+        "cache_contract_sha256": context.contract_sha256,
+        "reused_global": reused_global_identity,
+        "datasets": {},
+    }
     for dataset in config["data"]["datasets"]:
         dataset = str(dataset)
         primary_device = torch.device(devices[0])
@@ -841,7 +938,12 @@ def run_from_cache(
         calibration_windows = _score_windows(
             repository_root, selected_calibration, cache_root, context, dataset, config, parameters, devices[0],
             report=(lambda done, total: report({"current_dataset": dataset, "phase": "calibration_score", "completed": done, "total": total, "message": f"[{dataset}] 校准评分 {done}/{total}"}) if report and (done == total or done % max(1, total // 20) == 0) else None),
+            score_global=reused_global is None,
         )
+        if reused_global is not None:
+            calibration_windows = _attach_reused_global(
+                calibration_windows, reused_global, dataset=dataset, split="calibration"
+            )
         if report:
             report({"current_dataset": dataset, "phase": "evaluation_score", "completed": 0, "total": len(evaluation), "message": f"[{dataset}] 使用 {', '.join(devices)} 评分 evaluation（{len(evaluation)} 条）"})
         evaluation_started = monotonic()
@@ -854,7 +956,12 @@ def run_from_cache(
         evaluation_windows = _score_evaluation(
             repository_root, evaluation, cache_root, context, dataset, config,
             parameters, devices, evaluation_progress, worker_log_dir=worker_log_dir,
+            score_global=reused_global is None,
         )
+        if reused_global is not None:
+            evaluation_windows = _attach_reused_global(
+                evaluation_windows, reused_global, dataset=dataset, split="evaluation"
+            )
         if report:
             report({"current_dataset": dataset, "phase": "aggregate", "message": f"[{dataset}] 仅用 calibration real 执行窗口校准和视频聚合"})
         calibrated_windows, videos = _calibrate_and_aggregate(calibration_windows, evaluation_windows, config)

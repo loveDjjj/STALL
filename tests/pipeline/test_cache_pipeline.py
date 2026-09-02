@@ -32,6 +32,7 @@ sys.modules[_PIPELINE_SPEC.name] = _PIPELINE
 _PIPELINE_SPEC.loader.exec_module(_PIPELINE)
 run_from_cache = _PIPELINE.run_from_cache
 calibrate_and_aggregate = _PIPELINE._calibrate_and_aggregate
+attach_reused_global = _PIPELINE._attach_reused_global
 
 
 class CachePipelineTests(unittest.TestCase):
@@ -215,6 +216,36 @@ class CachePipelineTests(unittest.TestCase):
                 config["method"]["local"]["temporal_enabled"] = True
             _, videos = calibrate_and_aggregate(calibration, evaluation, config)
             self.assertTrue(np.isfinite(videos["final_score"]).all())
+
+    def test_reused_global_windows_require_exact_identity_match(self) -> None:
+        local = pd.DataFrame([
+            {
+                "dataset": "demo", "video_id": "v1", "window_id": 0,
+                "subset": "real", "source_model": "real", "video_path": "v1.mp4",
+                "patch_temporal_raw": -1.0, "_input_order": 0,
+            },
+            {
+                "dataset": "demo", "video_id": "v1", "window_id": 1,
+                "subset": "real", "source_model": "real", "video_path": "v1.mp4",
+                "patch_temporal_raw": -2.0, "_input_order": 0,
+            },
+        ])
+        global_scores = pd.DataFrame([
+            {
+                "dataset": "demo", "split": "evaluation", "video_id": "v1",
+                "window_id": window_id, "global_spatial_raw": value,
+                "global_spatial": 0.5, "global_t1_raw": value - 1.0, "global_t1": 0.4,
+            }
+            for window_id, value in ((0, -10.0), (1, -20.0))
+        ])
+        merged = attach_reused_global(
+            local, global_scores, dataset="demo", split="evaluation"
+        )
+        self.assertEqual(merged["global_spatial_raw"].tolist(), [-10.0, -20.0])
+        with self.assertRaisesRegex(ValueError, "无法与复用 Global 窗口一一对齐"):
+            attach_reused_global(
+                local, global_scores.iloc[:1], dataset="demo", split="evaluation"
+            )
 
     def test_k1_evaluation_uses_k1_subset_of_k3_calibration_reference(self) -> None:
         config = load_config(ROOT / "configs/benchmark.yaml")

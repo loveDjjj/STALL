@@ -155,6 +155,13 @@ def validate_config(config: dict[str, Any]) -> None:
     for key in ("score_batch_size", "cache_io_workers"):
         if not isinstance(runtime.get(key), int) or runtime[key] < 1:
             raise ValueError(f"runtime.{key} 必须是正整数")
+    reuse_global_run = runtime.get("reuse_global_run")
+    if reuse_global_run is not None and (
+        not isinstance(reuse_global_run, str) or not reuse_global_run
+    ):
+        raise ValueError("runtime.reuse_global_run 必须是 null 或非空 run 名")
+    if reuse_global_run is not None and not global_branch.get("enabled", False):
+        raise ValueError("复用 Global 分数时 method.global.enabled 必须为 true")
     devices = runtime.get("devices", [])
     if not isinstance(devices, list) or any(not isinstance(item, str) or not item for item in devices):
         raise ValueError("runtime.devices 必须是由非空设备名组成的列表")

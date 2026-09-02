@@ -273,7 +273,18 @@ Correspondence-Aware Conditional Local Dynamics Likelihoods
 
 ### Stage 2：Trajectory Geometry
 
-`T0 D2 / T1 curvature / T2 speed ratio / T3 path-chord / T4 D2+curvature / T5 low-D descriptor`。只有 Stage 1 gate 通过才执行完整矩阵。
+`T0 D2 / T1 curvature / T2 speed ratio / T3 path-chord / T4 D2+curvature / T5 low-D descriptor`。Stage 1 若通过则使用最佳 correspondence；若否定则回到 C0 same-grid，避免把无效 matching 带入 H2。
+
+实际 Stage 1 否定 correspondence 后，Stage 2 固定回到 C0 same-grid，仍执行 T1-T5
+以独立检验 H2，但采用以下预注册决策：
+
+- 主线继续门槛：候选相对 T0 的 Macro AUC 或 AP 至少 `+0.005`，且同一指标
+  至少 2/3 数据集提升；
+- T5 四维 descriptor 若相对 T0 的 Macro AUC/AP 均不低于 `-0.002`，只保留到
+  few-real-shot/cross-real 稳定性验证，不能仅凭持平声称创新；
+- T3 path/chord 与 SPLIT TTR 高度重叠，无论性能如何都只作诊断，不单独进入主线；
+- 若全部几何候选低于 T0，则 H2 被否定，Stage 3 直接以 T0 D2 检验 conditional
+  likelihood，不继续增加几何组合。
 
 ### Stage 3：Conditional Dynamics
 

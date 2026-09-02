@@ -60,6 +60,7 @@ run_variant() {
       --set method.local.correspondence.type=same_grid \
       --set method.local.correspondence.confidence=none \
       --set "method.local.dynamics=${dynamics}" \
+      --set runtime.reuse_global_run=alpha_stall_full_d2_k3_no_spatial_refit \
       "${PASSTHROUGH[@]}"
   echo "[Stage 2] 完成 ${run_name}" >&2
 }
