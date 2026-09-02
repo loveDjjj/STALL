@@ -69,6 +69,10 @@ class WhiteningTransform:
         centered = values - self.mean_
         if self.covariance_estimator == "empirical":
             covariance = torch.cov(centered.T)
+            # torch.cov 对单变量 `[1,N]` 返回 0 维标量；eigh 需要显式的
+            # `1x1` covariance。多变量路径保持原有数值和形状不变。
+            if covariance.ndim == 0:
+                covariance = covariance.reshape(1, 1)
             self.shrinkage_ = 0.0
         else:
             covariance, self.shrinkage_ = self._oas_covariance(centered)

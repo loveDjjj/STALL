@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 import numpy as np
+import torch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,6 +72,14 @@ class ConfigAndEvaluateTests(unittest.TestCase):
         oas = WhiteningTransform(values, device="cpu", covariance_estimator="oas")
         self.assertGreater(oas.shrinkage_, 0.0)
         self.assertGreater(float(oas.eigenvalues_.min()), float(empirical.eigenvalues_.min()))
+
+    def test_empirical_whitening_supports_scalar_descriptor(self) -> None:
+        values = np.linspace(-1.0, 1.0, 32, dtype=np.float32).reshape(-1, 1)
+        transform = WhiteningTransform(values, device="cpu", covariance_estimator="empirical")
+        self.assertEqual(tuple(transform.whitening_matrix_.shape), (1, 1))
+        whitened = transform.transform(values)
+        self.assertEqual(tuple(whitened.shape), (32, 1))
+        self.assertTrue(bool(torch.isfinite(whitened).all()))
 
     def test_standard_score_csv_produces_dataset_and_generator_tables(self) -> None:
         scores = normalize_scores(
