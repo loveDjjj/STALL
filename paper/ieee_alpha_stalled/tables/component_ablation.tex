@@ -1,19 +1,17 @@
 \begin{table*}[t]
   \centering
-  \caption{全局分支与局部分支的消融实验。``w/o Local'' 仅保留全局分支，``w/o Global'' 仅保留局部分支。AUC 列以浅灰色标示；每个指标中的最优和次优结果分别以粗体和下划线标出。}
+  \caption{Global 与 Local D2 的同协议组件消融。全部变体使用 K=3、相同 evaluation 身份和互斥真实视频校准。每格为 AUC/real-positive AP。}
   \label{tab:component_ablation}
   {\scriptsize
   \setlength{\tabcolsep}{4.0pt}
   \renewcommand{\arraystretch}{1.10}
-  \begin{tabular}{l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c||>{\columncolor{gray!8}}c c}
+  \begin{tabular}{lcccc}
     \toprule
-    \multirow{2}{*}{Method} & \multicolumn{2}{c|}{ComGenVid} & \multicolumn{2}{c|}{VideoFeedback} & \multicolumn{2}{c||}{GenVideo} & \multicolumn{2}{c}{Macro-3} \\
-    & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP \\
-    \specialrule{0.8pt}{0pt}{1pt}
-    Original STALL & 0.8508 & 0.8560 & \underline{0.8449} & \underline{0.8596} & 0.8206 & 0.8129 & 0.8388 & 0.8428 \\
-    w/o Local & 0.8627 & 0.8694 & 0.8442 & 0.8582 & \underline{0.8386} & \underline{0.8181} & \underline{0.8485} & \underline{0.8486} \\
-    w/o Global & \underline{0.8914} & \underline{0.8912} & 0.7828 & 0.7849 & 0.8328 & 0.8114 & 0.8357 & 0.8292 \\
-    \method & \textbf{0.8968} & \textbf{0.9064} & \textbf{0.8597} & \textbf{0.8689} & \textbf{0.8657} & \textbf{0.8416} & \textbf{0.8741} & \textbf{0.8723} \\
+    Method & ComGenVid & VideoFeedback & GenVideo & Macro-3 \\
+    \midrule
+    Global-only & 0.8668/0.8762 & 0.8580/0.8694 & 0.8320/0.8140 & 0.8523/0.8532 \\
+    Local D2-only & 0.8995/0.8970 & 0.7368/0.7539 & 0.8447/0.8179 & 0.8270/0.8229 \\
+    Global + Local D2 & \textbf{0.9015/0.9110} & \textbf{0.8621/0.8687} & \textbf{0.8586/0.8391} & \textbf{0.8741/0.8729} \\
     \bottomrule
   \end{tabular}}
 \end{table*}

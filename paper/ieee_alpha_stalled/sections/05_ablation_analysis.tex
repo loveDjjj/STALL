@@ -1,31 +1,32 @@
-\section{消融与边界分析}
+\section{消融与外部边界}
 \label{sec:ablation}
 
-本节按科学问题组织实验。除特别说明外，所有结果均采用相同的独立真实视频校准协议、相同的评测交集和相同的分数方向；单元格报告 AUC 与以真实视频为正类的 AP。
+本节所有开发集消融均使用相同的 21,421 条 evaluation 视频、相同生成器配对规则和互斥真实校准协议。除特别说明外，单元格报告 AUC/real-positive AP。
 
-\subsection{全局与局部证据的互补性}
-表~\ref{tab:component_ablation} 固定 $K=3$，分别移除全局或局部分支。融合模型在 Macro-3 上达到 0.8741/0.8723，超过仅全局分支的 0.8485/0.8486 和仅局部分支的 0.8357/0.8292。三个数据集的相对排序并不完全一致，但融合在宏平均上稳定受益，说明局部二阶证据提供了全局分支之外的互补信息。
+\subsection{Global 与 Local D2 的互补性}
+表~\ref{tab:component_ablation} 固定 $K=3$，分别保留 Global、Local D2 或两者融合。最终模型相对 Global-only 的 Macro AUC/AP 提高 0.0218/0.0197，AUC 配对 bootstrap 95\% 区间为 [0.0191, 0.0242]。相对 Local D2-only，融合后的 Macro AP 提高约 0.0500。ComGenVid 的 Local D2 已具有较强区分能力，而 VideoFeedback 更依赖 Global，说明两条分支在不同数据域提供互补证据。
 
 \input{tables/component_ablation}
 
-\subsection{局部一阶与二阶时序}
-表~\ref{tab:temporal_ablation} 在三个数据集上隔离局部时序的导数阶数。四组实验共享相同的编码器、窗口、区域大小、聚合方式、真实校准视频、局部空间分支、全局分支和融合权重；仅将局部时序从 D1 替换为 D2。D2 在仅局部时序和完整 LSTL 中均提高三个数据集的 AUC/AP；完整模型的 Macro-3 AP 增加 0.0028，配对 bootstrap 的 95\% 区间为 [0.0019, 0.0038]。
+\subsection{Local D1 与 D2}
+表~\ref{tab:temporal_ablation} 在完全移除 Local Spatial 后比较 D1 与 D2。Local-only 条件下，D2 相对 D1 提高 0.0094/0.0126 Macro AUC/AP；完整模型中提高 0.0022/0.0033。完整模型 AUC 增益的 95\% 区间为 [0.0015, 0.0028]，且三个数据集方向一致。这表明有效增益来自同网格二阶轨迹，而非仅仅增加一个 patch 分支。
 
 \input{tables/temporal_ablation}
 
 \subsection{时间覆盖}
-表~\ref{tab:window_coverage_ablation} 先给出仅改变窗口数的受控比较：由 $K=1$ 到 $K=3$ 时，Macro-3 AUC/AP 分别提升 0.0109/0.0087。已有的 $K=5$ 与全部窗口扩展均未改善 AP，却显著增加帧数，因此本文采用三个均匀窗口。
+表~\ref{tab:window_coverage_ablation} 在无 Spatial、固定 Local D2 的条件下只改变窗口数。K3 相对 K1 的 Macro AUC/AP 提高 0.0060/0.0024，AUC 增益 95\% 区间为 [0.0033, 0.0087]。收益主要来自 ComGenVid 与 GenVideo；VideoFeedback 的 AP 下降约 0.0029，因此三窗口应解释为开发集宏平均上的有效选择，而非所有数据域上的单调改进。
 
 \input{tables/window_coverage_ablation}
 
-\subsection{局部空间支持域}
-表~\ref{tab:local_support_boundary} 显示最优图块区域大小随数据集变化：ComGenVid 偏好较大支持域，GenVideo 在中等支持域达到峰值，而 VideoFeedback 偏好细粒度图块。该差异表明区域大小与局部运动尺度相关，不能简单视为可跨数据集固定的常数。
+\subsection{删除 Local Spatial}
+表~\ref{tab:spatial_ablation} 显示 Spatial-only 远弱于 D2-only。将 Spatial 以旧 0.1 权重加入 Local D2，使 Macro AUC/AP 下降 0.0075/0.0057；加入完整模型后下降 0.0015/0.0012，AUC 区间为 $[-0.0019,-0.0011]$。因此正式方法删除 Local Spatial，也不再把 region pooling 或 Patch Spatial likelihood map 作为推理组成部分。
 
-\input{tables/local_support_boundary}
+\input{tables/spatial_ablation}
 
-\subsection{独立真实校准稳定性}
-表~\ref{tab:independent_real_calibration} 使用预先固定的三个独立真实视频校准集。每次均重新拟合局部白化和经验分布函数，生成视频始终只参与最终评价，校准真实视频与评测真实视频也完全互斥。结果的低标准差表明主结果不依赖某一组特定的真实校准视频。
+\subsection{GenVidBench Pair1 外部验证}
+使用 199 条独立 VRiPT real 构建新域 Local D2 参考后，最终 K3 方法在 300 条 VRiPT real 与 300 条 ModelScope fake 上达到 0.8386/0.8430 AUC/AP。相对同协议 Global-only，AUC 提高 0.0249，95\% 区间为 [0.0073, 0.0404]；AP 点增益的区间跨零。K3 与 K1 的 AUC/AP 差值仅为 $-0.0005/-0.0011$，两个区间均跨零。该实验支持 Local D2 的外部域贡献，但不支持三窗口在所有数据域普遍更优。
 
-\input{tables/independent_real_calibration}
+\input{tables/u0_external_validation}
 
-其余融合权重、聚合方式与低分图块比例的敏感性分析，以及跨域校准、校准规模、逐生成器差值、失败方向和注入实验均置于补充材料，作为稳定性和局限性证据；它们不再作为正文的独立结果或方法增益来源。
+\subsection{尚未继承的历史证据}
+旧 Spatial/U0 方法的 region、K5/all-window、45,185 fake 覆盖、独立 200-real split 和跨域校准结果不用于当前 D2-only 方法的正式结论。它们仅保留为研究历史；在最终方法下重跑前，不写入主结果或摘要。

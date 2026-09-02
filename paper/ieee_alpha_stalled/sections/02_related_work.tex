@@ -4,7 +4,7 @@
 \subsection{生成图像与生成视频检测}
 早期生成内容检测主要依赖监督式图像分类器或手工伪影特征。随着生成模型快速变化，这类检测器在未见生成器上容易退化。后续方法引入 CLIP、DINO 等预训练视觉特征，以提升跨生成器泛化能力；训练自由图像检测方法进一步尝试通过重建误差、特征一致性或表示空间统计来避免合成样本依赖，例如 AEROBLADE、ZED 和 RIGID~\cite{ricker2024aeroblade,cozzolino2024zed,he2024rigid}。但图像检测器天然是逐帧的，仍然难以直接建模跨帧运动一致性。
 
-生成视频检测同时需要处理空间外观和时序动态。GenVideo~\cite{chen2024genvideo} 和 VideoFeedback/VideoScore~\cite{he2024videoscore} 等数据集推动了生成视频评测，但许多检测器仍依赖监督训练或特定 benchmark。D3~\cite{zheng2025d3} 是较早的免训练生成视频检测器，它使用二阶时序特征描述帧间动态差异，但主要关注时序证据而不显式建模单帧空间真实度。\stall~\cite{benhayun2026stall} 则把空间外观和全局帧间差分统一到真实视频似然框架中。本文沿用 \stall 的真实视频校准原则，但把补充证据放在 patch 级局部二阶时序上，以解决全局帧向量对局部异常不敏感的问题。
+生成视频检测同时需要处理空间外观和时序动态。GenVideo~\cite{chen2024genvideo} 和 VideoFeedback/VideoScore~\cite{he2024videoscore} 等数据集推动了生成视频评测，但许多检测器仍依赖监督训练或特定 benchmark。D3~\cite{zheng2025d3} 使用二阶时序特征描述帧间动态差异；Over-Coherence~\cite{brokman2026overcoherence} 利用生成视频帧间过度一致性；\stall~\cite{benhayun2026stall} 则把空间外观和全局帧间差分统一到真实视频似然框架中。近期 SPLIT~\cite{hyun2026split} 进一步在冻结视觉编码器的 patch token 上结合时间粗糙度与局部空间运动不一致，并面向低 FPR 和部分编辑视频评测。本文与这些方法共享 training-free 时序检测背景，但关注的问题是：在 \stall 的真实似然框架中，目标域真实视频校准的同网格 Local D2 是否能稳定补充 Global 证据，以及哪些早期局部分支应通过受控消融删除。
 
 \subsection{白化似然与冻结视觉表征}
 白化高斯似然把预训练视觉表征映射到近似各向同性的空间后，以闭式形式估计样本在真实分布下的典型性。该思想已被用于 CLIP 表征的生成图像检测和激活空间统计分析~\cite{betser2025whitenedclip,betser2026conditional,rachmil2025whitening}。\stall 进一步表明，在 DINOv3 全局帧表征中，帧级特征和归一化帧间差分可以被真实视频校准集近似建模，并通过百分位映射得到可比较的空间和时序分数。本文保留这一统计形式，但把被建模对象从全局 token 扩展到 patch token 及其同网格二阶差分。
@@ -12,4 +12,4 @@
 \subsection{局部时序证据}
 局部时序证据在视频取证中具有直接意义：许多生成伪影表现为短时、局部、非语义的变化，例如纹理闪烁、物体边界不稳定或局部运动方向突变。显式光流或 patch 匹配可以描述局部运动，但在生成视频伪影区域容易受到匹配错误影响。本文采用更低假设的同网格策略：不追踪物体，不搜索对应区域，只在冻结 DINOv3 的固定 patch 网格上计算二阶差分。这一选择牺牲了物体级运动解释能力，但提高了协议简洁性和复现性，也与免训练检测目标一致。
 
-综上，现有工作已经分别推进了生成图像检测、生成视频评测和白化似然建模，但尚未把真实视频校准的全局似然与 patch 级局部二阶时序证据在同一冻结 backbone 上统一起来，并在严格的视频级协议下验证其增益。本文填补的正是这一空缺。
+需要特别注意，运动型检测器可能利用 real/fake 在 FPS、时长或运动幅度上的数据集偏差。近期统一预处理审计显示，多种运动检测器在 motion rebalancing 或单帧扰动后明显下降~\cite{michels2026biases}。因此本文把同协议 D1/D2、K1/K3 和 Spatial factorial 作为内部因果证据，同时将 motion-balanced 与统一转码评测列为投稿前必须补齐的外部压力测试，而不把当前 benchmark 增益外推为普遍生成痕迹。

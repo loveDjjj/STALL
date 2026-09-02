@@ -2,117 +2,83 @@
 \label{sec:method}
 
 \subsection{任务定义与总体流程}
-给定视频 $V=\{I_t\}_{t=1}^{T}$，目标是输出真实性分数 $S(V)\in[0,1]$：分数越高，视频越符合真实视频的统计规律。检测器仅使用预先指定的真实视频建立参考统计，不以生成视频训练分类器，也不在推理时读取生成器来源、测试标签或测试批次的类别构成。真实校准集与目标评测集严格隔离，具体划分见实验设置。
+给定视频 $V=\{I_t\}_{t=1}^{T}$，目标是输出真实性分数 $S(V)\in[0,1]$，其中较高分数表示视频更接近真实视频参考统计。检测器不使用生成视频训练分类器，也不在推理时读取生成器来源、测试标签或测试批次组成。Local 参数与经验分布仅由和评测集互斥的真实视频估计。
 
-图~\ref{fig:pipeline} 展示了 \method 的两阶段流程。参考构建阶段，真实视频经过冻结的 DINOv3 编码器，得到全局标记与图块标记；随后分别估计全局空间、全局一阶时序、局部空间和局部二阶时序的白化参数，并保存真实视频的分支统计量以进行百分位校准。推理阶段，每个视频在可用时长内均匀选取至多三个互异的 2 秒窗口，每个窗口包含 8 FPS 下的 16 个不同帧。各窗口独立产生全局和局部分数，两个分支分别在视频级取均值、按有效窗口数重新校准，再使用固定权重融合。
+图~\ref{fig:pipeline} 展示了三个阶段。第一阶段加载官方 \stall VATEX Global 参数，并从目标域真实校准视频构建 Local D2 白化参数、窗口级经验分布和按有效窗口数分组的视频级经验分布。第二阶段对待测视频均匀选择至多三个互异的 2 秒窗口，每窗在 8 FPS 下包含 16 帧；冻结 DINOv3 同时输出 Global token 与 $14\times14$ patch token。第三阶段分别聚合 Global 与 Local D2 证据，执行视频级真实分位数校准，并以固定权重融合。
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{alpha_stalled_pipeline_zh.png}
-  \caption{\method 的全局--局部真实视频校准流程。全局分支继承 \stall 的空间和时序似然；局部分支在 DINOv3 图块标记上建模局部空间似然和同网格二阶时序似然。局部证据先汇聚为统一局部分数，再与全局分数融合。}
+  \caption{\method 的真实视频校准与推理流程。Global 分支固定加载官方 \stall VATEX 参数，并由目标域真实视频建立有效窗口数匹配的视频级参考分布；Local 分支只对同网格 patch 二阶差分建模。两条分支独立聚合与重校准后，以固定 $0.6/0.4$ 权重得到最终真实性分数。}
   \label{fig:pipeline}
 \end{figure*}
 
 \subsection{冻结 DINOv3 表征}
-所有分支共享同一个冻结 DINOv3 ViT-L/16 编码器~\cite{simeoni2025dinov3}。第 $t$ 帧输入后得到全局帧表征和 patch token 网格：
+所有分支共享冻结的 DINOv3 ViT-L/16 编码器~\cite{simeoni2025dinov3}。第 $t$ 帧得到 Global token $g_t$ 与 patch token 网格 $P_t$：
 \begin{equation}
   g_t\in\mathbb{R}^{D},\qquad
-  P_t=\{p_{t,i}\}_{i=1}^{N}\in\mathbb{R}^{N\times D}.
+  P_t=\{p_{t,i}\}_{i=1}^{N}\in\mathbb{R}^{N\times D},
   \label{eq:dino_features}
 \end{equation}
-本文使用 $D=1024$、$N=14\times14$。全局序列 $G=\{g_t\}_{t=1}^{T}$ 对应 \stall 的全局空间和全局时序分支；局部序列 $P=\{P_t\}_{t=1}^{T}$ 用于构建图块空间与图块二阶时序分支。两类证据共享同一次前向传播，因此局部扩展无需训练额外的骨干网络。
+其中 $D=1024$，$N=14\times14$。Global 序列用于 \stall 的空间与一阶时序证据，patch 序列只用于 Local D2。两类证据共享同一次编码器前向传播，不训练额外骨干网络。
 
-\subsection{白化高斯似然与百分位校准}
-对任一分支的特征向量 $x\in\mathbb{R}^{d}$，根据真实校准集估计均值 $\mu$ 和协方差 $\Sigma=U\Lambda U^\top$。保留正特征值对应子空间后，构造白化矩阵：
+\subsection{白化高斯似然与经验分位数}
+对特征 $x\in\mathbb{R}^{d}$，真实参考样本给出均值 $\mu$ 与协方差 $\Sigma=U\Lambda U^\top$。保留正特征值对应子空间并构造
 \begin{equation}
-  W=U_r\operatorname{diag}\left((\lambda_1+\epsilon)^{-1/2},
-  \ldots,(\lambda_r+\epsilon)^{-1/2}\right),
+  W=U_r\operatorname{diag}\left((\lambda_1+\epsilon)^{-1/2},\ldots,(\lambda_r+\epsilon)^{-1/2}\right).
   \label{eq:whitening}
 \end{equation}
-其中 $\epsilon$ 是数值稳定项。白化特征及其标准高斯对数似然为
+白化特征与标准高斯对数似然为
 \begin{align}
   z(x)&=(x-\mu)W,\\
   \ell(x)&=-\frac{1}{2}\left[r\log(2\pi)+\lVert z(x)\rVert_2^2\right].
   \label{eq:gaussian_ll}
 \end{align}
-该分数不是监督分类边界，而是衡量样本是否落在真实视频参考分布的高密度区域。
-
-不同分支的原始对数似然尺度不同，因此本文沿用 \stall 的经验百分位校准。设分支 $b$ 的视频级统计为 $q_b(V)$，真实校准视频的对应统计集合为 $\mathcal{C}_b=\{c_{b,j}\}_{j=1}^{M}$，则
+设真实参考分数排序为 $\mathcal{C}_b=\{c_{b,j}\}_{j=1}^{M}$，任一统计 $q_b$ 的右闭合经验分位数为
 \begin{equation}
-  s_b(V)=\widehat F_b(q_b(V))=
-  \frac{1}{M}\sum_{j=1}^{M}\mathbb{I}\left[c_{b,j}\leq q_b(V)\right].
+  \widehat F_b(q_b)=\frac{1}{M}\sum_{j=1}^{M}\mathbb{I}[c_{b,j}\leq q_b].
   \label{eq:percentile}
 \end{equation}
-校准后，$s_b(V)$ 越大表示该分支证据越接近真实视频。
+白化与似然使用 float64，DINOv3 特征保持 float32；经验分布使用稳定排序和右闭合并列规则。
 
 \subsection{全局 \stall 分支}
-全局空间分支对每帧 $g_t$ 计算空间似然，并以视频内最大空间似然作为统计：
+对第 $k$ 个窗口，Global Spatial 逐帧计算 $\ell_{\mathrm{gs}}(g_t)$ 并取最大值；Global T1 对相邻帧差分进行 L2 归一化，计算似然后取最小值：
 \begin{align}
-  \ell^{\mathrm{gs}}_t &= \ell_{\mathrm{gs}}(g_t),\\
-  q_{\mathrm{gs}}(V) &= \max_t \ell^{\mathrm{gs}}_t .
-  \label{eq:global_spatial}
+  q_{\mathrm{gs},k}&=\max_t\ell_{\mathrm{gs}}(g_t),\\
+  d_t&=\frac{g_{t+1}-g_t}{\lVert g_{t+1}-g_t\rVert_2},\\
+  q_{\mathrm{gt},k}&=\min_t\ell_{\mathrm{gt}}(d_t).
 \end{align}
-全局时序分支对相邻全局帧特征差分进行 L2 归一化：
+Global 的白化参数与窗口参考分布固定使用官方 VATEX 资产。经分位数映射后，窗口分数为
 \begin{equation}
-  d_t=\frac{g_{t+1}-g_t}{\lVert g_{t+1}-g_t\rVert_2},
-  \qquad t=1,\ldots,T-1,
-  \label{eq:global_delta}
-\end{equation}
-随后以最低转移似然作为视频级时序统计：
-\begin{align}
-  \ell^{\mathrm{gt}}_t &= \ell_{\mathrm{gt}}(d_t),\\
-  q_{\mathrm{gt}}(V) &= \min_t \ell^{\mathrm{gt}}_t .
-  \label{eq:global_temporal}
-\end{align}
-本文使用 \stall 的等权全局空间--时序融合规则。经百分位映射后，第 $k$ 个窗口的全局真实性分数为
-\begin{equation}
-  G_k=0.5s_{\mathrm{gs},k}+0.5s_{\mathrm{gt},k}.
+  G_k=0.5\widehat F_{\mathrm{gs}}(q_{\mathrm{gs},k})+0.5\widehat F_{\mathrm{gt}}(q_{\mathrm{gt},k}).
   \label{eq:global_window_score}
 \end{equation}
 
-\subsection{局部图块分支}
-\subsubsection{局部空间似然}
-局部空间分支直接对图块标记 $p_{t,i}$ 建模：
-\begin{equation}
-  \ell^{\mathrm{ps}}_{t,i}=\ell_{\mathrm{ps}}(p_{t,i}).
-  \label{eq:patch_spatial}
-\end{equation}
-该分支提供局部纹理、结构和边缘异常证据。实验表明，单帧局部外观在跨数据集上通常弱于局部时序证据，因此它被作为局部分数中的辅助证据。
-
-\subsubsection{同网格二阶时序似然}
-局部时序分支是 \method 的核心新增模块。为避免显式图块匹配带来的不稳定性，我们固定 DINOv3 的 $14\times14$ 图块网格，不包含 CLS 或注册标记，并在同一空间位置上计算连续三帧的二阶差分。本文不做区域池化，区域大小固定为 1：
+\subsection{同网格 Local D2}
+Local 分支不包含单帧 Spatial 项。对连续三帧同一网格位置的 patch token，计算二阶差分并沿特征维归一化：
 \begin{align}
   a_{t,i}&=p_{t+2,i}-2p_{t+1,i}+p_{t,i},\\
   \hat a_{t,i}&=\frac{a_{t,i}}{\lVert a_{t,i}\rVert_2},
-  \qquad t=1,\ldots,T-2 .
+  \qquad t=1,\ldots,T-2.
   \label{eq:patch_acceleration}
 \end{align}
-该特征刻画局部表征轨迹的加速度。真实视频中的局部纹理和结构通常随时间连续变化，而生成视频中的闪烁、漂移和局部形变突变会使 $\hat a_{t,i}$ 偏离真实参考分布。局部时序似然为
+不使用显式 patch 匹配、区域池化或 CLS/register token。目标域真实 calibration patch 轨迹用于拟合 $\mu_{\mathrm{D2}}$、$W_{\mathrm{D2}}$ 与窗口参考分布。窗口内对全部时间与网格位置的似然取算术均值：
 \begin{equation}
-  \ell^{\mathrm{pt}}_{t,i}=\ell_{\mathrm{pt}}(\hat a_{t,i}).
-  \label{eq:patch_temporal}
-\end{equation}
-
-\subsubsection{局部证据聚合}
-局部空间和二阶时序似然均在窗口内对时间与图块位置取算术均值。该设置在三个数据集上保持一致，不随数据集改变区域大小、聚合方式或低分图块比例。其余聚合和匹配变体仅用于补充敏感性分析，不构成本文方法。
-
-\subsection{局部分数与全局--局部融合}
-经窗口级真实百分位校准后，局部空间分数和局部二阶时序分数组合为
-\begin{equation}
-  L_k=0.1s_{\mathrm{ps},k}+0.9s_{\mathrm{pt},k}.
+  q_{\mathrm{D2},k}=\operatorname{mean}_{t,i}\ell_{\mathrm{D2}}(\hat a_{t,i}),\qquad
+  L_k=\widehat F_{\mathrm{D2}}(q_{\mathrm{D2},k}).
   \label{eq:local_window_score}
 \end{equation}
-局部二阶时序是 Local 的主要证据；PatchSpatial 只保留固定的 0.1 权重，不再进行数据集特定搜索。
 
-设视频 $V$ 的有效窗口数为 $K_V\leq3$。首先分别聚合两个分支，
+\subsection{视频聚合与固定融合}
+设有效窗口数为 $K_V\leq3$。两条分支分别取窗口均值：
 \begin{equation}
   G_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kG_k,\qquad
   L_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kL_k.
   \label{eq:branch_video_mean}
 \end{equation}
-随后使用具有相同有效窗口数的真实校准视频分别建立经验 CDF，得到 $G(V)$ 与 $L(V)$。每个校准视频在每个分支中只贡献一个视频级统计，长视频不会因窗口更多而获得更大权重。最终分数为
+随后仅使用具有相同有效窗口数的目标域真实校准视频建立视频级经验 CDF，得到 $G(V)$ 与 $L(V)$。最终分数为
 \begin{equation}
   S(V)=0.6G(V)+0.4L(V).
   \label{eq:final_score}
 \end{equation}
-局部白化、窗口级经验分布函数和视频级经验分布函数均仅由目标域的独立真实视频估计；生成视频不参与这些统计量的拟合或校准。$\alpha$、$\beta$、$K$ 与总体结构在三个开发数据集上确定，因此这些数据集不构成独立确认集。实现中，白化和高斯似然计算采用 float64，经验分布函数采用稳定排序及右闭合并列规则；DINOv3 特征仍保持 float32，从而避免高维白化对外层批量形状的数值依赖。
+每个校准视频在每个分支中只贡献一个视频级统计，避免长视频因窗口更多而获得更高权重。$K$ 与融合权重在三个开发数据集上确定，因此这些数据集属于开发与内部评测范围，而非未触碰的确认集。

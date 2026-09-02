@@ -1,17 +1,17 @@
 \begin{table}[!t]
   \centering
-  \caption{主实验数据与统一评测协议。真实视频仅用于独立校准或最终评测，生成视频不参与任何参数拟合。}
+  \caption{开发集统一评测协议。Calibration real 与 evaluation real 严格互斥；生成视频不参与任何参数拟合。}
   \label{tab:dataset_protocol}
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{lrrrr}
     \toprule
-    Dataset & Real & Fake & Generators & Calibration real \\
+    Dataset & Eval real & Eval fake & Generators & Calib. real \\
     \midrule
-    ComGenVid & 2,149 & 2,149 & 8 & 200 \\
-    VideoFeedback & 1,750 & 1,750 & 6 & 200 \\
-    GenVideo & 6,812 & 6,811 & 6 & 200 \\
+    ComGenVid & 898 & 3,400 & 2 & 200 \\
+    VideoFeedback & 500 & 3,000 & 10 & 200 \\
+    GenVideo & 7,984 & 5,639 & 8 & 200 \\
     \midrule
-    Total & 10,711 & 10,710 & 20 & 600 \\
+    Total & 9,382 & 12,039 & 20 & 600 \\
     \bottomrule
   \end{tabular}%
   }

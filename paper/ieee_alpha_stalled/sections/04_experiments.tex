@@ -1,19 +1,16 @@
 \section{实验设置与主结果}
 \label{sec:experiments}
 
-\subsection{数据集与评测协议}
-本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上评测。数据规模、生成器数量和独立真实校准规模见表~\ref{tab:dataset_protocol}。每个数据集使用 200 个与评测集互斥的真实视频拟合局部白化变换、经验 CDF 和窗口级校准统计；生成视频只用于最终评测。
+\subsection{数据集与统一协议}
+本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上进行开发集评测。表~\ref{tab:dataset_protocol} 给出实际进入 evaluation 的唯一视频数与生成器数。每个数据集使用 200 条与 evaluation real 严格互斥的真实视频拟合 Local D2 白化参数、窗口经验分布和视频级经验分布；Global 窗口统计固定加载官方 VATEX \stall 参数。生成视频只参与最终评价。
 
 \input{tables/dataset_protocol}
 
-每个生成器分别与匹配的真实视频计算 AUC 和 AP，再在数据集内进行生成器宏平均，最后对三个数据集等权得到 Macro-3。分数越高表示越真实，正文统一报告 AUC 与以真实视频为正类的 AP；生成视频为正类的 AP 换算和逐视频结果置于补充材料，避免在同一主表混用两种定义。本文采用三个 2 秒窗口、8 FPS、固定的全局--局部融合、region=1、mean 聚合和目标域真实视频校准。
+每个生成器分别与确定性选择的等量真实视频计算 AUC 与 real-positive AP，随后在数据集内对生成器等权平均，并对三个数据集等权得到 Macro-3。正文同时报告唯一视频 pooled 指标用于审计，但不把其 prevalence-sensitive AP 与平衡配对 AP 混用。正式方法固定为三个均匀 2 秒窗口、8 FPS、Local D2-only、窗口内 mean 聚合和 $0.6/0.4$ Global/Local 融合。
 
-\subsection{与现有检测器的比较}
-表~\ref{tab:main_results} 按数据集和生成模型报告三种图像检测器与四种视频检测器的 AUC/AP。每一行在同一指标下独立标示最优和次优结果；各数据集的 Average 行以及 All Benchmarks 平均行汇总方法在不同生成器上的表现。VideoFeedback 的 Hotshot-XL，以及 GenVideo 的 HotShot-XL 与 MoonValley 没有 Alpha-STALLED 的可用分数，保留为 ``--''，不参与排序。
+\subsection{参考方法比较}
+表~\ref{tab:main_results} 汇总公开 training-free/zero-shot 方法的参考结果与本文最终方法。公开基线来自其论文协议，而 \method 使用当前固定交集和配对宏平均协议，因此该表用于定位性能范围，不作为严格同视频显著性检验。正式投稿中的强排序结论仍需使用各方法官方代码在同一 manifest 和帧预算下重跑。
 
 \input{tables/main_results}
 
-在三个数据集的平均行中，\method 在 AUC/AP 上均取得最强的总体结果。表中保留原始小数精度和 dagger 标记；该标记不在本文中另作解释。
-
-\subsection{核心设计问题}
-后续消融围绕单一科学问题展开：表~\ref{tab:component_ablation} 检验全局与局部证据是否互补；表~\ref{tab:temporal_ablation} 检验局部二阶时序表示；表~\ref{tab:window_coverage_ablation} 检验时间覆盖；表~\ref{tab:local_support_boundary} 检验图块区域大小的空间尺度边界。校准规模、跨域校准、逐生成器结果、扰动和失败案例均置于补充材料，不再作为正文的条目式结果表。
+在当前统一开发集协议下，最终 D2-only K3 方法在 ComGenVid、VideoFeedback 和 GenVideo 上分别达到 0.9015/0.9110、0.8621/0.8687 和 0.8586/0.8391 AUC/AP，Macro-3 为 0.8741/0.8729。后续消融只使用当前标准化 run，分别检验 Global/Local 互补性、D1/D2、K1/K3 和 Local Spatial 必要性。

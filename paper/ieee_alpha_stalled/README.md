@@ -18,11 +18,11 @@
 
 ## 可复现结果来源
 
-- 锁定协议：`configs/alpha_stalled_u0_locked.yaml`。
-- 发布清单、锁定 Local 参数与逐视频分数：`release/u0/`。
-- 协议、核心消融、校准规模和数值稳定性报告：`reports/u0_*.md`。
-- 结论级指标索引：`results/research_summary/`。
-- 主文正式结果表：`tables/main_results.tex`、`tables/component_ablation.tex`、`tables/u0_calibration_stability.tex` 和 `tables/u0_failed_directions.tex`。
+- 唯一基础配置：`configs/benchmark.yaml`。
+- 正式无 Spatial 主结果：`results/runs/alpha_stall_full_d2_k3_no_spatial_refit/`。
+- D1/D2、K1/K3 与 Spatial 跨 run 统计：`results/runs/ablation_refit_comparisons/`。
+- GenVidBench 外部结果与统计：`results/runs/alpha_stall_external_genvidbench*` 和 `results/runs/external_genvidbench_comparisons/`。
+- 主文当前表格：`tables/main_results.tex`、`tables/component_ablation.tex`、`tables/temporal_ablation.tex`、`tables/window_coverage_ablation.tex`、`tables/spatial_ablation.tex` 和 `tables/u0_external_validation.tex`。
 
 ## Overleaf 设置
 
@@ -33,12 +33,11 @@
 
 ## 当前写作边界
 
-- 主结果是固定 21,421 视频交集上的 U0：Macro-3 AUC/real-positive AP `0.8741/0.8723`。
-- 23-source 扩展审计覆盖全部 45,185 条生成视频；当前 K3 Alpha 相对原窗口 K1 STALL 的 All-23 AUC/AP_fake/AP_real 增益为 `+0.0338/+0.0383/+0.0288`。
-- 方法固定 `G_k=0.5G_s+0.5G_{t1}`、`L_k=0.1L_s+0.9L_{D2}`、K=3 分支均值、effective-K 真实重校准和 `S=0.6G+0.4L`。
+- 主结果是固定 21,421 条视频交集上的无 Spatial D2-only 方法：Macro-3 AUC/real-positive AP `0.8741/0.8729`。
+- 方法固定 `G_k=0.5G_s+0.5G_{t1}`、`L_k=L_{D2}`、K=3 分支均值、effective-K 真实重校准和 `S=0.6G+0.4L`。
 - 生成视频和测试真实视频不得进入 whitening、CDF 或阈值拟合，locked run 不再据此调参；但 `alpha/beta/K` 和总体结构曾在三个开发基准上查看生成结果后冻结，因此它们不是 untouched confirmation sets。历史 leakage-affected `0.8737/0.8750` 只能作为审计记录。
-- K=5/all-window、bottom-2/hybrid、residual、多尺度、中间层、Joint Typicality、三分支和动态融合均不是正式方法。
-- 历史 clean single-window `0.8570/0.8600` 只用于方法演进展示；正式 K=3 增益以统一核心 K1 `0.8632/0.8636` 为因果对照。
-- 原论文规模复现、原窗口 K1/K3 因子分解和全 fake 覆盖分别见 `reports/original_k1_full23_factorial.md`、`tables/original_k1_factorial.tex` 与 `tables/full23_coverage.tex`；Macro-3 与 All-23、AP_fake 与 AP_real 不得互换。
+- Local Spatial、K=5/all-window、bottom-2/hybrid、residual、多尺度、中间层、Joint Typicality、三分支和动态融合均不是正式方法。
+- 正式 K1/K3 因果对照使用无 Spatial 的 `full_d2_k1_no_spatial_refit` 与 `full_d2_k3_no_spatial_refit`；Macro AUC/AP 增益为 `+0.0060/+0.0024`。
+- 旧 U0、region、校准 reserve、K5/all-window 和 45,185 fake 结果只作为历史资产，在无 Spatial 方法下重跑前不得写入当前摘要或主结论。
 - 外部集、鲁棒性和可控注入只按预锁定协议报告，不允许据此回调 U0。
 - 数据/代码/伦理/利益冲突/作者贡献声明位于 `sections/08_declarations.tex`，未知事实保留为待补充项。

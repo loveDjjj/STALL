@@ -1,19 +1,16 @@
-\begin{table}[t]
+\begin{table*}[t]
   \centering
-  \caption{时间覆盖范围的影响。前两行是在相同配置下仅改变窗口数的受控比较。$K=5$ 与全窗口结果来自已有扩展实验，其区域大小和聚合设置与主配置不同，故仅报告 Macro-3。}
+  \caption{无 Local Spatial、固定 Local D2 时的窗口覆盖消融。两行仅改变均匀 2 秒窗口数；每格为 AUC/real-positive AP，共同视频身份用于跨 run 比较。}
   \label{tab:window_coverage_ablation}
   {\scriptsize
-  \setlength{\tabcolsep}{3.4pt}
-  \renewcommand{\arraystretch}{1.08}
-  \begin{tabular}{l|>{\columncolor{gray!8}}c c|c}
+  \setlength{\tabcolsep}{4.0pt}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{tabular}{lccccc}
     \toprule
-    Coverage & \cellcolor{gray!8}AUC & AP & Relative frames \\
-    \specialrule{0.8pt}{0pt}{1pt}
-    $K=1$ (controlled) & 0.8632 & 0.8636 & 1.00$\times$ \\
-    $K=3$ (ours) & \textbf{0.8741} & \textbf{0.8723} & 2.30$\times$ \\
+    Coverage & ComGenVid & VideoFeedback & GenVideo & Macro-3 & Relative frames \\
     \midrule
-    $K=5$ (extended) & 0.8663 & 0.8672 & 3.21$\times$ \\
-    All windows (extended) & \underline{0.8712} & \underline{0.8695} & 4.02$\times$ \\
+    $K=1$ & 0.8968/0.9043 & 0.8633/0.8716 & 0.8441/0.8358 & 0.8681/0.8706 & 1.00$\times$ \\
+    $K=3$ & \textbf{0.9015/0.9110} & 0.8621/0.8687 & \textbf{0.8586/0.8391} & \textbf{0.8741/0.8729} & 2.30$\times$ \\
     \bottomrule
   \end{tabular}}
-\end{table}
+\end{table*}

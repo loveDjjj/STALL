@@ -1,20 +1,19 @@
 \begin{table*}[t]
   \centering
-  \caption{局部一阶与二阶时序的受控消融。编码器、窗口、区域大小、聚合方式、真实校准视频、局部空间分支、全局分支和融合权重均保持不变，仅将局部时序从 D1 替换为 D2。AUC 列以浅灰色标示。}
+  \caption{无 Local Spatial 条件下的一阶/二阶时序受控消融。D1 与 D2 共享编码器、K=3、mean 聚合、真实视频校准和 Global/Local 融合权重。每格为 AUC/real-positive AP。}
   \label{tab:temporal_ablation}
   {\scriptsize
-  \setlength{\tabcolsep}{3.2pt}
+  \setlength{\tabcolsep}{3.5pt}
   \renewcommand{\arraystretch}{1.10}
-  \begin{tabular}{l||>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c|>{\columncolor{gray!8}}c c||>{\columncolor{gray!8}}c c|cc}
+  \begin{tabular}{lccccc}
     \toprule
-    \multirow{2}{*}{Variant} & \multicolumn{2}{c|}{ComGenVid} & \multicolumn{2}{c|}{VideoFeedback} & \multicolumn{2}{c||}{GenVideo} & \multicolumn{2}{c|}{Macro-3} & \multicolumn{2}{c}{D2--D1} \\
-    & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & \cellcolor{gray!8}AUC & AP & $\Delta$AUC & $\Delta$AP \\
-    \specialrule{0.8pt}{0pt}{1pt}
-    Local first-order only & 0.8846 & 0.8848 & 0.7675 & 0.7712 & 0.8188 & 0.7952 & 0.8237 & 0.8171 & -- & -- \\
-    Local second-order only & 0.8907 & 0.8908 & 0.7783 & 0.7870 & 0.8279 & 0.8066 & 0.8323 & 0.8281 & +0.0086 & +0.0111 \\
+    Variant & ComGenVid & VideoFeedback & GenVideo & Macro-3 & $\Delta$ Macro \\
     \midrule
-    Full model with Local D1 & \underline{0.8966} & \underline{0.9055} & \underline{0.8563} & \underline{0.8645} & \underline{0.8635} & \underline{0.8385} & \underline{0.8721} & \underline{0.8695} & -- & -- \\
-    LSTL / Alpha-STALLED (Local D2) & \textbf{0.8968} & \textbf{0.9064} & \textbf{0.8597} & \textbf{0.8689} & \textbf{0.8657} & \textbf{0.8416} & \textbf{0.8741} & \textbf{0.8723} & \textbf{+0.0019} & \textbf{+0.0028} \\
+    Local D1-only & 0.8883/0.8856 & 0.7309/0.7412 & 0.8334/0.8043 & 0.8176/0.8103 & -- \\
+    Local D2-only & 0.8995/0.8970 & 0.7368/0.7539 & 0.8447/0.8179 & 0.8270/0.8229 & +0.0094/+0.0126 \\
+    \midrule
+    Full model with Local D1 & 0.9003/0.9095 & 0.8591/0.8650 & 0.8561/0.8346 & 0.8719/0.8697 & -- \\
+    Full model with Local D2 & \textbf{0.9015/0.9110} & \textbf{0.8621/0.8687} & \textbf{0.8586/0.8391} & \textbf{0.8741/0.8729} & +0.0022/+0.0033 \\
     \bottomrule
   \end{tabular}}
 \end{table*}
