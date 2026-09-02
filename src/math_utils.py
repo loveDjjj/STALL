@@ -232,6 +232,7 @@ def score_gaussian_aggregate_float64(
     aggregation: str,
     device: str | torch.device = "cuda:0",
     invalid_mask: torch.Tensor | np.ndarray | None = None,
+    position_weights: torch.Tensor | np.ndarray | None = None,
     compute_percentile: bool = True,
     allow_positive_infinity_percentile: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -241,6 +242,7 @@ def score_gaussian_aggregate_float64(
     a sample before applying mean, min, or max likelihood aggregation. An
     optional mask marks likelihood positions as positive infinity, matching
     STALL's treatment of exact zero temporal differences under min aggregation.
+    `position_weights` 只允许用于 mean 聚合，并在每个样本内部归一化。
     ``allow_positive_infinity_percentile`` 仅供该 Global T1 协议使用。
     """
     values = torch.as_tensor(features, dtype=torch.float32, device="cpu")
@@ -255,6 +257,17 @@ def score_gaussian_aggregate_float64(
             raise ValueError(
                 f"mask shape {tuple(mask.shape)} != feature positions {tuple(values.shape[:-1])}"
             )
+    weights = None
+    if position_weights is not None:
+        if aggregation != "mean":
+            raise ValueError("position_weights 只支持 mean 聚合")
+        weights = torch.as_tensor(position_weights, dtype=torch.float64, device="cpu")
+        if tuple(weights.shape) != tuple(values.shape[:-1]):
+            raise ValueError(
+                f"weight shape {tuple(weights.shape)} != feature positions {tuple(values.shape[:-1])}"
+            )
+        if not torch.isfinite(weights).all() or torch.any(weights < 0):
+            raise ValueError("position_weights 必须是有限非负数")
 
     target = torch.device(device)
     mean = torch.as_tensor(params.mean, dtype=torch.float64, device=target)
@@ -271,7 +284,14 @@ def score_gaussian_aggregate_float64(
     if mask is not None:
         likelihood = likelihood.masked_fill(mask.reshape(len(values), -1).to(target), float("inf"))
     if aggregation == "mean":
-        aggregate = likelihood.mean(dim=1, dtype=torch.float64)
+        if weights is None:
+            aggregate = likelihood.mean(dim=1, dtype=torch.float64)
+        else:
+            flat_weights = weights.reshape(len(values), -1).to(target)
+            denominators = flat_weights.sum(dim=1)
+            if torch.any(denominators <= 0):
+                raise ValueError("每个样本的 position_weights 权重和必须为正")
+            aggregate = torch.sum(likelihood * flat_weights, dim=1) / denominators
     elif aggregation == "min":
         aggregate = likelihood.amin(dim=1)
     else:

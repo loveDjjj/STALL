@@ -107,7 +107,12 @@ def run(
         pipeline_metadata = None
         try:
             if scores_csv is None:
-                windows, scores, pipeline_metadata = run_from_cache(repository_root, config, report=report)
+                windows, scores, pipeline_metadata = run_from_cache(
+                    repository_root,
+                    config,
+                    report=report,
+                    artifact_dir=output_dir,
+                )
             else:
                 report({"phase": "loading_scores", "message": "[输入] 读取外部分数 CSV"})
                 scores = normalize_scores(pd.read_csv(scores_csv, float_precision="round_trip"))

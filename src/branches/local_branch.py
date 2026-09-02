@@ -1,9 +1,8 @@
-"""我们方法的 Local 分支基础计算。
+"""Local 分支的历史 same-grid D1/D2 基础计算。
 
-The formal Local branch uses unpooled same-grid patch tokens, feature-wise L2
-normalization, mean Gaussian likelihood aggregation, and a fixed spatial weight.
-Matching, multi-lag, higher-order, region-pooling, and residual variants are
-historical experiments and deliberately do not appear in this public module.
+正式基线使用未池化 patch token、特征维 L2 归一化和 mean Gaussian
+likelihood。Stage 1 的 hard/soft correspondence 位于 ``correspondence/``，
+统一动力学入口位于 ``dynamics/``；本模块保留兼容函数供旧实验和测试使用。
 """
 
 from __future__ import annotations

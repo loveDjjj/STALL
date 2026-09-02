@@ -13,6 +13,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_cache_pack.sh` | 将已验证的单视频 K=3 缓存迁移为 32 视频顺序 shard，并边校验边删除旧文件 |
 | `wait_for_cache_gpu.sh` | 等待 GPU 0 空闲达到阈值后安全启动缓存重建 |
 | `run_alpha_stall.sh` | Alpha STALL 默认方法 |
+| `run_correspondence.sh` | Stage 1 C0-C3 same-grid/hard/soft/confidence 受控实验 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |
@@ -43,6 +44,18 @@ bash scripts/run_alpha_stall.sh --set 'runtime.devices=[cuda:0,cuda:1]'
 # 调整缓存预取吞吐，不改变采样、方法或逐窗口浮点公式。
 bash scripts/run_alpha_stall.sh --set runtime.score_batch_size=16 --set runtime.cache_io_workers=4
 ```
+
+Stage 1 只复用现有 Patch token 缓存并改变 Local correspondence：
+
+```bash
+bash scripts/run_correspondence.sh --dry-run
+bash scripts/run_correspondence.sh --variant c1
+bash scripts/run_correspondence.sh --variant c3 --set runtime.score_batch_size=8
+```
+
+正式 C0-C3 固定 `radius=1`、`temperature=0.07` 和 `spatial_penalty=0.05`。
+`--radius 2` 只供 C0-C3 决策后的预注册敏感性检查，不得根据单个数据集 fake
+结果选择。
 
 缓存重建默认写入 `cache/patch_embeddings_k3_2s_8fps/`，不会复用旧的
 `cache/patch_embeddings/`。执行前可使用：

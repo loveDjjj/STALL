@@ -65,6 +65,17 @@ def validate_config(config: dict[str, Any]) -> None:
     windows = config["sampling"].get("num_windows")
     if not isinstance(windows, int) or windows < 1:
         raise ValueError("sampling.num_windows 必须是正整数")
+    locked_sampling = {
+        "window_seconds": 2,
+        "fps": 8,
+        "frames_per_window": 16,
+        "strategy": "uniform",
+    }
+    for key, expected in locked_sampling.items():
+        if config["sampling"].get(key) != expected:
+            raise ValueError(
+                f"当前严格缓存只支持 sampling.{key}={expected!r}"
+            )
     local = method.get("local", {})
     global_branch = method.get("global", {})
     if not global_branch.get("enabled", False) and not local.get("enabled", False):
@@ -72,6 +83,27 @@ def validate_config(config: dict[str, Any]) -> None:
     if local.get("enabled", False) and local.get("temporal_enabled", False):
         if local.get("temporal_order") not in {1, 2}:
             raise ValueError("method.local.temporal_order 只能是 1 或 2")
+        correspondence = local.get("correspondence", {})
+        correspondence_type = correspondence.get("type", "same_grid")
+        if correspondence_type not in {"same_grid", "hard_local", "soft_local"}:
+            raise ValueError(
+                "method.local.correspondence.type 只能是 same_grid、hard_local 或 soft_local"
+            )
+        if correspondence.get("radius", 1) not in {1, 2}:
+            raise ValueError("method.local.correspondence.radius 只能是 1 或 2")
+        temperature = correspondence.get("temperature", 0.07)
+        if not isinstance(temperature, (int, float)) or temperature <= 0:
+            raise ValueError("method.local.correspondence.temperature 必须为正数")
+        spatial_penalty = correspondence.get("spatial_penalty", 0.05)
+        if not isinstance(spatial_penalty, (int, float)) or spatial_penalty < 0:
+            raise ValueError("method.local.correspondence.spatial_penalty 不能为负数")
+        confidence = correspondence.get("confidence", "none")
+        if confidence not in {"none", "aggregation"}:
+            raise ValueError(
+                "method.local.correspondence.confidence 只能是 none 或 aggregation"
+            )
+        if confidence == "aggregation" and correspondence_type != "soft_local":
+            raise ValueError("aggregation confidence 只允许与 soft_local 一起使用")
     if local.get("covariance_estimator") not in {"empirical", "oas"}:
         raise ValueError("method.local.covariance_estimator 只能是 empirical 或 oas")
     if local.get("parameter_source") not in {"locked_u0", "fit_real_only"}:
@@ -80,6 +112,8 @@ def validate_config(config: dict[str, Any]) -> None:
         for key in ("locked_parameters_dir", "locked_frame_indices"):
             if not isinstance(local.get(key), str) or not local[key]:
                 raise ValueError(f"method.local.{key} 必须是非空路径")
+        if local.get("correspondence", {}).get("type", "same_grid") != "same_grid":
+            raise ValueError("locked_u0 参数只兼容 same_grid correspondence")
     if global_branch.get("enabled", False):
         if global_branch.get("parameter_source") != "official_vatex":
             raise ValueError("method.global.parameter_source 必须是 official_vatex")

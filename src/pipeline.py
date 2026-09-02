@@ -22,12 +22,13 @@ from branches.global_branch import (
     GLOBAL_TEMPORAL_AGGREGATION,
     load_official_stall_parameters,
 )
-from branches.local_branch import LOCAL_AGGREGATION, local_d1_features, local_d2_features
+from branches.local_branch import LOCAL_AGGREGATION
 from data.cache_contract import prepare_feature_cache, tensor_descriptor, validate_cache_entry
 from data.manifest import load_manifest
 from data.patch_cache import _get_patch_cache_path, cache_frame_indices
 from data.packed_cache import PackedCacheReader
 from data.sampling import parse_indices, uniform_windows
+from dynamics.local import LocalDynamicsResult, build_local_dynamics
 from math_utils import (
     StableGaussianParams,
     WhiteningTransform,
@@ -205,13 +206,30 @@ def _temporal_global(values: np.ndarray) -> np.ndarray:
     return torch.nn.functional.normalize(difference, p=2, dim=-1, eps=1e-12).numpy()
 
 
-def _temporal_patch(values: np.ndarray, order: int) -> np.ndarray:
-    tensor = torch.as_tensor(values, dtype=torch.float32).unsqueeze(0)
-    if order == 1:
-        return local_d1_features(tensor).squeeze(0).numpy()
-    if order == 2:
-        return local_d2_features(tensor).squeeze(0).numpy()
-    raise ValueError("method.local.temporal_order 只能是 1 或 2")
+def _patch_grid_size(values: np.ndarray | torch.Tensor) -> tuple[int, int]:
+    """当前缓存使用方形 patch 网格；拒绝静默猜测非方形布局。"""
+
+    patch_count = int(values.shape[-2])
+    side = int(round(np.sqrt(patch_count)))
+    if side * side != patch_count:
+        raise ValueError(f"无法从 {patch_count} 个 patch 推断方形网格")
+    return side, side
+
+
+def _temporal_patch(
+    values: np.ndarray | torch.Tensor, local_config: dict, device: str
+) -> LocalDynamicsResult:
+    """构造 Local evidence；真实拟合与测试评分共用同一实现。"""
+
+    tensor = torch.as_tensor(values, dtype=torch.float32)
+    if tensor.ndim == 3:
+        tensor = tensor.unsqueeze(0)
+    return build_local_dynamics(
+        tensor,
+        grid_size=_patch_grid_size(tensor),
+        local_config=local_config,
+        device=device,
+    )
 
 
 def _reservoir_add(reservoir: np.ndarray | None, values: np.ndarray, limit: int, seen: int, rng: np.random.Generator) -> tuple[np.ndarray, int]:
@@ -259,13 +277,15 @@ def _fit_local_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray
     reservoirs: dict[str, np.ndarray | None] = {key: None for key in needed}
     seen = {key: 0 for key in needed}
     rng = np.random.default_rng(int(config["calibration"]["seed"]))
-    order = int(method["local"]["temporal_order"])
     for _global_values, patch_values in calibration_windows:
         items: dict[str, np.ndarray] = {}
         if "patch_spatial" in needed:
             items["patch_spatial"] = patch_values
         if "patch_temporal" in needed:
-            items["patch_temporal"] = _temporal_patch(patch_values, order)
+            temporal = _temporal_patch(
+                patch_values, method["local"], device
+            )
+            items["patch_temporal"] = temporal.features.squeeze(0).numpy()
         for name, values in items.items():
             reservoirs[name], seen[name] = _reservoir_add(reservoirs[name], values, limit, seen[name], rng)
     return {
@@ -352,6 +372,63 @@ def _load_global_parameters(repository_root: Path, config: dict) -> dict[str, St
             f"期望 {global_config['parameters_sha256']}，实际 {digest}"
         )
     return load_official_stall_parameters(parameter_path)
+
+
+def _save_fitted_local_artifacts(
+    output_dir: Path,
+    dataset: str,
+    selected_calibration: pd.DataFrame,
+    calibration_windows: pd.DataFrame,
+    parameters: dict[str, StableGaussianParams],
+    config: dict,
+) -> str | None:
+    """保存 real-only Local 参数、窗口参考与明确的校准视频身份。"""
+
+    local_names = [name for name in ("patch_spatial", "patch_temporal") if name in parameters]
+    if not local_names:
+        return None
+    directory = output_dir / "fitted_local"
+    directory.mkdir(parents=True, exist_ok=True)
+    identifiers = selected_calibration.copy()
+    identifiers.insert(0, "dataset", dataset)
+    identifiers["video_id"] = identifiers["video_path"].map(
+        lambda path: _video_id(dataset, str(path))
+    )
+    identifier_columns = [
+        column for column in ("dataset", "video_id", "subset", "source_model", "video_path")
+        if column in identifiers
+    ]
+    identifiers[identifier_columns].to_csv(
+        directory / f"{dataset}_calibration_ids.csv", index=False
+    )
+
+    payload: dict[str, np.ndarray] = {}
+    for name in local_names:
+        payload[f"{name}_mean"] = np.asarray(parameters[name].mean, dtype=np.float64)
+        payload[f"{name}_whitening"] = np.asarray(
+            parameters[name].whitening, dtype=np.float64
+        )
+        raw_name = f"{name}_raw"
+        if raw_name in calibration_windows:
+            payload[f"{name}_window_reference"] = stable_sorted(
+                calibration_windows[raw_name].to_numpy(dtype=np.float64)
+            )
+    target = directory / f"{dataset}_local_params.npz"
+    temporary = target.with_suffix(".tmp.npz")
+    np.savez_compressed(temporary, **payload)
+    temporary.replace(target)
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    metadata = {
+        "dataset": dataset,
+        "sha256": digest,
+        "calibration_videos": len(selected_calibration),
+        "local_config": config["method"]["local"],
+        "arrays": {name: list(value.shape) for name, value in payload.items()},
+    }
+    (directory / f"{dataset}_local_params.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return digest
 
 
 def _score_windows(
@@ -442,10 +519,13 @@ def _score_windows(
                     device=device, compute_percentile=locked_local,
                 )
             if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
-                temporal_features = local_d1_features(patch_tensor) if int(method["local"]["temporal_order"]) == 1 else local_d2_features(patch_tensor)
+                temporal = _temporal_patch(
+                    patch_tensor, method["local"], device
+                )
                 scores["patch_temporal_raw"], scores["patch_temporal"] = score_gaussian_aggregate_float64(
-                    temporal_features, parameters["patch_temporal"], LOCAL_AGGREGATION,
+                    temporal.features, parameters["patch_temporal"], LOCAL_AGGREGATION,
                     device=device, compute_percentile=locked_local,
+                    position_weights=temporal.aggregation_weights,
                 )
             for index, (record, _, _) in enumerate(batch_windows):
                 record.update({name: float(values[index]) for name, values in scores.items()})
@@ -687,6 +767,7 @@ def run_from_cache(
     *,
     report: Callable[[dict], None] | None = None,
     worker_log_dir: Path | None = None,
+    artifact_dir: Path | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
     """执行配置指定的全部数据集，返回逐窗口、逐视频分数和运行元信息。"""
 
@@ -718,6 +799,9 @@ def run_from_cache(
     metadata: dict[str, object] = {"cache_root": str(cache_root), "cache_contract_sha256": context.contract_sha256, "datasets": {}}
     for dataset in config["data"]["datasets"]:
         dataset = str(dataset)
+        primary_device = torch.device(devices[0])
+        if primary_device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(primary_device)
         manifests = resolve_dataset_manifests(repository_root, config, str(dataset))
         calibration = load_manifest(str(manifests.calibration))
         evaluation = load_manifest(str(manifests.evaluation))
@@ -774,6 +858,18 @@ def run_from_cache(
         if report:
             report({"current_dataset": dataset, "phase": "aggregate", "message": f"[{dataset}] 仅用 calibration real 执行窗口校准和视频聚合"})
         calibrated_windows, videos = _calibrate_and_aggregate(calibration_windows, evaluation_windows, config)
+        local_params_sha256 = (
+            _save_fitted_local_artifacts(
+                artifact_dir,
+                dataset,
+                selected_calibration,
+                calibration_windows,
+                parameters,
+                config,
+            )
+            if artifact_dir is not None
+            else None
+        )
         calibrated_windows["split"] = "calibration"
         evaluation_windows["split"] = "evaluation"
         all_windows.extend([calibrated_windows, evaluation_windows])
@@ -787,6 +883,12 @@ def run_from_cache(
             "devices": devices,
             "calibration_score_seconds": monotonic() - calibration_started,
             "evaluation_score_seconds": monotonic() - evaluation_started,
+            "local_params_sha256": local_params_sha256,
+            "primary_peak_vram_gib": (
+                torch.cuda.max_memory_allocated(primary_device) / 1024**3
+                if primary_device.type == "cuda"
+                else 0.0
+            ),
         }
         if report:
             report({"current_dataset": dataset, "phase": "dataset_completed", "message": f"[{dataset}] 完成：evaluation {len(videos)} 条视频"})

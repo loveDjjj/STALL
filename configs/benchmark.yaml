@@ -32,6 +32,18 @@ method:
     temporal_enabled: true
     # 局部时序差分阶数：1 是 D1 消融，2 是默认 D2 方法。
     temporal_order: 2
+    # Patch 时间对应。默认 same_grid 严格复现当前论文；Stage 1 只覆盖本段字段。
+    correspondence:
+      # 可选 same_grid、hard_local、soft_local。
+      type: same_grid
+      # hard/soft 在下一帧的局部搜索半径：1 对应 3×3，2 对应 5×5。
+      radius: 1
+      # softmax 温度；0.07 是 Stage 1 预注册开发值，不按 fake 结果逐数据集调整。
+      temperature: 0.07
+      # 余弦相似度中的归一化网格距离惩罚；0.05 为统一开发值。
+      spatial_penalty: 0.05
+      # none 不加权；aggregation 使用 soft matching 熵置信度加权窗口 likelihood。
+      confidence: none
     # 最终 Local 只保留 D2；历史 Spatial+D2 变体在脚本中显式覆盖为 0.1/0.9。
     spatial_weight: 0.0
     temporal_weight: 1.0
@@ -111,6 +123,6 @@ metrics:
   # 主表必报指标。
   primary: [auc, ap_real]
   # 附加运行点指标。
-  additional: [tpr_at_1pct_fpr]
+  additional: [tpr_at_0_1pct_fpr, tpr_at_1pct_fpr, fpr_at_95pct_tpr]
   # 视频级 paired bootstrap 的重复次数。
   bootstrap_iterations: 1000

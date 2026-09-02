@@ -24,10 +24,16 @@ def binary_metrics(frame: pd.DataFrame, score_column: str = "final_score") -> di
         eligible = tpr[fpr <= limit]
         return float(eligible.max()) if len(eligible) else 0.0
 
+    def fpr_at(target_tpr: float) -> float:
+        eligible = fpr[tpr >= target_tpr]
+        return float(eligible.min()) if len(eligible) else 1.0
+
     return {
         "auc": float(roc_auc_score(real, scores)),
         "real_positive_ap": float(average_precision_score(real, scores)),
+        "fake_tpr_at_0_1pct_real_fpr": tpr_at(0.001),
         "fake_tpr_at_1pct_real_fpr": tpr_at(0.01),
+        "real_fpr_at_95pct_fake_tpr": fpr_at(0.95),
     }
 
 
