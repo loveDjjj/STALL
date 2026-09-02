@@ -32,6 +32,9 @@ method:
     temporal_enabled: true
     # 局部时序差分阶数：1 是 D1 消融，2 是默认 D2 方法。
     temporal_order: 2
+    # Local 动力学表示。finite_difference 使用上面的 temporal_order；其余值仅供 Stage 2。
+    # 可选 curvature、speed_ratio、path_chord、d2_curvature、geometry。
+    dynamics: finite_difference
     # Patch 时间对应。默认 same_grid 严格复现当前论文；Stage 1 只覆盖本段字段。
     correspondence:
       # 可选 same_grid、hard_local、soft_local。

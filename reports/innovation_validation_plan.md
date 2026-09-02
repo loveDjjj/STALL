@@ -379,3 +379,13 @@ C0-C3 由一个 `scripts/run_correspondence.sh` 的实验矩阵/参数控制，�
 5. 最终候选必须在 untouched confirmation benchmark 上一次性评测；失败则按失败结果报告，不回到该 benchmark 调参。
 
 这套规则的目标不是保证新方法成立，而是尽早、低成本地淘汰不能经受文献和实验双重检验的故事。
+
+## 10. Stage 1 已执行决策（2026-09-02）
+
+C1 hard、C2 soft 和 C3 soft+confidence 相对 C0 的 Macro AUC/AP 均下降；C3 为
+`-0.0029/-0.0046`，且没有在至少两个数据集提升同一指标。1,000 次论文配对口径
+bootstrap 的三个 Macro AUC/AP 区间也均完全低于零。
+
+因此 H1 被否定：当前 same-grid correspondence 不是可由简单局部 hard/soft matching
+修复的主要瓶颈。停止 radius=2、OT 和 learned matcher 扩展，Stage 2 固定使用 C0
+same-grid。完整结果见 `reports/stage1_correspondence_results.md`。

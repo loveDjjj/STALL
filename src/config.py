@@ -83,6 +83,21 @@ def validate_config(config: dict[str, Any]) -> None:
     if local.get("enabled", False) and local.get("temporal_enabled", False):
         if local.get("temporal_order") not in {1, 2}:
             raise ValueError("method.local.temporal_order 只能是 1 或 2")
+        dynamics = local.get("dynamics", "finite_difference")
+        if dynamics not in {
+            "finite_difference",
+            "curvature",
+            "speed_ratio",
+            "path_chord",
+            "d2_curvature",
+            "geometry",
+        }:
+            raise ValueError(
+                "method.local.dynamics 必须是 finite_difference、curvature、"
+                "speed_ratio、path_chord、d2_curvature 或 geometry"
+            )
+        if dynamics == "d2_curvature" and local.get("temporal_order") != 2:
+            raise ValueError("d2_curvature 要求 method.local.temporal_order=2")
         correspondence = local.get("correspondence", {})
         correspondence_type = correspondence.get("type", "same_grid")
         if correspondence_type not in {"same_grid", "hard_local", "soft_local"}:

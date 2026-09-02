@@ -1,0 +1,17 @@
+variant,run_name,scope,dataset,auc,ap_real,n_generators,n_pairwise_real,n_pairwise_fake,pairwise_seed
+c0,alpha_stall_full_d2_k3_no_spatial_refit,generator_pairwise_dataset_macro,comgenvid,0.9014749430806395,0.9110388468338928,2,1796,1796,42
+c0,alpha_stall_full_d2_k3_no_spatial_refit,generator_pairwise_dataset_macro,genvideo,0.8585612598531033,0.8391031398830191,8,5639,5639,42
+c0,alpha_stall_full_d2_k3_no_spatial_refit,generator_pairwise_dataset_macro,videofeedback,0.8621400000000001,0.8686679558954129,10,3000,3000,42
+c0,alpha_stall_full_d2_k3_no_spatial_refit,generator_pairwise_macro3,Macro-3,0.8740587343112476,0.8729366475374416,20,10435,10435,42
+c1,stage1_c1_hard_local_d2_k3,generator_pairwise_dataset_macro,comgenvid,0.8977649540428867,0.9080262772679822,2,1796,1796,42
+c1,stage1_c1_hard_local_d2_k3,generator_pairwise_dataset_macro,genvideo,0.8574371988535813,0.8354875013155618,8,5639,5639,42
+c1,stage1_c1_hard_local_d2_k3,generator_pairwise_dataset_macro,videofeedback,0.8590816666666667,0.8667111878626862,10,3000,3000,42
+c1,stage1_c1_hard_local_d2_k3,generator_pairwise_macro3,Macro-3,0.8714279398543784,0.8700749888154101,20,10435,10435,42
+c2,stage1_c2_soft_local_d2_k3,generator_pairwise_dataset_macro,comgenvid,0.8993451173357275,0.909784512494338,2,1796,1796,42
+c2,stage1_c2_soft_local_d2_k3,generator_pairwise_dataset_macro,genvideo,0.8615232374317943,0.8403281620900811,8,5639,5639,42
+c2,stage1_c2_soft_local_d2_k3,generator_pairwise_dataset_macro,videofeedback,0.8558111111111112,0.8613477299135741,10,3000,3000,42
+c2,stage1_c2_soft_local_d2_k3,generator_pairwise_macro3,Macro-3,0.872226488626211,0.8704868014993311,20,10435,10435,42
+c3,stage1_c3_soft_local_d2_k3,generator_pairwise_dataset_macro,comgenvid,0.9018234036537518,0.910975342608569,2,1796,1796,42
+c3,stage1_c3_soft_local_d2_k3,generator_pairwise_dataset_macro,genvideo,0.8561362139396873,0.8335021799964041,8,5639,5639,42
+c3,stage1_c3_soft_local_d2_k3,generator_pairwise_dataset_macro,videofeedback,0.8553911111111111,0.8604896466801979,10,3000,3000,42
+c3,stage1_c3_soft_local_d2_k3,generator_pairwise_macro3,Macro-3,0.8711169095681833,0.8683223897617237,20,10435,10435,42

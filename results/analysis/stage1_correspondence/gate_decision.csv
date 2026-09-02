@@ -1,0 +1,4 @@
+variant,macro_auc_delta_vs_c0,macro_ap_delta_vs_c0,datasets_with_auc_improvement,datasets_with_ap_improvement,passes_gate
+c1,-0.002630794456869201,-0.0028616587220314793,0,0,False
+c2,-0.0018322456850365931,-0.0024498460381104925,1,1,False
+c3,-0.0029418247430642586,-0.004614257775717889,1,0,False

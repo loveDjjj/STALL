@@ -129,6 +129,50 @@ class CorrespondenceTests(unittest.TestCase):
                 ],
             )
 
+    def test_trajectory_geometry_has_expected_values_and_shapes(self) -> None:
+        # 单个 patch 依次沿 x、x、y 移动：中间位置曲率分别为 0 和 1。
+        points = torch.tensor(
+            [[[[0.0, 0.0]], [[1.0, 0.0]], [[2.0, 0.0]], [[2.0, 1.0]]]]
+        )
+        expected_shapes = {
+            "curvature": (1, 2, 1, 1),
+            "speed_ratio": (1, 2, 1, 1),
+            "path_chord": (1, 2, 1, 1),
+            "d2_curvature": (1, 2, 1, 3),
+            "geometry": (1, 2, 1, 4),
+        }
+        outputs = {}
+        for dynamics, shape in expected_shapes.items():
+            local = dict(self.config["method"]["local"])
+            local["dynamics"] = dynamics
+            result = build_local_dynamics(
+                points, grid_size=(1, 1), local_config=local, device="cpu"
+            )
+            self.assertEqual(tuple(result.features.shape), shape)
+            self.assertTrue(torch.isfinite(result.features).all())
+            outputs[dynamics] = result.features
+        torch.testing.assert_close(
+            outputs["curvature"].flatten(), torch.tensor([0.0, 1.0])
+        )
+        torch.testing.assert_close(
+            outputs["speed_ratio"], torch.zeros_like(outputs["speed_ratio"])
+        )
+        self.assertAlmostEqual(float(outputs["path_chord"][0, 0, 0, 0]), 0.0, places=5)
+        self.assertAlmostEqual(
+            float(outputs["path_chord"][0, 1, 0, 0]), 2.0**0.5 - 1.0, places=5
+        )
+
+    def test_zero_velocity_geometry_remains_finite(self) -> None:
+        points = torch.zeros(2, 4, 4, 3)
+        local = dict(self.config["method"]["local"])
+        local["dynamics"] = "geometry"
+        result = build_local_dynamics(
+            points, grid_size=(2, 2), local_config=local, device="cpu"
+        )
+        self.assertTrue(torch.isfinite(result.features).all())
+        # 零速度 turning angle 没有方向，协议将 curvature 定义为 0。
+        self.assertTrue(torch.equal(result.features[..., 1], torch.zeros(2, 2, 4)))
+
 
 if __name__ == "__main__":
     unittest.main()
