@@ -14,7 +14,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `wait_for_cache_gpu.sh` | 等待 GPU 0 空闲达到阈值后安全启动缓存重建 |
 | `run_alpha_stall.sh` | Alpha STALL 默认方法 |
 | `run_correspondence.sh` | Stage 1 C0-C3 same-grid/hard/soft/confidence 受控实验 |
-| `run_trajectory.sh` | Stage 2 T1-T5 same-grid 轨迹几何 likelihood 实验；T0 复用 C0 |
+| `run_trajectory.sh` | Stage 2 T1-T5 单次 cache 扫描轨迹几何矩阵；T0/Global 复用 C0 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |

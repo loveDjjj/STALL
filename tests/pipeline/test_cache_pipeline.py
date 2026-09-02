@@ -247,6 +247,45 @@ class CachePipelineTests(unittest.TestCase):
                 local, global_scores.iloc[:1], dataset="demo", split="evaluation"
             )
 
+    def test_one_cache_read_scores_multiple_local_candidates(self) -> None:
+        rows = pd.DataFrame([
+            {
+                "video_path": "mock/v1.mp4", "subset": "real",
+                "source_model": "real_source", "downsample_idxs": json.dumps(list(range(16))),
+            }
+        ])
+        payload = {
+            "global": torch.zeros(16, 2),
+            "patch": torch.randn(16, 4, 3, generator=torch.Generator().manual_seed(41)),
+            "grid_size": [2, 2], "frame_indices": list(range(16)),
+        }
+        config = load_config(ROOT / "configs/benchmark.yaml")
+        config["method"]["global"]["enabled"] = False
+        configs = {}
+        parameters = {}
+        for name, dynamics in (("curvature", "curvature"), ("speed", "speed_ratio")):
+            local = __import__("copy").deepcopy(config["method"]["local"])
+            local["dynamics"] = dynamics
+            configs[name] = local
+            parameters[name] = StableGaussianParams(
+                mean=np.zeros(1), whitening=np.eye(1), calibration_raw=np.array([0.0, 1.0])
+            )
+        context = CacheContractContext(Path("mock"), "strict", True, {"identity": {}}, "mock")
+        with patch(
+            "alpha_stall_pipeline._load_cache_payload", return_value=payload
+        ) as loader:
+            result = _PIPELINE._score_windows(
+                ROOT, rows, Path("mock"), context, "demo", config, {}, "cpu",
+                score_global=False,
+                local_candidates={
+                    name: (configs[name], parameters[name]) for name in configs
+                },
+            )
+        self.assertEqual(loader.call_count, 1)
+        self.assertIn("patch_temporal_raw__curvature", result)
+        self.assertIn("patch_temporal_raw__speed", result)
+        self.assertTrue(np.isfinite(result.filter(like="patch_temporal_raw__")).all().all())
+
     def test_k1_evaluation_uses_k1_subset_of_k3_calibration_reference(self) -> None:
         config = load_config(ROOT / "configs/benchmark.yaml")
         config["method"]["local"]["parameter_source"] = "fit_real_only"

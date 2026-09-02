@@ -7,6 +7,7 @@ import json
 import multiprocessing
 import os
 import traceback
+import copy
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from pathlib import Path
@@ -525,6 +526,7 @@ def _score_windows(
     device: str,
     *,
     score_global: bool = True,
+    local_candidates: dict[str, tuple[dict, StableGaussianParams]] | None = None,
     report: Callable[[int, int], None] | None = None,
     diagnostic: Callable[[dict], None] | None = None,
 ) -> pd.DataFrame:
@@ -602,7 +604,21 @@ def _score_windows(
                     patch_values, parameters["patch_spatial"], LOCAL_AGGREGATION,
                     device=device, compute_percentile=locked_local,
                 )
-            if method["local"]["enabled"] and method["local"]["temporal_enabled"]:
+            if local_candidates is not None:
+                for candidate_name, (candidate_local, candidate_params) in local_candidates.items():
+                    temporal = _temporal_patch(
+                        patch_tensor, candidate_local, device
+                    )
+                    raw, _ = score_gaussian_aggregate_float64(
+                        temporal.features,
+                        candidate_params,
+                        LOCAL_AGGREGATION,
+                        device=device,
+                        compute_percentile=False,
+                        position_weights=temporal.aggregation_weights,
+                    )
+                    scores[f"patch_temporal_raw__{candidate_name}"] = raw
+            elif method["local"]["enabled"] and method["local"]["temporal_enabled"]:
                 temporal = _temporal_patch(
                     patch_tensor, method["local"], device
                 )
@@ -1002,6 +1018,209 @@ def run_from_cache(
     windows = pd.concat(all_windows, ignore_index=True)
     windows = windows.drop(columns=["_input_order"], errors="ignore")
     return windows, pd.concat(all_videos, ignore_index=True), metadata
+
+
+def run_trajectory_matrix_from_cache(
+    repository_root: Path,
+    config: dict,
+    candidates: dict[str, str],
+    *,
+    report: Callable[[dict], None] | None = None,
+    artifact_dir: Path | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+    """一次扫描严格缓存，完成多个 Local trajectory likelihood 对照。"""
+
+    if not candidates:
+        raise ValueError("trajectory matrix 至少需要一个候选")
+    runtime = config["runtime"]
+    cache_root = repository_root / runtime["cache_dir"]
+    context = prepare_feature_cache(
+        cache_root,
+        expected_contract=None,
+        policy="strict",
+        create=False,
+        required_cache_kind="patch_embeddings",
+    )
+    reused_global, reused_identity = _load_reused_global_windows(
+        repository_root, config, context.contract_sha256
+    )
+    if reused_global is None:
+        raise ValueError("trajectory matrix 必须显式配置已验证的 reuse_global_run")
+    devices = [str(item) for item in runtime.get("devices", [])] or [str(runtime["device"])]
+    if len(devices) != 1:
+        raise ValueError("trajectory matrix 当前要求单卡，避免多进程重复持有五组参数")
+    device = devices[0]
+    if device.startswith("cuda"):
+        if not torch.cuda.is_available():
+            raise RuntimeError("配置请求 CUDA，但 PyTorch 未检测到 CUDA")
+        target = torch.device(device)
+        free_bytes, _ = torch.cuda.mem_get_info(target)
+        if free_bytes / 1024**3 < float(runtime["minimum_free_gib"]):
+            raise RuntimeError("trajectory matrix 的目标 GPU 空闲显存不足")
+    else:
+        target = torch.device(device)
+
+    global_parameters = _load_global_parameters(repository_root, config)
+    all_windows: dict[str, list[pd.DataFrame]] = {name: [] for name in candidates}
+    all_videos: dict[str, list[pd.DataFrame]] = {name: [] for name in candidates}
+    metadata: dict[str, object] = {
+        "cache_root": str(cache_root),
+        "cache_contract_sha256": context.contract_sha256,
+        "reused_global": reused_identity,
+        "candidates": candidates,
+        "datasets": {},
+    }
+    packed_reader = PackedCacheReader(cache_root)
+    identity_columns = [
+        "video_id", "dataset", "subset", "source_model", "video_path",
+        "window_id", "_input_order",
+    ]
+    global_columns = list(GLOBAL_WINDOW_COLUMNS)
+
+    for dataset_value in config["data"]["datasets"]:
+        dataset = str(dataset_value)
+        if target.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(target)
+        manifests = resolve_dataset_manifests(repository_root, config, dataset)
+        calibration = load_manifest(str(manifests.calibration))
+        evaluation = load_manifest(str(manifests.evaluation))
+        _ensure_disjoint(calibration, evaluation, dataset)
+        policy = str(config["data"]["short_video_policy"])
+        calibration, excluded_calibration = _apply_short_video_policy(
+            calibration, dataset, "calibration", policy
+        )
+        evaluation, excluded_evaluation = _apply_short_video_policy(
+            evaluation, dataset, "evaluation", policy
+        )
+        selected_calibration = _choose_calibration(
+            calibration,
+            dataset,
+            int(config["calibration"]["real_videos_per_dataset"]),
+            int(config["calibration"]["seed"]),
+        )
+        if report:
+            report({"message": f"[{dataset}] 一次读取真实校准窗口，拟合 {len(candidates)} 个轨迹候选"})
+        calibration_features = []
+        for _, row in selected_calibration.iterrows():
+            payload = _load_cache_payload(
+                repository_root, cache_root, row, context, packed_reader
+            )
+            calibration_features.extend(
+                _window_features(payload, row, int(config["sampling"]["num_windows"]))
+            )
+
+        candidate_configs: dict[str, dict] = {}
+        candidate_parameters: dict[str, dict[str, StableGaussianParams]] = {}
+        scoring_candidates: dict[str, tuple[dict, StableGaussianParams]] = {}
+        for name, dynamics in candidates.items():
+            candidate_config = copy.deepcopy(config)
+            candidate_config["method"]["local"]["dynamics"] = dynamics
+            parameters = dict(global_parameters)
+            parameters.update(
+                _fit_local_parameters(calibration_features, candidate_config, device)
+            )
+            candidate_configs[name] = candidate_config
+            candidate_parameters[name] = parameters
+            scoring_candidates[name] = (
+                candidate_config["method"]["local"], parameters["patch_temporal"]
+            )
+
+        def progress_callback(done: int, total: int) -> None:
+            if report and (done == total or done % max(1, total // 50) == 0):
+                report({
+                    "current_dataset": dataset,
+                    "phase": "trajectory_matrix_score",
+                    "completed": done,
+                    "total": total,
+                    "message": f"[{dataset}] trajectory matrix {done}/{total}",
+                })
+
+        started = monotonic()
+        calibration_matrix = _score_windows(
+            repository_root,
+            selected_calibration,
+            cache_root,
+            context,
+            dataset,
+            config,
+            global_parameters,
+            device,
+            score_global=False,
+            local_candidates=scoring_candidates,
+        )
+        calibration_matrix = _attach_reused_global(
+            calibration_matrix, reused_global, dataset=dataset, split="calibration"
+        )
+        evaluation_matrix = _score_windows(
+            repository_root,
+            evaluation,
+            cache_root,
+            context,
+            dataset,
+            config,
+            global_parameters,
+            device,
+            score_global=False,
+            local_candidates=scoring_candidates,
+            report=progress_callback,
+        )
+        evaluation_matrix = _attach_reused_global(
+            evaluation_matrix, reused_global, dataset=dataset, split="evaluation"
+        )
+        score_seconds = monotonic() - started
+
+        parameter_hashes = {}
+        for name in candidates:
+            raw_column = f"patch_temporal_raw__{name}"
+            calibration_one = calibration_matrix[
+                identity_columns + global_columns + [raw_column]
+            ].rename(columns={raw_column: "patch_temporal_raw"})
+            evaluation_one = evaluation_matrix[
+                identity_columns + global_columns + [raw_column]
+            ].rename(columns={raw_column: "patch_temporal_raw"})
+            calibrated, videos = _calibrate_and_aggregate(
+                calibration_one, evaluation_one, candidate_configs[name]
+            )
+            calibrated["split"] = "calibration"
+            evaluation_one["split"] = "evaluation"
+            candidate_windows = pd.concat(
+                [calibrated, evaluation_one], ignore_index=True
+            ).drop(columns=["_input_order"], errors="ignore")
+            candidate_windows.insert(0, "variant", name)
+            videos.insert(0, "variant", name)
+            all_windows[name].append(candidate_windows)
+            all_videos[name].append(videos)
+            if artifact_dir is not None:
+                parameter_hashes[name] = _save_fitted_local_artifacts(
+                    artifact_dir / "candidates" / name,
+                    dataset,
+                    selected_calibration,
+                    calibration_one,
+                    candidate_parameters[name],
+                    candidate_configs[name],
+                )
+        metadata["datasets"][dataset] = {
+            "calibration_videos": len(selected_calibration),
+            "evaluation_videos": len(evaluation),
+            "excluded_short_calibration_videos": excluded_calibration,
+            "excluded_short_evaluation_videos": excluded_evaluation,
+            "score_seconds_all_candidates": score_seconds,
+            "local_params_sha256": parameter_hashes,
+            "primary_peak_vram_gib": (
+                torch.cuda.max_memory_allocated(target) / 1024**3
+                if target.type == "cuda"
+                else 0.0
+            ),
+        }
+    windows = pd.concat(
+        [pd.concat(all_windows[name], ignore_index=True) for name in candidates],
+        ignore_index=True,
+    )
+    videos = pd.concat(
+        [pd.concat(all_videos[name], ignore_index=True) for name in candidates],
+        ignore_index=True,
+    )
+    return windows, videos, metadata
 
 
 def build_bootstrap(videos: pd.DataFrame, config: dict) -> pd.DataFrame:
