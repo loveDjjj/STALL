@@ -168,3 +168,9 @@ negative方法位于显式config和独立模块，不改变默认`finite_differe
 ## 19. Blocking issue检查
 
 没有代码层blocking issue。真正约束是现有cache不含arbitrary positions，因此FS1-FS5完整评分必然需要一次coarse Global构建和一次selected dense DINO提取。该代价可控，但FS0与adaptive走不同feature来源时必须做数值等价测试：对FS0窗口，on-demand extractor与现有strict cache的Global/Patch token应在明确tolerance内一致，否则停止实验。
+
+真实4视频smoke显示：coarse `batch=64,float16` 与旧cache重合Global的cosine最低
+`0.99999982`、max absolute difference约`4.87e-4`，可用于同contract selector；
+dense `batch=8`重新提取Global相对旧cache的max absolute difference约`2.63e-6`。
+因此coarse不与8 FPS参考混用，dense FS0等价测试暂定`atol=3e-6`，并进一步要求
+最终窗口/视频分数回归，而不能只靠feature tolerance证明baseline一致。

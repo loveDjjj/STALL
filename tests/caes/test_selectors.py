@@ -30,6 +30,12 @@ from temporal_selection.candidates import (
 )
 from temporal_selection.models import WindowManifest
 from temporal_selection.selectors import select_windows, temporal_iou
+from temporal_selection.reference import (
+    SelectorReference,
+    attach_candidate_scores,
+    fit_selector_reference,
+    score_coarse_sequence,
+)
 from features import AlphaStallFeatureExtractor
 import numpy as np
 import torch
@@ -244,6 +250,53 @@ class TemporalSelectorTests(unittest.TestCase):
             [np.stack([frame, frame]), np.stack([frame])], batch_size=2
         )
         self.assertEqual([item.shape for item in outputs], [(2, 1024), (1, 1024)])
+
+    def test_selector_reference_is_real_only_and_zero_diff_is_not_anomaly(self) -> None:
+        sequences = [
+            np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [2.0, 1.0]], dtype=np.float32),
+            np.array([[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 2.0]], dtype=np.float32),
+        ]
+        reference = fit_selector_reference(
+            sequences,
+            ["real:a", "real:b"],
+            coarse_contract_sha256="b" * 64,
+            device="cpu",
+        )
+        self.assertEqual(reference.calibration_ids, ("real:a", "real:b"))
+        scored = score_coarse_sequence(
+            np.array([[0.0, 0.0], [0.0, 0.0], [1.0, 0.0]], dtype=np.float32),
+            [0, 8, 16],
+            reference,
+        )
+        self.assertEqual(float(scored["anomaly"][0]), 0.0)
+        self.assertTrue(np.isfinite(scored["anomaly"]).all())
+        self.assertNotIn("label", inspect.signature(fit_selector_reference).parameters)
+
+    def test_candidate_scores_use_transition_midpoints(self) -> None:
+        candidates = generate_candidate_windows(list(range(24)))
+        scored = attach_candidate_scores(
+            candidates,
+            {
+                "midpoint_position": np.array([4.0, 12.0, 20.0]),
+                "feature_change": np.array([1.0, 3.0, 5.0]),
+                "anomaly": np.array([0.1, 0.3, 0.9]),
+            },
+        )
+        self.assertAlmostEqual(scored[0].scores["feature_change_mean"], 2.0)
+        self.assertAlmostEqual(scored[0].scores["real_anomaly_max"], 0.3)
+        self.assertAlmostEqual(scored[-1].scores["real_anomaly_max"], 0.9)
+
+    def test_selector_reference_rejects_fps_mismatch(self) -> None:
+        reference = SelectorReference(
+            mean=np.zeros(2),
+            whitening=np.eye(2),
+            calibration_likelihood=np.array([-1.0, 0.0]),
+            calibration_ids=("real:a",),
+            coarse_contract_sha256="c" * 64,
+            coarse_fps=2,
+        )
+        with self.assertRaisesRegex(ValueError, "FPS"):
+            reference.validate()
 
 
 if __name__ == "__main__":
