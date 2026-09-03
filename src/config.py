@@ -76,6 +76,39 @@ def validate_config(config: dict[str, Any]) -> None:
             raise ValueError(
                 f"当前严格缓存只支持 sampling.{key}={expected!r}"
             )
+    selection = config.get("temporal_selection")
+    if selection is not None:
+        if not isinstance(selection, dict):
+            raise ValueError("temporal_selection 必须是映射")
+        allowed_selectors = {
+            "uniform", "random", "feature_change", "real_anomaly",
+            "real_anomaly_nms", "stratified_real_anomaly",
+        }
+        if selection.get("name") not in allowed_selectors:
+            raise ValueError("temporal_selection.name 不受支持")
+        locked_selection = {
+            "coarse_fps": 1,
+            "candidate_stride_seconds": 0.5,
+            "k": 3,
+            "window_seconds": 2.0,
+            "dense_fps": 8,
+            "frames_per_window": 16,
+            "nms_iou_threshold": 0.5,
+            "reference_mode": "target_real",
+        }
+        for key, expected in locked_selection.items():
+            if selection.get(key) != expected:
+                raise ValueError(
+                    f"CAES第一轮固定 temporal_selection.{key}={expected!r}"
+                )
+        if selection.get("calibration_mode") not in {"matched", "crossfit5"}:
+            raise ValueError(
+                "temporal_selection.calibration_mode 只能是 matched 或 crossfit5"
+            )
+        if selection.get("crossfit_folds") != 5:
+            raise ValueError("CAES cross-fitting 固定为 5 folds")
+        if not isinstance(selection.get("seed"), int):
+            raise ValueError("temporal_selection.seed 必须是整数")
     local = method.get("local", {})
     global_branch = method.get("global", {})
     if not global_branch.get("enabled", False) and not local.get("enabled", False):
@@ -160,6 +193,13 @@ def validate_config(config: dict[str, Any]) -> None:
     runtime = config["runtime"]
     if not isinstance(runtime.get("cache_dir"), str) or not runtime["cache_dir"]:
         raise ValueError("runtime.cache_dir 必须是非空路径")
+    coarse_cache = runtime.get("coarse_global_cache_dir")
+    if coarse_cache is not None and (
+        not isinstance(coarse_cache, str) or not coarse_cache
+    ):
+        raise ValueError("runtime.coarse_global_cache_dir 必须是非空路径")
+    if coarse_cache == runtime.get("cache_dir"):
+        raise ValueError("coarse Global cache 不得与 Patch cache 使用同一根目录")
     if runtime.get("cache_policy") != "strict":
         raise ValueError("主实验只能使用 runtime.cache_policy=strict")
     if not isinstance(runtime.get("max_features_for_fit"), int) or runtime["max_features_for_fit"] < 2:
