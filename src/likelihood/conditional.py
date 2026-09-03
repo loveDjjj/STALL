@@ -74,6 +74,11 @@ def score_conditional_gaussian_mean_float64(
         constant = float(whitening.shape[1]) * np.log(2.0 * np.pi)
         scores = -0.5 * (constant + torch.sum(white * white, dim=-1))
         likelihood.index_copy_(0, selected_cpu.to(target), scores)
+        # 三个高维 bin 顺序评分；结果已写回小型 likelihood 向量后立即释放
+        # 选中特征和白化中间量，防止 CUDA allocator 在同一 batch 内累积。
+        del selected, mean, whitening, white, scores
+        if target.type == "cuda":
+            torch.cuda.empty_cache()
     return (
         likelihood.reshape(len(values), -1)
         .mean(dim=1, dtype=torch.float64)
