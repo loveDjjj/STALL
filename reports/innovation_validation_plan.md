@@ -423,3 +423,10 @@ path/chord 组合。完整结果见 `reports/stage2_trajectory_results.md`。
 Stage 4 只保留 vector D2 的 Ledoit-Wolf/OAS covariance；依赖已失败低维 geometry
 的 Student-t/kNN 按预注册 gate 剪枝。完整结果见
 `reports/stage3_conditional_results.md`。
+
+## 13. Stage 4 已执行决策（2026-09-03）
+
+n=200 时 Ledoit-Wolf/OAS 与 empirical D2 几乎完全等价，shrinkage 仅约
+`0.0039-0.0056`，Macro AUC/AP 差异均小于 `5e-5` 且 bootstrap 区间跨零。
+因此 shrinkage 不进入主方法，只在后续 25/50/100-real 阶段检验其小样本价值。
+完整结果见 `reports/stage4_statistics_results.md`。

@@ -1295,7 +1295,7 @@ def run_local_candidate_matrix_from_cache(
             int(config["calibration"]["seed"]),
         )
         if report:
-            report({"message": f"[{dataset}] 一次读取真实校准窗口，拟合 {len(candidates)} 个轨迹候选"})
+            report({"message": f"[{dataset}] 一次读取真实校准窗口，拟合 {len(candidates)} 个局部候选"})
         calibration_features = []
         for _, row in selected_calibration.iterrows():
             payload = _load_cache_payload(

@@ -1,0 +1,13 @@
+variant,run_name,scope,dataset,auc,ap_real,n_generators,n_pairwise_real,n_pairwise_fake,pairwise_seed
+s0_empirical_d2,s0_empirical_d2,generator_pairwise_dataset_macro,comgenvid,0.9014749430806395,0.9110388468338928,2,1796,1796,42
+s0_empirical_d2,s0_empirical_d2,generator_pairwise_dataset_macro,genvideo,0.8585612598531033,0.8391031398830191,8,5639,5639,42
+s0_empirical_d2,s0_empirical_d2,generator_pairwise_dataset_macro,videofeedback,0.8621400000000001,0.8686679558954129,10,3000,3000,42
+s0_empirical_d2,s0_empirical_d2,generator_pairwise_macro3,Macro-3,0.8740587343112476,0.8729366475374416,20,10435,10435,42
+s1_ledoit_wolf_d2,s1_ledoit_wolf_d2,generator_pairwise_dataset_macro,comgenvid,0.9014253401520824,0.9110167622291427,2,1796,1796,42
+s1_ledoit_wolf_d2,s1_ledoit_wolf_d2,generator_pairwise_dataset_macro,genvideo,0.8585930093522213,0.8392574549319166,8,5639,5639,42
+s1_ledoit_wolf_d2,s1_ledoit_wolf_d2,generator_pairwise_dataset_macro,videofeedback,0.862126111111111,0.8686634387820492,10,3000,3000,42
+s1_ledoit_wolf_d2,s1_ledoit_wolf_d2,generator_pairwise_macro3,Macro-3,0.8740481535384715,0.8729792186477029,20,10435,10435,42
+s2_oas_d2,s2_oas_d2,generator_pairwise_dataset_macro,comgenvid,0.9014253401520824,0.9110167622291427,2,1796,1796,42
+s2_oas_d2,s2_oas_d2,generator_pairwise_dataset_macro,genvideo,0.8585928818012009,0.8392572760820308,8,5639,5639,42
+s2_oas_d2,s2_oas_d2,generator_pairwise_dataset_macro,videofeedback,0.862126111111111,0.8686634387820492,10,3000,3000,42
+s2_oas_d2,s2_oas_d2,generator_pairwise_macro3,Macro-3,0.8740481110214647,0.8729791590310741,20,10435,10435,42
