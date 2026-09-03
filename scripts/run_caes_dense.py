@@ -483,6 +483,8 @@ def _prepare(args: argparse.Namespace):
     window_run = json.loads(window_manifest_path.read_text(encoding="utf-8"))
     if window_run.get("schema_version") != "caes_window_selection_run_v1":
         raise ValueError("WindowManifest run schema不受支持")
+    if window_run.get("status") != "completed":
+        raise ValueError("只允许消费status=completed的WindowManifest run")
     if window_run.get("config_sha256") != _sha256(args.config):
         raise ValueError("WindowManifest使用的配置文件与dense run不一致")
     if not window_run.get("coarse_contract_sha256"):
