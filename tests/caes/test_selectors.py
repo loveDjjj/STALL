@@ -37,6 +37,12 @@ from temporal_selection.reference import (
     fit_selector_reference,
     score_coarse_sequence,
 )
+from temporal_selection.calibration import (
+    FrozenLocalD2Reference,
+    load_frozen_local_reference,
+    save_frozen_local_reference,
+)
+from math_utils import StableGaussianParams
 from features import AlphaStallFeatureExtractor
 import numpy as np
 import torch
@@ -315,6 +321,27 @@ class TemporalSelectorTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "FPS"):
             reference.validate()
+
+    def test_frozen_local_reference_round_trip(self) -> None:
+        reference = FrozenLocalD2Reference(
+            dataset="demo",
+            params=StableGaussianParams(
+                mean=np.zeros(1024),
+                whitening=np.eye(1024),
+                calibration_raw=np.array([-2.0, -1.0]),
+                shrinkage=0.0,
+            ),
+            calibration_ids=("demo:real1", "demo:real2"),
+            source_run="c0",
+            source_config_hash="d" * 64,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "reference.npz"
+            file_sha = save_frozen_local_reference(path, reference)
+            restored = load_frozen_local_reference(path)
+        self.assertEqual(len(file_sha), 64)
+        self.assertEqual(restored.digest(), reference.digest())
+        np.testing.assert_array_equal(restored.params.whitening, reference.params.whitening)
 
 
 if __name__ == "__main__":

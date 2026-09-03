@@ -19,6 +19,7 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_statistics.sh` | Stage 4 Ledoit-Wolf/OAS D2 covariance 单次 cache 扫描矩阵 |
 | `run_coarse_global_cache.sh` | CAES 1 FPS Global-only float16小缓存构建 |
 | `run_window_selection.sh` | CAES FS0-FS5 matched WindowManifest与coarse signals生成 |
+| `freeze_caes_detector_reference.sh` | 冻结并验证FS0 Local D2共享参数 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |
