@@ -400,3 +400,14 @@ bootstrap 的三个 Macro AUC/AP 区间也均完全低于零。
 因此 H1 被否定：当前 same-grid correspondence 不是可由简单局部 hard/soft matching
 修复的主要瓶颈。停止 radius=2、OT 和 learned matcher 扩展，Stage 2 固定使用 C0
 same-grid。完整结果见 `reports/stage1_correspondence_results.md`。
+
+## 11. Stage 2 已执行决策（2026-09-02）
+
+T1 curvature、T2 speed ratio、T3 path/chord 和 T5 四维 geometry 在三个数据集上
+均显著低于 T0 vector D2。T4 D2+curvature 的 Macro AUC/AP 差仅为
+`+0.000002/+0.000009`；1,000 次成对 bootstrap 区间约为 `[-9e-5,+1e-4]`，
+严格不可区分。T5 相对 T0 下降 `-0.1323/-0.1060`，也未通过低维保留门槛。
+
+因此 H2 被否定：简单 trajectory geometry 不比 Local vector D2 更稳定。Stage 3
+以 T0 same-grid D2 检验 speed-conditioned likelihood；不继续增加 curvature 或
+path/chord 组合。完整结果见 `reports/stage2_trajectory_results.md`。

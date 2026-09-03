@@ -77,6 +77,7 @@ def _pairwise_bootstrap(
     aligned: pd.DataFrame,
     variant: str,
     *,
+    baseline_variant: str = "c0",
     seed: int,
     iterations: int,
 ) -> pd.DataFrame:
@@ -91,10 +92,12 @@ def _pairwise_bootstrap(
             dataset_frame["subset"].eq("annotated")
         ].groupby("source_model", sort=True):
             pairs.append(_balanced_real_pair(real, fake, seed))
-        rng = np.random.default_rng(_seed(seed, variant, dataset))
+        rng = np.random.default_rng(
+            _seed(seed, variant, baseline_variant, dataset)
+        )
         samples = {"auc": [], "ap_real": []}
         candidate_column = f"final_score_{variant}"
-        baseline_column = "final_score_c0"
+        baseline_column = f"final_score_{baseline_variant}"
         for _ in range(iterations):
             deltas = {"auc": [], "ap_real": []}
             for pair in pairs:

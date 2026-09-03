@@ -1,0 +1,2 @@
+matrix_run,candidate_count,evaluation_videos_per_candidate,score_seconds_all_candidates,peak_vram_gib,result_size_bytes
+stage2_trajectory_matrix,5,21421,4194.5436189211905,6.053349494934082,114047593

@@ -1,0 +1,6 @@
+variant,macro_auc_delta_vs_t0,macro_ap_delta_vs_t0,datasets_with_auc_improvement,datasets_with_ap_improvement,passes_mainline_gate,passes_low_dim_retention_gate
+t1_curvature,-0.03722259031690067,-0.02794440844086743,0,0,False,False
+t2_speed_ratio,-0.18155997779620492,-0.13802645889884468,0,0,False,False
+t3_path_chord,-0.12683312005958625,-0.1021833556914643,0,0,False,False
+t4_d2_curvature,1.599771350502266e-06,8.845474106178308e-06,2,1,False,False
+t5_geometry,-0.1322955319294863,-0.10596615338568915,0,0,False,False
