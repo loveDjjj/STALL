@@ -1,0 +1,4 @@
+comparison,macro_auc_delta,macro_ap_delta,datasets_with_auc_improvement,datasets_with_ap_improvement,passes_conditional_gate
+d1_conditioned_d2_vs_d0_unconditioned_d2,-0.004661532725509621,0.0002547503242683602,1,2,False
+d3_conditioned_geometry_vs_d2_unconditioned_geometry,0.013415541338580805,0.010593970243687023,2,2,True
+d3_conditioned_geometry_vs_d0_unconditioned_d2,-0.11887999059090548,-0.09537218314200213,0,0,False

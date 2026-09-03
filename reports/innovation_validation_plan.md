@@ -411,3 +411,15 @@ T1 curvature、T2 speed ratio、T3 path/chord 和 T5 四维 geometry 在三个�
 因此 H2 被否定：简单 trajectory geometry 不比 Local vector D2 更稳定。Stage 3
 以 T0 same-grid D2 检验 speed-conditioned likelihood；不继续增加 curvature 或
 path/chord 组合。完整结果见 `reports/stage2_trajectory_results.md`。
+
+## 12. Stage 3 已执行决策（2026-09-03）
+
+三分位 speed-conditioned vector D2 相对 D0 的 Macro AUC/AP 为
+`-0.00466/+0.00025`，配对 bootstrap 为 `-0.00461 [-0.00615,-0.00301]` 与
+`+0.00019 [-0.00188,+0.00219]`，未通过门槛。条件化 geometry 相对弱 T5
+提高 `+0.01342/+0.01059`，但相对 D0 仍低 `-0.11888/-0.09537`。
+
+因此 H3 只获机制性部分支持，不进入主方法。不 sweep bin、不使用 neural density。
+Stage 4 只保留 vector D2 的 Ledoit-Wolf/OAS covariance；依赖已失败低维 geometry
+的 Student-t/kNN 按预注册 gate 剪枝。完整结果见
+`reports/stage3_conditional_results.md`。
