@@ -48,6 +48,19 @@ MATRICES = {
             },
         },
     },
+    "statistics": {
+        "run_name": "stage4_statistics_matrix",
+        "candidates": {
+            "s1_ledoit_wolf_d2": {
+                "dynamics": "finite_difference", "conditional": False,
+                "covariance_estimator": "ledoit_wolf",
+            },
+            "s2_oas_d2": {
+                "dynamics": "finite_difference", "conditional": False,
+                "covariance_estimator": "oas",
+            },
+        },
+    },
 }
 
 

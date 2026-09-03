@@ -129,8 +129,10 @@ def validate_config(config: dict[str, Any]) -> None:
                 raise ValueError("条件动力学当前固定使用 3 个 real-quantile bins")
             if conditional.get("binning") != "real_quantile":
                 raise ValueError("条件动力学当前只支持 real_quantile")
-    if local.get("covariance_estimator") not in {"empirical", "oas"}:
-        raise ValueError("method.local.covariance_estimator 只能是 empirical 或 oas")
+    if local.get("covariance_estimator") not in {"empirical", "ledoit_wolf", "oas"}:
+        raise ValueError(
+            "method.local.covariance_estimator 只能是 empirical、ledoit_wolf 或 oas"
+        )
     if local.get("parameter_source") not in {"locked_u0", "fit_real_only"}:
         raise ValueError("method.local.parameter_source 只能是 locked_u0 或 fit_real_only")
     if local.get("parameter_source") == "locked_u0":

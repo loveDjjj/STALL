@@ -58,8 +58,10 @@ class WhiteningTransform:
         )
         if values.ndim != 2 or len(values) < 2:
             raise ValueError("白化拟合需要至少两条二维特征")
-        if covariance_estimator not in {"empirical", "oas"}:
-            raise ValueError("covariance_estimator 只能是 empirical 或 oas")
+        if covariance_estimator not in {"empirical", "ledoit_wolf", "oas"}:
+            raise ValueError(
+                "covariance_estimator 只能是 empirical、ledoit_wolf 或 oas"
+            )
         self.n_components = n_components
         self.covariance_estimator = covariance_estimator
         self._fit(values)
@@ -74,8 +76,10 @@ class WhiteningTransform:
             if covariance.ndim == 0:
                 covariance = covariance.reshape(1, 1)
             self.shrinkage_ = 0.0
-        else:
+        elif self.covariance_estimator == "oas":
             covariance, self.shrinkage_ = self._oas_covariance(centered)
+        else:
+            covariance, self.shrinkage_ = self._ledoit_wolf_covariance(centered)
         eigenvalues, eigenvectors = torch.linalg.eigh(covariance)
         order = torch.argsort(eigenvalues, descending=True)
         eigenvalues, eigenvectors = eigenvalues[order], eigenvectors[:, order]
@@ -117,6 +121,42 @@ class WhiteningTransform:
         else:
             shrinkage = min(float((numerator / denominator).detach().cpu()), 1.0)
         covariance = (1.0 - shrinkage) * covariance
+        covariance.diagonal().add_(shrinkage * mean_variance)
+        return covariance, shrinkage
+
+    @staticmethod
+    def _ledoit_wolf_covariance(centered: torch.Tensor) -> tuple[torch.Tensor, float]:
+        """计算与 sklearn 定义一致的 Ledoit-Wolf 收缩协方差。
+
+        输入已严格中心化。使用极大似然 covariance `X.T@X/n`，并直接在当前
+        设备计算非分块 closed-form shrinkage；不使用 fake 或验证集选择系数。
+        """
+
+        samples, dimensions = centered.shape
+        if dimensions == 1:
+            covariance = centered.T @ centered / float(samples)
+            return covariance, 0.0
+        squared = centered.square()
+        empirical_trace = squared.sum(dim=0) / float(samples)
+        mean_variance = empirical_trace.sum() / float(dimensions)
+        cross = centered.T @ centered
+        delta_unscaled = cross.square().sum() / float(samples**2)
+        beta_unscaled = (squared.T @ squared).sum()
+        beta = (
+            beta_unscaled / float(samples) - delta_unscaled
+        ) / float(dimensions * samples)
+        delta = (
+            delta_unscaled
+            - 2.0 * mean_variance * empirical_trace.sum()
+            + float(dimensions) * mean_variance.square()
+        ) / float(dimensions)
+        beta = torch.minimum(beta, delta)
+        if float(beta.detach().cpu()) == 0.0 or float(delta.detach().cpu()) <= 0.0:
+            shrinkage = 0.0
+        else:
+            shrinkage = float((beta / delta).detach().cpu())
+        covariance = cross / float(samples)
+        covariance.mul_(1.0 - shrinkage)
         covariance.diagonal().add_(shrinkage * mean_variance)
         return covariance, shrinkage
 
@@ -212,6 +252,7 @@ class StableGaussianParams:
     mean: np.ndarray
     whitening: np.ndarray
     calibration_raw: np.ndarray
+    shrinkage: float | None = None
 
     @classmethod
     def from_npz(

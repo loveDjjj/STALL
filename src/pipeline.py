@@ -268,6 +268,7 @@ def _fit_parameter(
         mean=transform.mean_.detach().cpu().numpy().astype(np.float64),
         whitening=transform.whitening_matrix_.detach().cpu().numpy().astype(np.float64),
         calibration_raw=np.array([0.0, 1.0], dtype=np.float64),
+        shrinkage=float(transform.shrinkage_),
     )
 
 
@@ -572,6 +573,10 @@ def _save_fitted_local_artifacts(
         payload[f"{name}_whitening"] = np.asarray(
             parameters[name].whitening, dtype=np.float64
         )
+        if parameters[name].shrinkage is not None:
+            payload[f"{name}_shrinkage"] = np.asarray(
+                [parameters[name].shrinkage], dtype=np.float64
+            )
         raw_name = f"{name}_raw"
         if raw_name in calibration_windows:
             payload[f"{name}_window_reference"] = stable_sorted(
@@ -1312,6 +1317,10 @@ def run_local_candidate_matrix_from_cache(
             candidate_config["method"]["local"]["conditional"]["enabled"] = bool(
                 spec["conditional"]
             )
+            if "covariance_estimator" in spec:
+                candidate_config["method"]["local"]["covariance_estimator"] = str(
+                    spec["covariance_estimator"]
+                )
             parameters = dict(global_parameters)
             candidate_configs[name] = candidate_config
             if spec["conditional"]:
@@ -1330,6 +1339,9 @@ def run_local_candidate_matrix_from_cache(
                 scoring_candidates[name] = (
                     candidate_config["method"]["local"], parameters["patch_temporal"]
                 )
+            gc.collect()
+            if target.type == "cuda":
+                torch.cuda.empty_cache()
 
         def progress_callback(done: int, total: int) -> None:
             if report and (done == total or done % max(1, total // 50) == 0):

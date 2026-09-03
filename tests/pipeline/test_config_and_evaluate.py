@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import torch
+from sklearn.covariance import ledoit_wolf
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,6 +81,30 @@ class ConfigAndEvaluateTests(unittest.TestCase):
         whitened = transform.transform(values)
         self.assertEqual(tuple(whitened.shape), (32, 1))
         self.assertTrue(bool(torch.isfinite(whitened).all()))
+        self.assertEqual(transform.shrinkage_, 0.0)
+
+    def test_ledoit_wolf_covariance_matches_sklearn_definition(self) -> None:
+        rng = np.random.default_rng(37)
+        values = rng.normal(size=(96, 7)).astype(np.float32)
+        centered = values - values.mean(axis=0, keepdims=True)
+        expected_covariance, expected_shrinkage = ledoit_wolf(
+            centered, assume_centered=True
+        )
+        covariance, shrinkage = WhiteningTransform._ledoit_wolf_covariance(
+            torch.from_numpy(centered)
+        )
+        np.testing.assert_allclose(
+            covariance.numpy(), expected_covariance, rtol=2e-5, atol=2e-6
+        )
+        self.assertAlmostEqual(float(shrinkage), float(expected_shrinkage), places=5)
+
+    def test_ledoit_wolf_is_valid_config_override(self) -> None:
+        config = apply_overrides(
+            self.config, ["method.local.covariance_estimator=ledoit_wolf"]
+        )
+        self.assertEqual(
+            config["method"]["local"]["covariance_estimator"], "ledoit_wolf"
+        )
 
     def test_standard_score_csv_produces_dataset_and_generator_tables(self) -> None:
         scores = normalize_scores(
