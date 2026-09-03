@@ -6,7 +6,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shlex
+import shutil
+import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -17,7 +21,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from config import load_config
+from config import config_digest, dump_config, load_config, validate_config
 from data.cache_contract import prepare_feature_cache
 from data.coarse_global_cache import (
     coarse_cache_path,
@@ -85,7 +89,10 @@ def _load_payload(context, cache_root: Path, dataset: str, split: str, row: pd.S
 
 def main() -> None:
     args = parse_args()
+    args.config = args.config.resolve()
+    args.output_dir = args.output_dir.resolve()
     config = load_config(args.config)
+    validate_config(config)
     selection = config["temporal_selection"]
     cache_root = args.cache_dir or ROOT / config["runtime"]["coarse_global_cache_dir"]
     context = prepare_feature_cache(
@@ -98,20 +105,36 @@ def main() -> None:
     stored_selection = context.contract["identity"]["extraction"]["frame_selection"]
     if stored_selection["base_fps"] != selection["dense_fps"] or stored_selection["coarse_fps"] != selection["coarse_fps"]:
         raise ValueError("coarse cache FPS与CAES配置不一致")
-    if args.output_dir.exists() and any(args.output_dir.iterdir()) and not args.overwrite:
+    if args.output_dir.exists() and args.overwrite:
+        shutil.rmtree(args.output_dir)
+    if args.output_dir.exists() and any(args.output_dir.iterdir()):
         raise FileExistsError(f"WindowManifest输出目录已存在：{args.output_dir}")
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    dump_config(args.output_dir / "resolved_config.yaml", config)
+    (args.output_dir / "command.txt").write_text(
+        "命令：" + " ".join(
+            shlex.quote(item) for item in [sys.executable, *sys.argv]
+        )
+        + "\n开始时间（UTC）：" + datetime.now(timezone.utc).isoformat() + "\n",
+        encoding="utf-8",
+    )
 
     summary = {
         "schema_version": "caes_window_selection_run_v1",
-        "git_commit": __import__("subprocess").check_output(
+        "status": "running",
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "git_commit": subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
         ).strip(),
+        "config_hash": config_digest(config),
         "config_sha256": hashlib.sha256(args.config.read_bytes()).hexdigest(),
         "coarse_contract_sha256": context.contract_sha256,
         "selectors": {},
         "datasets": {},
     }
+    (args.output_dir / "run_manifest.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     for dataset in args.datasets:
         manifest_root = ROOT / config["data"]["development_manifests"]
         calibration = load_manifest(str(manifest_root / f"{dataset}_calibration.csv"))
@@ -130,7 +153,11 @@ def main() -> None:
             int(config["calibration"]["seed"]),
         )
         if args.limit_evaluation is not None:
-            evaluation = evaluation.head(args.limit_evaluation).reset_index(drop=True)
+            evaluation = (
+                evaluation.groupby(["subset", "source_model"], sort=True, group_keys=False)
+                .head(args.limit_evaluation)
+                .reset_index(drop=True)
+            )
 
         calibration_payloads = [
             _load_payload(context, cache_root, dataset, "calibration", row)
@@ -237,6 +264,8 @@ def main() -> None:
             "nms_iou_threshold": float(selection["nms_iou_threshold"]),
             "calibration_mode": str(selection["calibration_mode"]),
         }
+    summary["status"] = "completed"
+    summary["completed_at"] = datetime.now(timezone.utc).isoformat()
     (args.output_dir / "run_manifest.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

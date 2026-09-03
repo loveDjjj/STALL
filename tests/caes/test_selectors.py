@@ -51,7 +51,14 @@ from temporal_selection.dense_scoring import (
 from math_utils import StableGaussianParams
 from features import AlphaStallFeatureExtractor
 import numpy as np
+import pandas as pd
 import torch
+
+from temporal_selection.evaluation import (
+    align_selector_scores,
+    evaluate_selector_gate,
+    paired_selector_bootstrap,
+)
 
 
 class TemporalSelectorTests(unittest.TestCase):
@@ -403,6 +410,75 @@ class TemporalSelectorTests(unittest.TestCase):
             np.isfinite([item["patch_temporal_raw"] for item in records]).all()
         )
         self.assertTrue(all(len(item["frame_indices"]) == 16 for item in records))
+
+    def test_selector_bootstrap_aligns_identity_and_reports_auc_ap(self) -> None:
+        rows = []
+        for dataset in ("a", "b", "c"):
+            for index in range(8):
+                subset = "real" if index < 4 else "annotated"
+                source = "real_source" if subset == "real" else "generator"
+                truth_score = 0.8 - index * 0.01 if subset == "real" else 0.2 + index * 0.01
+                for selector, shift in (("uniform", 0.0), ("adaptive", 0.03)):
+                    score = truth_score + (shift if subset == "real" else -shift)
+                    rows.append({
+                        "video_id": f"{dataset}:{index}",
+                        "dataset": dataset,
+                        "subset": subset,
+                        "source_model": source,
+                        "video_path": f"{dataset}/{index}.mp4",
+                        "selector": selector,
+                        "final_score": score,
+                    })
+        scores = pd.DataFrame(rows)
+        aligned = align_selector_scores(scores)
+        self.assertEqual(len(aligned), 24)
+        bootstrap = paired_selector_bootstrap(scores, iterations=20)
+        self.assertEqual(set(bootstrap["metric"]), {"auc", "ap_real"})
+        self.assertIn("Macro-3", set(bootstrap["dataset"]))
+
+        pairwise = []
+        for selector, auc, ap in (
+            ("uniform", 0.80, 0.79), ("adaptive", 0.81, 0.80)
+        ):
+            for dataset in ("a", "b", "c"):
+                pairwise.append({
+                    "selector": selector,
+                    "scope": "generator_pairwise_dataset_macro",
+                    "dataset": dataset,
+                    "auc": auc,
+                    "ap_real": ap,
+                })
+            pairwise.append({
+                "selector": selector,
+                "scope": "generator_pairwise_macro3",
+                "dataset": "Macro-3",
+                "auc": auc,
+                "ap_real": ap,
+            })
+        stable_bootstrap = pd.DataFrame([
+            {
+                "selector": "adaptive", "dataset": "Macro-3",
+                "metric": metric, "ci95_low": 0.006, "ci95_high": 0.014,
+            }
+            for metric in ("auc", "ap_real")
+        ])
+        gate = evaluate_selector_gate(pd.DataFrame(pairwise), stable_bootstrap)
+        self.assertTrue(gate["passes_go_gate"].all())
+
+    def test_selector_alignment_rejects_missing_video(self) -> None:
+        frame = pd.DataFrame([
+            {"video_id": "v1", "dataset": "d", "subset": "real",
+             "source_model": "r", "video_path": "v1.mp4", "selector": "uniform",
+             "final_score": 0.5},
+            {"video_id": "v1", "dataset": "d", "subset": "real",
+             "source_model": "r", "video_path": "v1.mp4", "selector": "adaptive",
+             "final_score": 0.5},
+            {"video_id": "v2", "dataset": "d", "subset": "annotated",
+             "source_model": "g", "video_path": "v2.mp4", "selector": "uniform",
+             "final_score": 0.5},
+        ])
+        with self.assertRaisesRegex(ValueError, "视频身份不一致"):
+            align_selector_scores(frame)
 
 
 if __name__ == "__main__":
