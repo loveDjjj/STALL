@@ -23,6 +23,11 @@ from math_utils import (
     l2_normalized_second_order,
     score_gaussian_aggregate_float64,
 )
+from likelihood.conditional import (
+    ConditionalGaussianParams,
+    assign_condition_bins,
+    score_conditional_gaussian_mean_float64,
+)
 
 
 class CorrespondenceTests(unittest.TestCase):
@@ -172,6 +177,39 @@ class CorrespondenceTests(unittest.TestCase):
         self.assertTrue(torch.isfinite(result.features).all())
         # 零速度 turning angle 没有方向，协议将 curvature 定义为 0。
         self.assertTrue(torch.equal(result.features[..., 1], torch.zeros(2, 2, 4)))
+
+    def test_d2_conditioning_state_uses_current_velocity_speed(self) -> None:
+        points = torch.tensor(
+            [[[[0.0]], [[1.0]], [[3.0]], [[6.0]]]], dtype=torch.float32
+        )
+        result = build_local_dynamics(
+            points,
+            grid_size=(1, 1),
+            local_config=self.config["method"]["local"],
+            device="cpu",
+        )
+        torch.testing.assert_close(
+            result.conditioning_state.flatten(), torch.tensor([2.0, 3.0])
+        )
+
+    def test_conditional_gaussian_uses_position_specific_bin(self) -> None:
+        params = ConditionalGaussianParams(
+            boundaries=np.array([1.0]),
+            bins=(
+                StableGaussianParams(np.array([0.0]), np.eye(1), np.array([0.0])),
+                StableGaussianParams(np.array([2.0]), np.eye(1), np.array([0.0])),
+            ),
+        )
+        features = np.array([[[0.0], [2.0]]], dtype=np.float32)
+        state = np.array([[0.5, 1.5]], dtype=np.float32)
+        raw = score_conditional_gaussian_mean_float64(
+            features, state, params, device="cpu"
+        )
+        self.assertAlmostEqual(float(raw[0]), -0.5 * np.log(2.0 * np.pi), places=12)
+        np.testing.assert_array_equal(
+            assign_condition_bins(np.array([0.9, 1.0, 1.1]), np.array([1.0])),
+            np.array([0, 1, 1]),
+        )
 
 
 if __name__ == "__main__":

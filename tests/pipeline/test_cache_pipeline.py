@@ -286,6 +286,26 @@ class CachePipelineTests(unittest.TestCase):
         self.assertIn("patch_temporal_raw__speed", result)
         self.assertTrue(np.isfinite(result.filter(like="patch_temporal_raw__")).all().all())
 
+    def test_real_only_conditional_fit_builds_three_bins(self) -> None:
+        config = load_config(ROOT / "configs/benchmark.yaml")
+        config["runtime"]["max_features_for_fit"] = 90
+        config["method"]["local"]["conditional"]["enabled"] = True
+        rng = np.random.default_rng(47)
+        windows = [
+            (
+                rng.normal(size=(16, 4)).astype(np.float32),
+                rng.normal(size=(16, 4, 4)).astype(np.float32),
+            )
+            for _ in range(5)
+        ]
+        fitted = _PIPELINE._fit_conditional_local_parameter(
+            windows, config, "cpu"
+        )
+        self.assertEqual(len(fitted.boundaries), 2)
+        self.assertEqual(len(fitted.bins), 3)
+        self.assertTrue(np.isfinite(fitted.boundaries).all())
+        self.assertTrue(all(item.mean.shape == (4,) for item in fitted.bins))
+
     def test_k1_evaluation_uses_k1_subset_of_k3_calibration_reference(self) -> None:
         config = load_config(ROOT / "configs/benchmark.yaml")
         config["method"]["local"]["parameter_source"] = "fit_real_only"

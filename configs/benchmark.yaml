@@ -47,6 +47,14 @@ method:
       spatial_penalty: 0.05
       # none 不加权；aggregation 使用 soft matching 熵置信度加权窗口 likelihood。
       confidence: none
+    # 条件真实动力学。默认关闭；Stage 3 只允许 real-quantile speed bins。
+    conditional:
+      enabled: false
+      # 每个 D2/geometry 位置以后一条一阶速度的 L2 范数作为当前运动状态。
+      state: current_speed
+      # slow/medium/fast 三个等频真实运动区间，仅由 calibration real 确定边界。
+      bins: 3
+      binning: real_quantile
     # 最终 Local 只保留 D2；历史 Spatial+D2 变体在脚本中显式覆盖为 0.1/0.9。
     spatial_weight: 0.0
     temporal_weight: 1.0

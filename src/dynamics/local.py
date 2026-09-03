@@ -17,6 +17,7 @@ class LocalDynamicsResult:
 
     features: torch.Tensor
     aggregation_weights: torch.Tensor | None
+    conditioning_state: torch.Tensor | None = None
 
 
 def _trajectory_geometry(velocity: torch.Tensor) -> dict[str, torch.Tensor]:
@@ -49,6 +50,7 @@ def _trajectory_geometry(velocity: torch.Tensor) -> dict[str, torch.Tensor]:
         "curvature": curvature,
         "speed_ratio": speed_ratio,
         "path_chord": path_chord,
+        "current_speed": current_speed,
     }
 
 
@@ -93,7 +95,17 @@ def build_local_dynamics(
             if order == 1
             else l2_normalized_second_order(values)
         )
-        return LocalDynamicsResult(features=features.cpu(), aggregation_weights=None)
+        velocity = values[:, 1:] - values[:, :-1]
+        state = (
+            torch.linalg.vector_norm(velocity, dim=-1)
+            if order == 1
+            else torch.linalg.vector_norm(velocity[:, 1:], dim=-1)
+        )
+        return LocalDynamicsResult(
+            features=features.cpu(),
+            aggregation_weights=None,
+            conditioning_state=state.cpu(),
+        )
 
     aligned = align_local_velocity(
         values,
@@ -153,6 +165,15 @@ def build_local_dynamics(
     return LocalDynamicsResult(
         features=features.cpu(),
         aggregation_weights=weights.cpu() if weights is not None else None,
+        conditioning_state=(
+            (
+                torch.linalg.vector_norm(aligned.velocity, dim=-1)
+                if dynamics == "finite_difference" and order == 1
+                else geometry["current_speed"]
+                if dynamics != "finite_difference"
+                else torch.linalg.vector_norm(aligned.velocity[:, 1:], dim=-1)
+            ).cpu()
+        ),
     )
 
 

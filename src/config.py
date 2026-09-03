@@ -119,6 +119,16 @@ def validate_config(config: dict[str, Any]) -> None:
             )
         if confidence == "aggregation" and correspondence_type != "soft_local":
             raise ValueError("aggregation confidence 只允许与 soft_local 一起使用")
+        conditional = local.get("conditional", {"enabled": False})
+        if not isinstance(conditional, dict):
+            raise ValueError("method.local.conditional 必须是映射")
+        if conditional.get("enabled", False):
+            if conditional.get("state") != "current_speed":
+                raise ValueError("条件动力学当前只支持 current_speed")
+            if conditional.get("bins") != 3:
+                raise ValueError("条件动力学当前固定使用 3 个 real-quantile bins")
+            if conditional.get("binning") != "real_quantile":
+                raise ValueError("条件动力学当前只支持 real_quantile")
     if local.get("covariance_estimator") not in {"empirical", "oas"}:
         raise ValueError("method.local.covariance_estimator 只能是 empirical 或 oas")
     if local.get("parameter_source") not in {"locked_u0", "fit_real_only"}:
@@ -129,6 +139,8 @@ def validate_config(config: dict[str, Any]) -> None:
                 raise ValueError(f"method.local.{key} 必须是非空路径")
         if local.get("correspondence", {}).get("type", "same_grid") != "same_grid":
             raise ValueError("locked_u0 参数只兼容 same_grid correspondence")
+        if local.get("conditional", {}).get("enabled", False):
+            raise ValueError("locked_u0 参数不包含条件动力学统计")
     if global_branch.get("enabled", False):
         if global_branch.get("parameter_source") != "official_vatex":
             raise ValueError("method.global.parameter_source 必须是 official_vatex")

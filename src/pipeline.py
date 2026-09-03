@@ -31,6 +31,11 @@ from data.patch_cache import _get_patch_cache_path, cache_frame_indices
 from data.packed_cache import PackedCacheReader
 from data.sampling import parse_indices, uniform_windows
 from dynamics.local import LocalDynamicsResult, build_local_dynamics
+from likelihood.conditional import (
+    ConditionalGaussianParams,
+    assign_condition_bins,
+    score_conditional_gaussian_mean_float64,
+)
 from math_utils import (
     StableGaussianParams,
     WhiteningTransform,
@@ -277,7 +282,10 @@ def _fit_local_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray
     if method["local"]["enabled"]:
         if method["local"]["spatial_enabled"]:
             needed.add("patch_spatial")
-        if method["local"]["temporal_enabled"]:
+        if (
+            method["local"]["temporal_enabled"]
+            and not method["local"].get("conditional", {}).get("enabled", False)
+        ):
             needed.add("patch_temporal")
     reservoirs: dict[str, np.ndarray | None] = {key: None for key in needed}
     seen = {key: 0 for key in needed}
@@ -300,6 +308,66 @@ def _fit_local_parameters(calibration_windows: list[tuple[np.ndarray, np.ndarray
         for name, values in reservoirs.items()
         if values is not None and seen[name] >= 2
     }
+
+
+def _fit_conditional_local_parameter(
+    calibration_windows: list[tuple[np.ndarray, np.ndarray]],
+    config: dict,
+    device: str,
+) -> ConditionalGaussianParams:
+    """仅用 calibration real 的 speed quantile 拟合三个条件 Gaussian。"""
+
+    local = config["method"]["local"]
+    conditional = local.get("conditional", {})
+    if not conditional.get("enabled", False):
+        raise ValueError("条件 Local 拟合要求 conditional.enabled=true")
+    bin_count = int(conditional["bins"])
+    states = []
+    for _, patch_values in calibration_windows:
+        result = _temporal_patch(patch_values, local, device)
+        if result.conditioning_state is None:
+            raise ValueError("当前 Local dynamics 未返回条件运动状态")
+        states.append(result.conditioning_state.numpy().reshape(-1))
+    all_states = np.concatenate(states).astype(np.float64, copy=False)
+    boundaries = np.quantile(
+        all_states,
+        np.arange(1, bin_count, dtype=np.float64) / float(bin_count),
+        method="linear",
+    )
+
+    total_limit = int(config["runtime"]["max_features_for_fit"])
+    per_bin_limit = max(2, total_limit // bin_count)
+    reservoirs: list[np.ndarray | None] = [None] * bin_count
+    seen = [0] * bin_count
+    rng = np.random.default_rng(int(config["calibration"]["seed"]))
+    for _, patch_values in calibration_windows:
+        result = _temporal_patch(patch_values, local, device)
+        features = result.features.numpy().reshape(-1, result.features.shape[-1])
+        assignments = assign_condition_bins(
+            result.conditioning_state, boundaries
+        ).reshape(-1)
+        for bin_index in range(bin_count):
+            selected = features[assignments == bin_index]
+            if not len(selected):
+                continue
+            reservoirs[bin_index], seen[bin_index] = _reservoir_add(
+                reservoirs[bin_index], selected, per_bin_limit, seen[bin_index], rng
+            )
+    if any(item is None or count < 2 for item, count in zip(reservoirs, seen)):
+        raise ValueError(f"条件运动 bin 样本不足：{seen}")
+    estimator = str(local["covariance_estimator"])
+    bins = tuple(
+        _fit_parameter(
+            reservoir[: min(per_bin_limit, count)], device, estimator
+        )
+        for reservoir, count in zip(reservoirs, seen)
+        if reservoir is not None
+    )
+    return ConditionalGaussianParams(
+        boundaries=np.asarray(boundaries, dtype=np.float64),
+        bins=bins,
+        state_name=str(conditional["state"]),
+    )
 
 
 def _load_locked_local_parameters(
@@ -515,6 +583,61 @@ def _save_fitted_local_artifacts(
     return digest
 
 
+def _save_fitted_conditional_artifacts(
+    output_dir: Path,
+    dataset: str,
+    selected_calibration: pd.DataFrame,
+    calibration_windows: pd.DataFrame,
+    parameters: ConditionalGaussianParams,
+    config: dict,
+) -> str:
+    """保存条件边界、逐 bin Gaussian、窗口 CDF 参考和校准视频身份。"""
+
+    directory = output_dir / "fitted_local"
+    directory.mkdir(parents=True, exist_ok=True)
+    identifiers = selected_calibration.copy()
+    identifiers.insert(0, "dataset", dataset)
+    identifiers["video_id"] = identifiers["video_path"].map(
+        lambda path: _video_id(dataset, str(path))
+    )
+    columns = [
+        name for name in ("dataset", "video_id", "subset", "source_model", "video_path")
+        if name in identifiers
+    ]
+    identifiers[columns].to_csv(
+        directory / f"{dataset}_calibration_ids.csv", index=False
+    )
+    payload: dict[str, np.ndarray] = {
+        "boundaries": np.asarray(parameters.boundaries, dtype=np.float64),
+        "patch_temporal_window_reference": stable_sorted(
+            calibration_windows["patch_temporal_raw"].to_numpy(dtype=np.float64)
+        ),
+    }
+    for index, gaussian in enumerate(parameters.bins):
+        payload[f"bin_{index}_mean"] = np.asarray(gaussian.mean, dtype=np.float64)
+        payload[f"bin_{index}_whitening"] = np.asarray(
+            gaussian.whitening, dtype=np.float64
+        )
+    target = directory / f"{dataset}_conditional_local_params.npz"
+    temporary = target.with_suffix(".tmp.npz")
+    np.savez_compressed(temporary, **payload)
+    temporary.replace(target)
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    metadata = {
+        "dataset": dataset,
+        "sha256": digest,
+        "state_name": parameters.state_name,
+        "bin_count": len(parameters.bins),
+        "calibration_videos": len(selected_calibration),
+        "local_config": config["method"]["local"],
+        "arrays": {name: list(value.shape) for name, value in payload.items()},
+    }
+    (directory / f"{dataset}_conditional_local_params.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return digest
+
+
 def _score_windows(
     repository_root: Path,
     rows: pd.DataFrame,
@@ -527,6 +650,9 @@ def _score_windows(
     *,
     score_global: bool = True,
     local_candidates: dict[str, tuple[dict, StableGaussianParams]] | None = None,
+    conditional_candidates: dict[
+        str, tuple[dict, ConditionalGaussianParams]
+    ] | None = None,
     report: Callable[[int, int], None] | None = None,
     diagnostic: Callable[[dict], None] | None = None,
 ) -> pd.DataFrame:
@@ -618,15 +744,48 @@ def _score_windows(
                         position_weights=temporal.aggregation_weights,
                     )
                     scores[f"patch_temporal_raw__{candidate_name}"] = raw
-            elif method["local"]["enabled"] and method["local"]["temporal_enabled"]:
+            if conditional_candidates is not None:
+                for candidate_name, (candidate_local, candidate_params) in conditional_candidates.items():
+                    temporal = _temporal_patch(
+                        patch_tensor, candidate_local, device
+                    )
+                    if temporal.conditioning_state is None:
+                        raise ValueError("条件候选缺少 current_speed 状态")
+                    scores[f"patch_temporal_raw__{candidate_name}"] = (
+                        score_conditional_gaussian_mean_float64(
+                            temporal.features,
+                            temporal.conditioning_state,
+                            candidate_params,
+                            device=device,
+                        )
+                    )
+            if (
+                local_candidates is None
+                and conditional_candidates is None
+                and method["local"]["enabled"]
+                and method["local"]["temporal_enabled"]
+            ):
                 temporal = _temporal_patch(
                     patch_tensor, method["local"], device
                 )
-                scores["patch_temporal_raw"], scores["patch_temporal"] = score_gaussian_aggregate_float64(
-                    temporal.features, parameters["patch_temporal"], LOCAL_AGGREGATION,
-                    device=device, compute_percentile=locked_local,
-                    position_weights=temporal.aggregation_weights,
-                )
+                if method["local"].get("conditional", {}).get("enabled", False):
+                    if temporal.conditioning_state is None:
+                        raise ValueError("条件 Local 缺少 current_speed 状态")
+                    scores["patch_temporal_raw"] = score_conditional_gaussian_mean_float64(
+                        temporal.features,
+                        temporal.conditioning_state,
+                        parameters["patch_temporal_conditional"],
+                        device=device,
+                    )
+                    scores["patch_temporal"] = np.full(
+                        len(scores["patch_temporal_raw"]), np.nan, dtype=np.float64
+                    )
+                else:
+                    scores["patch_temporal_raw"], scores["patch_temporal"] = score_gaussian_aggregate_float64(
+                        temporal.features, parameters["patch_temporal"], LOCAL_AGGREGATION,
+                        device=device, compute_percentile=locked_local,
+                        position_weights=temporal.aggregation_weights,
+                    )
             for index, (record, _, _) in enumerate(batch_windows):
                 record.update({name: float(values[index]) for name, values in scores.items()})
                 records.append(record)
@@ -948,6 +1107,10 @@ def run_from_cache(
             parameters.update(_load_locked_local_parameters(repository_root, config, dataset))
         else:
             parameters.update(_fit_local_parameters(calibration_windows_features, config, devices[0]))
+            if local_config.get("conditional", {}).get("enabled", False):
+                parameters["patch_temporal_conditional"] = _fit_conditional_local_parameter(
+                    calibration_windows_features, config, devices[0]
+                )
         if report:
             report({"current_dataset": dataset, "phase": "calibration_score", "completed": 0, "total": len(selected_calibration), "message": f"[{dataset}] 评分校准窗口"})
         calibration_started = monotonic()
@@ -981,18 +1144,26 @@ def run_from_cache(
         if report:
             report({"current_dataset": dataset, "phase": "aggregate", "message": f"[{dataset}] 仅用 calibration real 执行窗口校准和视频聚合"})
         calibrated_windows, videos = _calibrate_and_aggregate(calibration_windows, evaluation_windows, config)
-        local_params_sha256 = (
-            _save_fitted_local_artifacts(
-                artifact_dir,
-                dataset,
-                selected_calibration,
-                calibration_windows,
-                parameters,
-                config,
-            )
-            if artifact_dir is not None
-            else None
-        )
+        local_params_sha256 = None
+        if artifact_dir is not None:
+            if local_config.get("conditional", {}).get("enabled", False):
+                local_params_sha256 = _save_fitted_conditional_artifacts(
+                    artifact_dir,
+                    dataset,
+                    selected_calibration,
+                    calibration_windows,
+                    parameters["patch_temporal_conditional"],
+                    config,
+                )
+            else:
+                local_params_sha256 = _save_fitted_local_artifacts(
+                    artifact_dir,
+                    dataset,
+                    selected_calibration,
+                    calibration_windows,
+                    parameters,
+                    config,
+                )
         calibrated_windows["split"] = "calibration"
         evaluation_windows["split"] = "evaluation"
         all_windows.extend([calibrated_windows, evaluation_windows])
@@ -1020,15 +1191,15 @@ def run_from_cache(
     return windows, pd.concat(all_videos, ignore_index=True), metadata
 
 
-def run_trajectory_matrix_from_cache(
+def run_local_candidate_matrix_from_cache(
     repository_root: Path,
     config: dict,
-    candidates: dict[str, str],
+    candidates: dict[str, str | dict[str, object]],
     *,
     report: Callable[[dict], None] | None = None,
     artifact_dir: Path | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
-    """一次扫描严格缓存，完成多个 Local trajectory likelihood 对照。"""
+    """一次扫描严格缓存，完成多个 Local dynamics/likelihood 对照。"""
 
     if not candidates:
         raise ValueError("trajectory matrix 至少需要一个候选")
@@ -1063,11 +1234,19 @@ def run_trajectory_matrix_from_cache(
     global_parameters = _load_global_parameters(repository_root, config)
     all_windows: dict[str, list[pd.DataFrame]] = {name: [] for name in candidates}
     all_videos: dict[str, list[pd.DataFrame]] = {name: [] for name in candidates}
+    candidate_specs = {
+        name: ({"dynamics": spec, "conditional": False} if isinstance(spec, str) else dict(spec))
+        for name, spec in candidates.items()
+    }
+    for name, spec in candidate_specs.items():
+        if not isinstance(spec.get("dynamics"), str):
+            raise ValueError(f"候选 {name} 缺少 dynamics")
+        spec.setdefault("conditional", False)
     metadata: dict[str, object] = {
         "cache_root": str(cache_root),
         "cache_contract_sha256": context.contract_sha256,
         "reused_global": reused_identity,
-        "candidates": candidates,
+        "candidates": candidate_specs,
         "datasets": {},
     }
     packed_reader = PackedCacheReader(cache_root)
@@ -1110,20 +1289,35 @@ def run_trajectory_matrix_from_cache(
             )
 
         candidate_configs: dict[str, dict] = {}
-        candidate_parameters: dict[str, dict[str, StableGaussianParams]] = {}
+        candidate_parameters: dict[str, object] = {}
         scoring_candidates: dict[str, tuple[dict, StableGaussianParams]] = {}
-        for name, dynamics in candidates.items():
+        conditional_scoring_candidates: dict[
+            str, tuple[dict, ConditionalGaussianParams]
+        ] = {}
+        for name, spec in candidate_specs.items():
             candidate_config = copy.deepcopy(config)
-            candidate_config["method"]["local"]["dynamics"] = dynamics
+            candidate_config["method"]["local"]["dynamics"] = spec["dynamics"]
+            candidate_config["method"]["local"]["conditional"]["enabled"] = bool(
+                spec["conditional"]
+            )
             parameters = dict(global_parameters)
-            parameters.update(
-                _fit_local_parameters(calibration_features, candidate_config, device)
-            )
             candidate_configs[name] = candidate_config
-            candidate_parameters[name] = parameters
-            scoring_candidates[name] = (
-                candidate_config["method"]["local"], parameters["patch_temporal"]
-            )
+            if spec["conditional"]:
+                fitted = _fit_conditional_local_parameter(
+                    calibration_features, candidate_config, device
+                )
+                candidate_parameters[name] = fitted
+                conditional_scoring_candidates[name] = (
+                    candidate_config["method"]["local"], fitted
+                )
+            else:
+                parameters.update(
+                    _fit_local_parameters(calibration_features, candidate_config, device)
+                )
+                candidate_parameters[name] = parameters
+                scoring_candidates[name] = (
+                    candidate_config["method"]["local"], parameters["patch_temporal"]
+                )
 
         def progress_callback(done: int, total: int) -> None:
             if report and (done == total or done % max(1, total // 50) == 0):
@@ -1146,7 +1340,8 @@ def run_trajectory_matrix_from_cache(
             global_parameters,
             device,
             score_global=False,
-            local_candidates=scoring_candidates,
+            local_candidates=scoring_candidates or None,
+            conditional_candidates=conditional_scoring_candidates or None,
         )
         calibration_matrix = _attach_reused_global(
             calibration_matrix, reused_global, dataset=dataset, split="calibration"
@@ -1161,7 +1356,8 @@ def run_trajectory_matrix_from_cache(
             global_parameters,
             device,
             score_global=False,
-            local_candidates=scoring_candidates,
+            local_candidates=scoring_candidates or None,
+            conditional_candidates=conditional_scoring_candidates or None,
             report=progress_callback,
         )
         evaluation_matrix = _attach_reused_global(
@@ -1191,14 +1387,25 @@ def run_trajectory_matrix_from_cache(
             all_windows[name].append(candidate_windows)
             all_videos[name].append(videos)
             if artifact_dir is not None:
-                parameter_hashes[name] = _save_fitted_local_artifacts(
-                    artifact_dir / "candidates" / name,
-                    dataset,
-                    selected_calibration,
-                    calibration_one,
-                    candidate_parameters[name],
-                    candidate_configs[name],
-                )
+                candidate_dir = artifact_dir / "candidates" / name
+                if candidate_specs[name]["conditional"]:
+                    parameter_hashes[name] = _save_fitted_conditional_artifacts(
+                        candidate_dir,
+                        dataset,
+                        selected_calibration,
+                        calibration_one,
+                        candidate_parameters[name],
+                        candidate_configs[name],
+                    )
+                else:
+                    parameter_hashes[name] = _save_fitted_local_artifacts(
+                        candidate_dir,
+                        dataset,
+                        selected_calibration,
+                        calibration_one,
+                        candidate_parameters[name],
+                        candidate_configs[name],
+                    )
         metadata["datasets"][dataset] = {
             "calibration_videos": len(selected_calibration),
             "evaluation_videos": len(evaluation),
@@ -1221,6 +1428,25 @@ def run_trajectory_matrix_from_cache(
         ignore_index=True,
     )
     return windows, videos, metadata
+
+
+def run_trajectory_matrix_from_cache(
+    repository_root: Path,
+    config: dict,
+    candidates: dict[str, str],
+    *,
+    report: Callable[[dict], None] | None = None,
+    artifact_dir: Path | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+    """兼容 Stage 2 入口；全部候选使用无条件 Gaussian。"""
+
+    return run_local_candidate_matrix_from_cache(
+        repository_root,
+        config,
+        candidates,
+        report=report,
+        artifact_dir=artifact_dir,
+    )
 
 
 def build_bootstrap(videos: pd.DataFrame, config: dict) -> pd.DataFrame:

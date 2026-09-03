@@ -17,4 +17,4 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conda run --no-capture-output -n "${STALL_ENV:-stall}" \
-  python "$ROOT/scripts/run_trajectory_matrix.py" "$@"
+  python "$ROOT/scripts/run_trajectory_matrix.py" --matrix trajectory "$@"
