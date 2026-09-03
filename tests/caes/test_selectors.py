@@ -417,6 +417,10 @@ class TemporalSelectorTests(unittest.TestCase):
             device="cpu",
         )
         self.assertEqual(len(records), manifest.effective_k)
+        self.assertEqual(
+            sorted({int(item["request_index"]) for item in records}),
+            list(range(len(requests))),
+        )
         self.assertTrue(
             np.isfinite([item["patch_temporal_raw"] for item in records]).all()
         )

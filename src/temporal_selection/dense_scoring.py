@@ -140,6 +140,7 @@ def score_fixed_windows(
     for index, request in enumerate(requests):
         for use in request.uses:
             records.append({
+                "request_index": index,
                 "selector": use.selector,
                 "candidate_id": use.candidate.candidate_id,
                 "selection_rank": use.selection.rank,

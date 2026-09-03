@@ -12,7 +12,9 @@ set -euo pipefail
 #   bash scripts/run_caes_dense.sh --overwrite
 #
 # 可传：--config、--window-dir、--output-dir、--detector-reference-dir、
-# --device、--datasets、--chunk-videos、--resume、--overwrite。
+# --device、--datasets、--chunk-videos、--decode-workers、--resume、--overwrite。
+# 第一轮为保证与C0数值合同一致，--frame-batch-size固定8，
+# --score-window-batch-size固定48，不接受其他值。
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conda run --no-capture-output -n "${STALL_ENV:-stall}" \

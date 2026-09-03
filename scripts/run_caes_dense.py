@@ -14,6 +14,7 @@ import subprocess
 import sys
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -67,7 +68,7 @@ SELECTORS = (
 )
 ADAPTIVE_SELECTORS = SELECTORS[1:]
 DATASETS = ("comgenvid", "videofeedback", "genvideo")
-RAW_SHARD_SCHEMA = "caes_raw_score_shard_v2"
+RAW_SHARD_SCHEMA = "caes_raw_score_shard_v3"
 RUN_IDENTITY_SCHEMA = "caes_dense_identity_v1"
 
 
@@ -85,6 +86,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))
     parser.add_argument("--chunk-videos", type=int, default=64)
     parser.add_argument("--frame-batch-size", type=int, default=8)
+    parser.add_argument("--score-window-batch-size", type=int, default=48)
+    parser.add_argument("--decode-workers", type=int, default=8)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -306,6 +309,8 @@ def _score_split(
     device: str,
     chunk_videos: int,
     frame_batch_size: int,
+    score_window_batch_size: int,
+    decode_workers: int,
     run_identity_sha256: str,
     report,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
@@ -352,7 +357,9 @@ def _score_split(
             continue
         shard_records = []
         shard_dense_frames = 0
-        for _, row in ordered.iloc[start:stop].iterrows():
+        batch_rows = [row for _, row in ordered.iloc[start:stop].iterrows()]
+
+        def decode_video(row):
             video_id = str(row["video_id"])
             video_manifests = {
                 selector: mapping[video_id] for selector, mapping in adaptive.items()
@@ -362,42 +369,80 @@ def _score_split(
             if not requests or not union:
                 raise ValueError(f"{video_id}没有可评分selected windows")
             frames = _decode(_source_path(str(row["video_path"])), union)
-            output = model.frames_to_global_patch_embeddings(
-                [frames], batch_size=frame_batch_size
-            )[0]
+            return row, video_id, requests, union, frames
+
+        with ThreadPoolExecutor(
+            max_workers=min(decode_workers, len(batch_rows))
+        ) as executor:
+            decoded = list(executor.map(decode_video, batch_rows))
+        outputs = model.frames_to_global_patch_embeddings(
+            [item[4] for item in decoded], batch_size=frame_batch_size
+        )
+
+        flat_requests = []
+        request_metadata = []
+        global_items = []
+        patch_items = []
+        for (row, video_id, requests, union, _frames), output in zip(
+            decoded, outputs
+        ):
             global_windows, patch_windows = request_feature_arrays(
                 requests,
                 extracted_frame_indices=union,
                 global_features=output["global"],
                 patch_features=output["patch"],
             )
+            flat_requests.extend(requests)
+            global_items.extend(global_windows)
+            patch_items.extend(patch_windows)
+            request_metadata.extend(
+                [(row, video_id, len(union))] * len(requests)
+            )
+            shard_dense_frames += len(union)
+
+        for score_start in range(0, len(flat_requests), score_window_batch_size):
+            score_stop = min(
+                score_start + score_window_batch_size, len(flat_requests)
+            )
             records = score_fixed_windows(
-                requests,
-                global_windows=global_windows,
-                patch_windows=patch_windows,
+                flat_requests[score_start:score_stop],
+                global_windows=np.stack(global_items[score_start:score_stop]),
+                patch_windows=np.stack(patch_items[score_start:score_stop]),
                 global_parameters=global_parameters,
                 local_parameters=local_parameters,
                 device=device,
             )
-            per_selector: dict[str, list[dict]] = {}
             for record in records:
-                per_selector.setdefault(str(record["selector"]), []).append(record)
-            if set(per_selector) != set(ADAPTIVE_SELECTORS):
+                request_index = score_start + int(record.pop("request_index"))
+                row, video_id, union_size = request_metadata[request_index]
+                record.update({
+                    "video_id": video_id,
+                    "dataset": dataset,
+                    "subset": str(row["subset"]),
+                    "source_model": str(row["source_model"]),
+                    "video_path": str(row["video_path"]),
+                    "dense_unique_frames_video": union_size,
+                })
+                shard_records.append(record)
+        grouped_records: dict[tuple[str, str], list[dict]] = {}
+        for record in shard_records:
+            key = (str(record["video_id"]), str(record["selector"]))
+            grouped_records.setdefault(key, []).append(record)
+        for video_id in video_ids:
+            present = {
+                selector for current_video, selector in grouped_records
+                if current_video == video_id
+            }
+            if present != set(ADAPTIVE_SELECTORS):
                 raise ValueError(f"{video_id}评分结果缺少selector")
-            for selector, selector_records in per_selector.items():
-                selector_records.sort(key=lambda item: int(item["selection_rank"]))
-                for window_id, record in enumerate(selector_records):
-                    record.update({
-                        "video_id": video_id,
-                        "dataset": dataset,
-                        "subset": str(row["subset"]),
-                        "source_model": str(row["source_model"]),
-                        "video_path": str(row["video_path"]),
-                        "window_id": window_id,
-                        "dense_unique_frames_video": len(union),
-                    })
-                    shard_records.append(record)
-            shard_dense_frames += len(union)
+        shard_records = []
+        for key in sorted(grouped_records):
+            values = sorted(
+                grouped_records[key], key=lambda item: int(item["selection_rank"])
+            )
+            for window_id, record in enumerate(values):
+                record["window_id"] = window_id
+                shard_records.append(record)
         if len(shard_records) != expected_records:
             raise ValueError(f"{dataset}/{split} shard窗口数不符合WindowManifest")
         _atomic_json(shard_path, {
@@ -463,9 +508,16 @@ def _prepare(args: argparse.Namespace):
         raise ValueError("--resume与--overwrite不能同时使用")
     if args.chunk_videos < 1:
         raise ValueError("--chunk-videos必须为正数")
+    if args.decode_workers < 1:
+        raise ValueError("--decode-workers必须为正数")
     # dense batch=8是已与630GB cache验证到3e-6的数值合同。
     if args.frame_batch_size != 8:
         raise ValueError("CAES第一轮固定--frame-batch-size=8，避免baseline数值漂移")
+    if args.score_window_batch_size != 48:
+        raise ValueError(
+            "CAES第一轮固定--score-window-batch-size=48，"
+            "与正式pipeline的16视频×3窗口评分合同一致"
+        )
     args.config = args.config.resolve()
     args.window_dir = args.window_dir.resolve()
     args.output_dir = args.output_dir.resolve()
@@ -575,6 +627,16 @@ def _prepare(args: argparse.Namespace):
         "selectors": list(SELECTORS),
         "chunk_videos": args.chunk_videos,
         "frame_batch_size": args.frame_batch_size,
+        "score_window_batch_size": args.score_window_batch_size,
+        "decode_workers": args.decode_workers,
+        "implementation_sha256": {
+            "run_caes_dense.py": _sha256(Path(__file__)),
+            "dense_scoring.py": _sha256(
+                ROOT / "src/temporal_selection/dense_scoring.py"
+            ),
+            "features.py": _sha256(ROOT / "src/features.py"),
+            "math_utils.py": _sha256(ROOT / "src/math_utils.py"),
+        },
     }
     identity_sha = _canonical_digest(identity)
     return (
@@ -650,6 +712,8 @@ def _execute(args: argparse.Namespace, prepared) -> None:
             global_parameters=global_parameters, local_parameters=local_reference.params,
             device=args.device, chunk_videos=args.chunk_videos,
             frame_batch_size=args.frame_batch_size,
+            score_window_batch_size=args.score_window_batch_size,
+            decode_workers=args.decode_workers,
             run_identity_sha256=identity_sha, report=report,
         )
         evaluation_raw, evaluation_meta = _score_split(
@@ -658,6 +722,8 @@ def _execute(args: argparse.Namespace, prepared) -> None:
             global_parameters=global_parameters, local_parameters=local_reference.params,
             device=args.device, chunk_videos=args.chunk_videos,
             frame_batch_size=args.frame_batch_size,
+            score_window_batch_size=args.score_window_batch_size,
+            decode_workers=args.decode_workers,
             run_identity_sha256=identity_sha, report=report,
         )
         for selector in ADAPTIVE_SELECTORS:
