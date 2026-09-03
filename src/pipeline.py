@@ -8,6 +8,7 @@ import multiprocessing
 import os
 import traceback
 import copy
+import gc
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from pathlib import Path
@@ -356,16 +357,27 @@ def _fit_conditional_local_parameter(
     if any(item is None or count < 2 for item, count in zip(reservoirs, seen)):
         raise ValueError(f"条件运动 bin 样本不足：{seen}")
     estimator = str(local["covariance_estimator"])
-    bins = tuple(
-        _fit_parameter(
-            reservoir[: min(per_bin_limit, count)], device, estimator
+    target = torch.device(device)
+    gc.collect()
+    if target.type == "cuda":
+        torch.cuda.empty_cache()
+    fitted_bins = []
+    for reservoir, count in zip(reservoirs, seen):
+        if reservoir is None:
+            raise ValueError("条件运动 bin 缺少 reservoir")
+        fitted_bins.append(
+            _fit_parameter(
+                reservoir[: min(per_bin_limit, count)], device, estimator
+            )
         )
-        for reservoir, count in zip(reservoirs, seen)
-        if reservoir is not None
-    )
+        # `_fit_parameter` 已把 mean/W 转为 CPU NumPy；立即回收该 bin 的
+        # covariance/eigen 临时张量，避免三次 1024-D eigh 的缓存累积到 OOM。
+        gc.collect()
+        if target.type == "cuda":
+            torch.cuda.empty_cache()
     return ConditionalGaussianParams(
         boundaries=np.asarray(boundaries, dtype=np.float64),
-        bins=bins,
+        bins=tuple(fitted_bins),
         state_name=str(conditional["state"]),
     )
 
