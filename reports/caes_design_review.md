@@ -174,3 +174,12 @@ negative方法位于显式config和独立模块，不改变默认`finite_differe
 dense `batch=8`重新提取Global相对旧cache的max absolute difference约`2.63e-6`。
 因此coarse不与8 FPS参考混用，dense FS0等价测试暂定`atol=3e-6`，并进一步要求
 最终窗口/视频分数回归，而不能只靠feature tolerance证明baseline一致。
+
+旧C0 run没有保存其Local D2的mean/whitening矩阵，因此CAES必须用完全相同的
+calibration IDs、窗口顺序、reservoir seed和empirical covariance重新拟合一次。独立
+CUDA eigendecomposition不能合理要求跨进程`1e-10`位级一致；ComGenVid首轮重建的
+raw最大绝对差为`2.05e-5`，相对约千量级raw score仅约`1e-8`。正式冻结器不静默
+接受该误差，而同时审计：(1) raw最大绝对差不超过`5e-5`；(2) calibration窗口经验
+CDF最大漂移不超过一个rank step；(3) 将全部误差、相关性、阈值和参数哈希写入
+reference manifest。FS0论文指标仍直接复用C0唯一权威分数；FS1-FS5共享同一份经
+审计重建的Local参数，从而保证adaptive候选之间严格只改变窗口位置。

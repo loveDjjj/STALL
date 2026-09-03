@@ -39,6 +39,7 @@ from temporal_selection.reference import (
 )
 from temporal_selection.calibration import (
     FrozenLocalD2Reference,
+    audit_reconstructed_scores,
     load_frozen_local_reference,
     save_frozen_local_reference,
 )
@@ -355,6 +356,16 @@ class TemporalSelectorTests(unittest.TestCase):
         self.assertEqual(len(file_sha), 64)
         self.assertEqual(restored.digest(), reference.digest())
         np.testing.assert_array_equal(restored.params.whitening, reference.params.whitening)
+
+    def test_reconstructed_score_audit_reports_raw_and_rank_drift(self) -> None:
+        source = np.array([-3.0, -2.0, -1.0])
+        percentile = np.array([1 / 3, 2 / 3, 1.0])
+        audit = audit_reconstructed_scores(
+            source + np.array([1e-6, -1e-6, 2e-6]), source, percentile
+        )
+        self.assertAlmostEqual(audit["raw_max_abs_difference"], 2e-6)
+        self.assertEqual(audit["window_cdf_max_rank_steps"], 0.0)
+        self.assertGreater(audit["raw_pearson_correlation"], 0.999999)
 
     def test_dense_requests_deduplicate_windows_across_selectors(self) -> None:
         scored = self._scored(count=40)

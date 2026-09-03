@@ -33,6 +33,7 @@ from branches.local_branch import local_d2_features
 from math_utils import StableGaussianParams, score_gaussian_aggregate_float64, stable_sorted
 from temporal_selection.calibration import (
     FrozenLocalD2Reference,
+    audit_reconstructed_scores,
     save_frozen_local_reference,
 )
 
@@ -46,6 +47,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda:1")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "precomputed/caes_detector")
     parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))
+    parser.add_argument(
+        "--max-raw-abs-difference", type=float, default=5e-5,
+        help="旧C0未保存参数时允许的CUDA重拟合raw绝对误差上限",
+    )
+    parser.add_argument(
+        "--max-window-cdf-rank-steps", type=float, default=1.0,
+        help="重拟合后允许的最大窗口CDF秩步数漂移",
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -108,18 +117,24 @@ def main() -> None:
         expected = source_windows[
             source_windows["dataset"].eq(dataset)
             & source_windows["split"].eq("calibration")
-        ][["video_id", "window_id", "patch_temporal_raw"]]
+        ][["video_id", "window_id", "patch_temporal_raw", "patch_temporal"]]
         comparison = comparison.merge(
             expected, on=["video_id", "window_id"], how="left", validate="one_to_one"
         )
         if comparison["patch_temporal_raw"].isna().any() or len(comparison) != len(expected):
             raise ValueError(f"{dataset} FS0 calibration窗口身份无法与source run对齐")
-        max_abs = float(
-            np.max(np.abs(comparison["refit_raw"] - comparison["patch_temporal_raw"]))
+        audit = audit_reconstructed_scores(
+            comparison["refit_raw"].to_numpy(dtype=np.float64),
+            comparison["patch_temporal_raw"].to_numpy(dtype=np.float64),
+            comparison["patch_temporal"].to_numpy(dtype=np.float64),
         )
-        if max_abs > 1e-10:
+        if audit["raw_max_abs_difference"] > args.max_raw_abs_difference:
             raise ValueError(
-                f"{dataset} Local D2重拟合未复现C0 raw score：max_abs={max_abs}"
+                f"{dataset} Local D2重拟合raw漂移超过门槛：{audit}"
+            )
+        if audit["window_cdf_max_rank_steps"] > args.max_window_cdf_rank_steps + 1e-9:
+            raise ValueError(
+                f"{dataset} Local D2重拟合CDF排序漂移超过门槛：{audit}"
             )
         params = StableGaussianParams(
             mean=fitted.mean,
@@ -140,11 +155,20 @@ def main() -> None:
         file_sha = save_frozen_local_reference(output_path, reference)
         summaries[dataset] = {
             "windows": len(raw),
-            "max_abs_raw_vs_source": max_abs,
+            "reconstruction_audit": audit,
+            "reconstruction_thresholds": {
+                "max_raw_abs_difference": args.max_raw_abs_difference,
+                "max_window_cdf_rank_steps": args.max_window_cdf_rank_steps,
+            },
             "reference_sha256": reference.digest(),
             "file_sha256": file_sha,
         }
-        print(f"[{dataset}] 冻结完成，窗口={len(raw)}，max_abs={max_abs:.3e}", flush=True)
+        print(
+            f"[{dataset}] 冻结完成，窗口={len(raw)}，"
+            f"raw max={audit['raw_max_abs_difference']:.3e}，"
+            f"CDF max={audit['window_cdf_max_rank_steps']:.1f} rank step",
+            flush=True,
+        )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "manifest.json").write_text(
         json.dumps({

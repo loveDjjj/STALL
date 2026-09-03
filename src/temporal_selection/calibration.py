@@ -98,6 +98,41 @@ def load_frozen_local_reference(path: Path) -> FrozenLocalD2Reference:
 
 __all__ = [
     "FrozenLocalD2Reference",
+    "audit_reconstructed_scores",
     "load_frozen_local_reference",
     "save_frozen_local_reference",
 ]
+
+
+def audit_reconstructed_scores(
+    refit_raw: np.ndarray,
+    source_raw: np.ndarray,
+    source_percentile: np.ndarray,
+) -> dict[str, float]:
+    """量化旧run未保存参数时，重拟合分数的数值与CDF排序漂移。"""
+
+    refit = np.asarray(refit_raw, dtype=np.float64)
+    source = np.asarray(source_raw, dtype=np.float64)
+    percentile = np.asarray(source_percentile, dtype=np.float64)
+    if refit.ndim != 1 or refit.shape != source.shape or refit.shape != percentile.shape:
+        raise ValueError("重建审计要求三个等长一维数组")
+    if len(refit) < 2 or not all(
+        np.isfinite(values).all() for values in (refit, source, percentile)
+    ):
+        raise ValueError("重建审计输入必须包含至少两个有限分数")
+    refit_percentile = np.searchsorted(
+        stable_sorted(refit), refit, side="right"
+    ) / float(len(refit))
+    difference = np.abs(refit - source)
+    scale = max(float(np.max(np.abs(source))), np.finfo(np.float64).tiny)
+    cdf_difference = np.abs(refit_percentile - percentile)
+    correlation = float(np.corrcoef(refit, source)[0, 1])
+    return {
+        "raw_max_abs_difference": float(difference.max()),
+        "raw_mean_abs_difference": float(difference.mean()),
+        "raw_max_relative_to_source_scale": float(difference.max() / scale),
+        "raw_pearson_correlation": correlation,
+        "window_cdf_max_abs_difference": float(cdf_difference.max()),
+        "window_cdf_mean_abs_difference": float(cdf_difference.mean()),
+        "window_cdf_max_rank_steps": float(cdf_difference.max() * len(refit)),
+    }
