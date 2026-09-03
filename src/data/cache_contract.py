@@ -128,11 +128,12 @@ def _extractor_source_hashes(cache_kind: str) -> dict[str, str]:
 
     source_root = Path(__file__).resolve().parents[1]
     package_root = Path(__file__).resolve().parent
-    paths = [
-        source_root / "features.py",
-        package_root / "video.py",
-        package_root / "patch_cache.py",
-    ]
+    cache_module = (
+        package_root / "coarse_global_cache.py"
+        if cache_kind == "global_embeddings"
+        else package_root / "patch_cache.py"
+    )
+    paths = [source_root / "features.py", package_root / "video.py", cache_module]
     return {path.name: sha256_file(path) for path in paths}
 
 
@@ -143,6 +144,7 @@ def build_feature_cache_contract(
     frame_batch_size: int,
     video_batch_size: int,
     frame_selection: Mapping[str, Any] | str = "external_native_frame_indices",
+    feature_dtype: str = "float32",
 ) -> dict[str, Any]:
     """Build the immutable root contract for a model-backed feature cache."""
 
@@ -152,6 +154,8 @@ def build_feature_cache_contract(
     video_batch_size = _nonnegative_integer(video_batch_size, "video_batch_size")
     if frame_batch_size == 0 or video_batch_size == 0:
         raise ValueError("frame_batch_size and video_batch_size must be positive")
+    if feature_dtype not in {"float16", "float32"}:
+        raise ValueError("feature_dtype 只能是 float16 或 float32")
     if getattr(model, "model", None) is None:
         raise ValueError("strict cache contract requires a loaded DINOv3 model")
     repo_path = Path(_string(getattr(model, "dino_repo_path", None), "model.dino_repo_path"))
@@ -188,7 +192,7 @@ def build_feature_cache_contract(
                 "output_layer": block_count - 1,
                 "output_tokens": output_tokens,
                 "feature_dimension": feature_dimension,
-                "feature_dtype": "float32",
+                "feature_dtype": feature_dtype,
                 "cls_register_policy": "cls_separate_register_tokens_excluded",
             },
             "preprocessing": {
@@ -275,17 +279,39 @@ def validate_feature_cache_contract(contract: Mapping[str, Any]) -> str:
     if isinstance(frame_selection, str):
         _string(frame_selection, "identity.extraction.frame_selection")
     elif isinstance(frame_selection, Mapping):
-        _required(
-            frame_selection,
-            ("mode", "window_count", "window_frames", "strategy", "deduplicate"),
-            "identity.extraction.frame_selection",
+        _required(frame_selection, ("mode",), "identity.extraction.frame_selection")
+        mode = _string(
+            frame_selection["mode"], "identity.extraction.frame_selection.mode"
         )
-        _string(frame_selection["mode"], "identity.extraction.frame_selection.mode")
-        _nonnegative_integer(frame_selection["window_count"], "identity.extraction.frame_selection.window_count")
-        _nonnegative_integer(frame_selection["window_frames"], "identity.extraction.frame_selection.window_frames")
-        _string(frame_selection["strategy"], "identity.extraction.frame_selection.strategy")
-        if not isinstance(frame_selection["deduplicate"], bool):
-            raise ValueError("identity.extraction.frame_selection.deduplicate 必须为布尔值")
+        if mode == "coarse_stride_on_detector_grid":
+            _required(
+                frame_selection,
+                (
+                    "base_fps", "coarse_fps", "stride_positions",
+                    "include_partial_tail", "deduplicate",
+                ),
+                "identity.extraction.frame_selection",
+            )
+            for field in ("base_fps", "coarse_fps", "stride_positions"):
+                if _nonnegative_integer(
+                    frame_selection[field],
+                    f"identity.extraction.frame_selection.{field}",
+                ) == 0:
+                    raise ValueError(f"frame_selection.{field} 必须为正数")
+            for field in ("include_partial_tail", "deduplicate"):
+                if not isinstance(frame_selection[field], bool):
+                    raise ValueError(f"frame_selection.{field} 必须为布尔值")
+        else:
+            _required(
+                frame_selection,
+                ("window_count", "window_frames", "strategy", "deduplicate"),
+                "identity.extraction.frame_selection",
+            )
+            _nonnegative_integer(frame_selection["window_count"], "identity.extraction.frame_selection.window_count")
+            _nonnegative_integer(frame_selection["window_frames"], "identity.extraction.frame_selection.window_frames")
+            _string(frame_selection["strategy"], "identity.extraction.frame_selection.strategy")
+            if not isinstance(frame_selection["deduplicate"], bool):
+                raise ValueError("identity.extraction.frame_selection.deduplicate 必须为布尔值")
     else:
         raise ValueError("identity.extraction.frame_selection 必须是字符串或对象")
     source_hashes = extraction["extractor_source_sha256"]
@@ -406,6 +432,7 @@ def prepare_model_feature_cache(
     frame_batch_size: int,
     video_batch_size: int,
     frame_selection: Mapping[str, Any] | str = "external_native_frame_indices",
+    feature_dtype: str = "float32",
     policy: str = "auto",
     create: bool = False,
 ) -> CacheContractContext:
@@ -425,6 +452,7 @@ def prepare_model_feature_cache(
         frame_batch_size=frame_batch_size,
         video_batch_size=video_batch_size,
         frame_selection=frame_selection,
+        feature_dtype=feature_dtype,
     )
     return prepare_feature_cache(
         root,

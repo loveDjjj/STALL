@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 import inspect
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -15,6 +16,13 @@ if str(SRC) not in sys.path:
     sys.path.append(str(SRC))
 
 from config import apply_overrides, load_config
+from data.cache_contract import CacheContractContext
+from data.coarse_global_cache import (
+    coarse_cache_path,
+    coarse_positions,
+    load_coarse_entry,
+    write_coarse_entry,
+)
 from data.sampling import uniform_windows
 from temporal_selection.candidates import (
     generate_candidate_windows,
@@ -22,6 +30,9 @@ from temporal_selection.candidates import (
 )
 from temporal_selection.models import WindowManifest
 from temporal_selection.selectors import select_windows, temporal_iou
+from features import AlphaStallFeatureExtractor
+import numpy as np
+import torch
 
 
 class TemporalSelectorTests(unittest.TestCase):
@@ -163,6 +174,76 @@ class TemporalSelectorTests(unittest.TestCase):
                     "runtime.coarse_global_cache_dir=cache/patch_embeddings_k3_2s_8fps"
                 ],
             )
+
+    def test_coarse_positions_keep_exact_one_second_intervals(self) -> None:
+        self.assertEqual(coarse_positions(list(range(23))), [0, 8, 16])
+        self.assertEqual(coarse_positions(list(range(25))), [0, 8, 16, 24])
+        with self.assertRaisesRegex(ValueError, "整除"):
+            coarse_positions(list(range(25)), base_fps=8, coarse_fps=3)
+
+    def test_coarse_cache_key_includes_dataset_and_split(self) -> None:
+        root = Path("cache")
+        paths = {
+            coarse_cache_path(root, dataset=dataset, split=split, video_id="same")
+            for dataset, split in (
+                ("a", "calibration"), ("a", "evaluation"), ("b", "evaluation")
+            )
+        }
+        self.assertEqual(len(paths), 3)
+
+    def test_coarse_entry_round_trip_is_float16_and_strict(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "cache"
+            root.mkdir()
+            source = Path(temporary) / "video.mp4"
+            source.write_bytes(b"mock-video")
+            context = CacheContractContext(
+                root=root,
+                policy="strict",
+                strict=True,
+                contract={"identity": {"cache_kind": "global_embeddings"}},
+                contract_sha256="a" * 64,
+            )
+            path = coarse_cache_path(
+                root, dataset="demo", split="evaluation", video_id="demo:v1"
+            )
+            write_coarse_entry(
+                context=context,
+                path=path,
+                source_video_path=source,
+                video_id="demo:v1",
+                frame_indices=[0, 8],
+                downsample_positions=[0, 8],
+                global_features=np.zeros((2, 1024), dtype=np.float32),
+            )
+            payload = load_coarse_entry(
+                context=context,
+                path=path,
+                source_video_path=source,
+                frame_indices=[0, 8],
+            )
+            self.assertEqual(payload["global"].dtype, torch.float16)
+            self.assertEqual(tuple(payload["global"].shape), (2, 1024))
+
+    def test_global_only_extractor_does_not_require_patch_output(self) -> None:
+        class FakeModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.marker = torch.nn.Parameter(torch.zeros(()))
+                self.head = torch.nn.Identity()
+
+            def forward_features(self, values):
+                return {"x_norm_clstoken": torch.ones(len(values), 1024)}
+
+        extractor = AlphaStallFeatureExtractor.__new__(AlphaStallFeatureExtractor)
+        extractor.model = FakeModel()
+        extractor.transform = lambda _image: torch.zeros(3, 2, 2)
+        extractor.device = "cpu"
+        frame = np.zeros((2, 2, 3), dtype=np.uint8)
+        outputs = extractor.frames_to_global_embeddings(
+            [np.stack([frame, frame]), np.stack([frame])], batch_size=2
+        )
+        self.assertEqual([item.shape for item in outputs], [(2, 1024), (1, 1024)])
 
 
 if __name__ == "__main__":

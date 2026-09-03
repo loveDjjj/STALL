@@ -128,7 +128,9 @@ class AlphaStallFeatureExtractor:
 
         self.device = device
 
-    def _forward_features_dict(self, x: torch.Tensor) -> dict:
+    def _forward_features_dict(
+        self, x: torch.Tensor, *, require_patch_tokens: bool = True
+    ) -> dict:
         if hasattr(self.model, "module"):
             core_model = self.model.module
         else:
@@ -140,9 +142,40 @@ class AlphaStallFeatureExtractor:
         features = core_model.forward_features(x)
         if not isinstance(features, dict):
             raise TypeError(f"期望 forward_features() 返回 dict，实际为 {type(features).__name__}")
-        if "x_norm_patchtokens" not in features:
+        if require_patch_tokens and "x_norm_patchtokens" not in features:
             raise KeyError("forward_features() 输出中缺少 'x_norm_patchtokens'")
         return features
+
+    def _embed_flat_frames_global(
+        self, flat_frames: List[np.ndarray], batch_size: int = 32
+    ) -> np.ndarray:
+        """只返回最终归一化Global token，不把Patch token搬回CPU。"""
+
+        if not flat_frames:
+            raise ValueError("flat_frames 为空")
+        device = next(self.model.parameters()).device
+        outputs = []
+        with torch.no_grad():
+            for start in range(0, len(flat_frames), batch_size):
+                batch = flat_frames[start : start + batch_size]
+                tensors = [
+                    self.transform(
+                        Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                    )
+                    for frame in batch
+                ]
+                features = self._forward_features_dict(
+                    torch.stack(tensors).to(device), require_patch_tokens=False
+                )
+                if "x_norm_clstoken" not in features:
+                    raise KeyError("forward_features() 输出中缺少 'x_norm_clstoken'")
+                core_model = (
+                    self.model.module if hasattr(self.model, "module") else self.model
+                )
+                outputs.append(
+                    core_model.head(features["x_norm_clstoken"]).detach().cpu()
+                )
+        return torch.cat(outputs, dim=0).numpy()
 
     def _embed_flat_frames_with_patches(
         self, flat_frames: List[np.ndarray], batch_size: int = 32
@@ -310,6 +343,24 @@ class AlphaStallFeatureExtractor:
                     "grid_size": list(grid_size),
                 }
             )
+            cursor += length
+        return outputs
+
+    def frames_to_global_embeddings(
+        self, video_arrays: List[np.ndarray], batch_size: int = 32
+    ) -> List[np.ndarray]:
+        """为一组视频只提取Global token，供CAES低成本粗扫描使用。"""
+
+        if not video_arrays:
+            return []
+        lengths = [len(video) for video in video_arrays]
+        if any(length == 0 for length in lengths):
+            raise ValueError("video_arrays 至少包含一个空视频")
+        flat_frames = [frame for video in video_arrays for frame in video]
+        flat = self._embed_flat_frames_global(flat_frames, batch_size=batch_size)
+        outputs, cursor = [], 0
+        for length in lengths:
+            outputs.append(flat[cursor : cursor + length])
             cursor += length
         return outputs
 

@@ -52,7 +52,7 @@ patch  [48,196,1024] float32
 
 ## 7. 新 coarse Global cache 多大？
 
-对当前development+external manifests去重后共25,387视频、54.51小时。按1 FPS含首尾约218,781帧：
+对当前development+external manifests去重后共25,387视频、54.51小时。按1 FPS等间隔位置约218,781帧（不强行追加不足1秒的尾间隔）：
 
 ```text
 218,781 * 1024 * 2 bytes = 0.417 GiB
@@ -118,7 +118,7 @@ CAES应在manifest阶段保持相同模式：selector接口完全不接收subset
 
 有两点修改：
 
-1. **coarse signal对齐8 FPS grid。** 1 FPS帧从现有`downsample_idxs[::8]`选择，而不是重新按原FPS round，保证candidate mapping和dense窗口共享同一离散时间轴。
+1. **coarse signal对齐8 FPS grid。** 1 FPS帧从现有`downsample_idxs[::8]`选择，而不是重新按原FPS round；不强行追加不足1秒的尾帧，保证所有selector transition具有相同时间间隔。
 2. **FS5优先于FS4。** K=3下Temporal NMS只防局部重叠，仍可能把三个窗口放在同一半视频；三strata直接保证全局coverage，无需relevance/coverage权重，是更适合本仓库和deadline的主候选。
 
 另外，FS3 primary固定使用窗口内coarse anomaly mean；max作为诊断列保存但不作为第二主候选，避免隐性二选一。
