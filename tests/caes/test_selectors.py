@@ -42,6 +42,12 @@ from temporal_selection.calibration import (
     load_frozen_local_reference,
     save_frozen_local_reference,
 )
+from temporal_selection.dense_scoring import (
+    request_feature_arrays,
+    score_fixed_windows,
+    selected_window_requests,
+    union_frame_indices,
+)
 from math_utils import StableGaussianParams
 from features import AlphaStallFeatureExtractor
 import numpy as np
@@ -342,6 +348,61 @@ class TemporalSelectorTests(unittest.TestCase):
         self.assertEqual(len(file_sha), 64)
         self.assertEqual(restored.digest(), reference.digest())
         np.testing.assert_array_equal(restored.params.whitening, reference.params.whitening)
+
+    def test_dense_requests_deduplicate_windows_across_selectors(self) -> None:
+        scored = self._scored(count=40)
+        top = select_windows(
+            video_id="demo:dense", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="real_anomaly",
+            scored_candidates=scored,
+        )
+        change = select_windows(
+            video_id="demo:dense", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="feature_change",
+            scored_candidates=scored,
+        )
+        requests = selected_window_requests(
+            {"real_anomaly": top, "feature_change": change}
+        )
+        self.assertEqual(len(requests), 3)
+        self.assertEqual({len(item.uses) for item in requests}, {2})
+        union = union_frame_indices(requests)
+        self.assertLess(len(union), 3 * 16)
+
+    def test_dense_feature_mapping_and_fixed_scoring(self) -> None:
+        manifest = select_windows(
+            video_id="demo:score", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="random", seed=17,
+        )
+        requests = selected_window_requests({"random": manifest})
+        union = union_frame_indices(requests)
+        rng = np.random.default_rng(53)
+        global_features = rng.normal(size=(len(union), 3)).astype(np.float32)
+        patch_features = rng.normal(size=(len(union), 4, 3)).astype(np.float32)
+        global_windows, patch_windows = request_feature_arrays(
+            requests,
+            extracted_frame_indices=union,
+            global_features=global_features,
+            patch_features=patch_features,
+        )
+        params = StableGaussianParams(
+            mean=np.zeros(3),
+            whitening=np.eye(3),
+            calibration_raw=np.linspace(-100.0, 100.0, 101),
+        )
+        records = score_fixed_windows(
+            requests,
+            global_windows=global_windows,
+            patch_windows=patch_windows,
+            global_parameters={"global_spatial": params, "global_t1": params},
+            local_parameters=params,
+            device="cpu",
+        )
+        self.assertEqual(len(records), manifest.effective_k)
+        self.assertTrue(
+            np.isfinite([item["patch_temporal_raw"] for item in records]).all()
+        )
+        self.assertTrue(all(len(item["frame_indices"]) == 16 for item in records))
 
 
 if __name__ == "__main__":
