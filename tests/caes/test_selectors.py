@@ -29,6 +29,7 @@ from temporal_selection.candidates import (
     uniform_candidate_windows,
 )
 from temporal_selection.models import WindowManifest
+from temporal_selection.manifest import read_window_manifests, write_window_manifests
 from temporal_selection.selectors import select_windows, temporal_iou
 from temporal_selection.reference import (
     SelectorReference,
@@ -156,6 +157,23 @@ class TemporalSelectorTests(unittest.TestCase):
         restored = WindowManifest.from_dict(manifest.to_dict())
         self.assertEqual(restored, manifest)
         self.assertEqual(restored.digest(), manifest.digest())
+
+    def test_window_manifest_jsonl_round_trip_and_duplicate_guard(self) -> None:
+        first = select_windows(
+            video_id="demo:first", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="uniform",
+        )
+        second = select_windows(
+            video_id="demo:second", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="uniform",
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "windows.jsonl"
+            digest = write_window_manifests(path, [first, second])
+            self.assertEqual(len(digest), 64)
+            self.assertEqual(read_window_manifests(path), [first, second])
+            with self.assertRaisesRegex(ValueError, "重复video_id"):
+                write_window_manifests(path, [first, first])
 
     def test_selector_api_has_no_label_or_generator_input(self) -> None:
         parameters = inspect.signature(select_windows).parameters
