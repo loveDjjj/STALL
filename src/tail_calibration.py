@@ -70,8 +70,42 @@ def conformal_tail_authenticity_batch(
     return -top.mean(axis=1, dtype=np.float64)
 
 
+def conformal_tail_authenticity_multi(
+    likelihood_fields: np.ndarray,
+    reference_sorted: np.ndarray,
+    ratios: dict[str, float],
+) -> dict[str, np.ndarray]:
+    """一次CDF与多k partition同时计算多个预注册Tail比例。"""
+
+    if not ratios or any(not 0.0 < ratio <= 1.0 for ratio in ratios.values()):
+        raise ValueError("Tail ratios必须是非空且全部位于(0,1]")
+    fields = np.asarray(likelihood_fields, dtype=np.float64)
+    reference = np.asarray(reference_sorted, dtype=np.float64)
+    if fields.ndim < 2 or not len(fields) or not np.isfinite(fields).all():
+        raise ValueError("likelihood fields必须是非空、有限的batch")
+    if reference.ndim != 1 or not len(reference):
+        raise ValueError("位置reference必须是非空一维已排序数组")
+    flattened = fields.reshape(len(fields), -1)
+    anomaly = 1.0 - np.searchsorted(
+        reference, flattened, side="right"
+    ) / float(len(reference))
+    counts = {
+        name: max(1, int(np.ceil(anomaly.shape[1] * ratio)))
+        for name, ratio in ratios.items()
+    }
+    splits = sorted({anomaly.shape[1] - count for count in counts.values()})
+    partitioned = np.partition(anomaly, splits, axis=1)
+    return {
+        name: -partitioned[:, anomaly.shape[1] - count :].mean(
+            axis=1, dtype=np.float64
+        )
+        for name, count in counts.items()
+    }
+
+
 __all__ = [
     "conformal_tail_authenticity",
     "conformal_tail_authenticity_batch",
+    "conformal_tail_authenticity_multi",
     "fit_position_reference",
 ]

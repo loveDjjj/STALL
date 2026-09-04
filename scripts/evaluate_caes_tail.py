@@ -23,7 +23,7 @@ from config import load_config
 from evaluation.tables import build_metric_tables
 from pipeline import _calibrate_and_aggregate
 from tail_evidence import TAIL_RATIOS
-from tail_calibration import conformal_tail_authenticity_batch, fit_position_reference
+from tail_calibration import conformal_tail_authenticity_multi, fit_position_reference
 from temporal_selection.evaluation import build_matched_selector_pairwise_table
 
 
@@ -103,25 +103,37 @@ def _load_records(field_dir: Path) -> tuple[pd.DataFrame, dict, dict]:
                 for index in record_indices
             ]
             selected_fields = fields[field_indices]
-            for mode in CALIBRATION_MODES:
-                reference_mode = (
-                    "crossfit5"
-                    if selector == "real_anomaly" and mode == "crossfit5"
-                    else "standard"
-                )
+            modes_by_reference = (
+                {"standard": ("standard",), "crossfit5": ("crossfit5",)}
+                if selector == "real_anomaly"
+                else {"standard": CALIBRATION_MODES}
+            )
+            for reference_mode, output_modes in modes_by_reference.items():
                 reference = position_references[(dataset, selector, reference_mode)]
-                for name, ratio in tail_ratios.items():
-                    values = conformal_tail_authenticity_batch(
-                        selected_fields, reference, ratio
-                    )
-                    for record_index, value in zip(record_indices, values):
-                        shard_records[record_index][
-                            f"local_raw__{name}__{mode}"
-                        ] = float(value)
+                values_by_name = conformal_tail_authenticity_multi(
+                    selected_fields, reference, tail_ratios
+                )
+                for mode in output_modes:
+                    for name, values in values_by_name.items():
+                        for record_index, value in zip(record_indices, values):
+                            shard_records[record_index][
+                                f"local_raw__{name}__{mode}"
+                            ] = float(value)
         records.extend(shard_records)
     frame = pd.DataFrame(records)
     if frame.empty:
         raise ValueError("Tail field shards没有records")
+    # Stage FS按selector的原始selection rank分配window_id。effective-K参考会从
+    # calibration的完整K3窗口中取子集，因此不能把adaptive窗口改成时间顺序。
+    group_columns = [
+        "dataset", "split", "video_id", "selector", "calibration_mode"
+    ]
+    frame = frame.sort_values(
+        [*group_columns, "selection_rank"], kind="mergesort"
+    ).reset_index(drop=True)
+    frame["window_id"] = frame.groupby(
+        group_columns, sort=False
+    ).cumcount()
     reference_metadata = {
         "/".join(key): {
             "positions": len(value),

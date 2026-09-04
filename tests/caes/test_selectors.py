@@ -63,6 +63,7 @@ from tail_evidence import (
 from tail_calibration import (
     conformal_tail_authenticity,
     conformal_tail_authenticity_batch,
+    conformal_tail_authenticity_multi,
     fit_position_reference,
 )
 import numpy as np
@@ -586,6 +587,15 @@ class TemporalSelectorTests(unittest.TestCase):
         self.assertAlmostEqual(
             batch[1], conformal_tail_authenticity(field + 0.5, reference, 0.5)
         )
+        multi = conformal_tail_authenticity_multi(
+            np.stack([field, field + 0.5]), reference,
+            {"half": 0.5, "quarter": 0.25},
+        )
+        np.testing.assert_allclose(multi["half"], batch)
+        expected_quarter = conformal_tail_authenticity_batch(
+            np.stack([field, field + 0.5]), reference, 0.25
+        )
+        np.testing.assert_allclose(multi["quarter"], expected_quarter)
         with self.assertRaisesRegex(ValueError, "ratio"):
             conformal_tail_authenticity(field, reference, 0.0)
 
