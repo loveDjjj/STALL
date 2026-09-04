@@ -44,4 +44,34 @@ def conformal_tail_authenticity(
     return -float(top_anomaly.mean(dtype=np.float64))
 
 
-__all__ = ["conformal_tail_authenticity", "fit_position_reference"]
+def conformal_tail_authenticity_batch(
+    likelihood_fields: np.ndarray,
+    reference_sorted: np.ndarray,
+    ratio: float,
+) -> np.ndarray:
+    """批量计算多个field的Tail真实性，定义与单窗口函数完全一致。"""
+
+    if not 0.0 < ratio <= 1.0:
+        raise ValueError("Tail ratio必须位于(0,1]")
+    fields = np.asarray(likelihood_fields, dtype=np.float64)
+    reference = np.asarray(reference_sorted, dtype=np.float64)
+    if fields.ndim < 2 or not len(fields) or not np.isfinite(fields).all():
+        raise ValueError("likelihood fields必须是非空、有限的batch")
+    if reference.ndim != 1 or not len(reference):
+        raise ValueError("位置reference必须是非空一维已排序数组")
+    flattened = fields.reshape(len(fields), -1)
+    percentile = np.searchsorted(reference, flattened, side="right") / float(
+        len(reference)
+    )
+    anomaly = 1.0 - percentile
+    count = max(1, int(np.ceil(anomaly.shape[1] * ratio)))
+    split = anomaly.shape[1] - count
+    top = np.partition(anomaly, split, axis=1)[:, split:]
+    return -top.mean(axis=1, dtype=np.float64)
+
+
+__all__ = [
+    "conformal_tail_authenticity",
+    "conformal_tail_authenticity_batch",
+    "fit_position_reference",
+]

@@ -23,7 +23,7 @@ from config import load_config
 from evaluation.tables import build_metric_tables
 from pipeline import _calibrate_and_aggregate
 from tail_evidence import TAIL_RATIOS
-from tail_calibration import conformal_tail_authenticity, fit_position_reference
+from tail_calibration import conformal_tail_authenticity_batch, fit_position_reference
 from temporal_selection.evaluation import build_matched_selector_pairwise_table
 
 
@@ -91,11 +91,18 @@ def _load_records(field_dir: Path) -> tuple[pd.DataFrame, dict, dict]:
     for summary in _shard_summaries(index):
         payload = _load_shard(field_dir, index, summary)
         fields = payload["local_likelihood_fields"].numpy()
-        for source_record in payload["records"]:
-            record = dict(source_record)
-            field = fields[int(record["field_index"])]
-            selector = str(record["selector"])
-            dataset = str(record["dataset"])
+        shard_records = [dict(item) for item in payload["records"]]
+        grouped: dict[tuple[str, str], list[int]] = {}
+        for record_index, record in enumerate(shard_records):
+            grouped.setdefault(
+                (str(record["dataset"]), str(record["selector"])), []
+            ).append(record_index)
+        for (dataset, selector), record_indices in grouped.items():
+            field_indices = [
+                int(shard_records[index]["field_index"])
+                for index in record_indices
+            ]
+            selected_fields = fields[field_indices]
             for mode in CALIBRATION_MODES:
                 reference_mode = (
                     "crossfit5"
@@ -104,10 +111,14 @@ def _load_records(field_dir: Path) -> tuple[pd.DataFrame, dict, dict]:
                 )
                 reference = position_references[(dataset, selector, reference_mode)]
                 for name, ratio in tail_ratios.items():
-                    record[f"local_raw__{name}__{mode}"] = (
-                        conformal_tail_authenticity(field, reference, ratio)
+                    values = conformal_tail_authenticity_batch(
+                        selected_fields, reference, ratio
                     )
-            records.append(record)
+                    for record_index, value in zip(record_indices, values):
+                        shard_records[record_index][
+                            f"local_raw__{name}__{mode}"
+                        ] = float(value)
+        records.extend(shard_records)
     frame = pd.DataFrame(records)
     if frame.empty:
         raise ValueError("Tail field shards没有records")

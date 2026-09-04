@@ -60,7 +60,11 @@ from tail_evidence import (
     local_d2_likelihood_fields,
     merge_tail_window_requests,
 )
-from tail_calibration import conformal_tail_authenticity, fit_position_reference
+from tail_calibration import (
+    conformal_tail_authenticity,
+    conformal_tail_authenticity_batch,
+    fit_position_reference,
+)
 import numpy as np
 import pandas as pd
 import torch
@@ -574,6 +578,13 @@ class TemporalSelectorTests(unittest.TestCase):
         field = np.array([[-4.0, -3.0], [-2.0, -1.0]])
         self.assertAlmostEqual(
             conformal_tail_authenticity(field, reference, 0.5), -0.625
+        )
+        batch = conformal_tail_authenticity_batch(
+            np.stack([field, field + 0.5]), reference, 0.5
+        )
+        self.assertAlmostEqual(batch[0], -0.625)
+        self.assertAlmostEqual(
+            batch[1], conformal_tail_authenticity(field + 0.5, reference, 0.5)
         )
         with self.assertRaisesRegex(ValueError, "ratio"):
             conformal_tail_authenticity(field, reference, 0.0)
