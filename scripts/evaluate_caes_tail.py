@@ -23,6 +23,7 @@ from config import load_config
 from evaluation.tables import build_metric_tables
 from pipeline import _calibrate_and_aggregate
 from tail_evidence import TAIL_RATIOS
+from tail_calibration import conformal_tail_authenticity, fit_position_reference
 from temporal_selection.evaluation import build_matched_selector_pairwise_table
 
 
@@ -34,26 +35,90 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _load_records(field_dir: Path) -> tuple[pd.DataFrame, dict]:
+def _shard_summaries(index: dict):
+    for dataset in index["datasets"].values():
+        for shards in dataset.values():
+            yield from shards
+
+
+def _load_shard(field_dir: Path, index: dict, summary: dict) -> dict:
+    path = field_dir / summary["path"]
+    if _sha256(path) != summary["sha256"]:
+        raise ValueError(f"Tail field shard哈希漂移：{path}")
+    payload = torch.load(path, weights_only=True)
+    if payload.get("run_identity_sha256") != index["identity_sha256"]:
+        raise ValueError(f"Tail field shard运行身份漂移：{path}")
+    return payload
+
+
+def _load_records(field_dir: Path) -> tuple[pd.DataFrame, dict, dict]:
+    """两遍流式读取：先拟合selector/mode位置CDF，再转换每个field的Tail分数。"""
+
     index_path = field_dir / "index.json"
     index = json.loads(index_path.read_text(encoding="utf-8"))
     if index.get("status") != "completed":
         raise ValueError("Tail field index尚未完成")
+    reference_parts: dict[tuple[str, str, str], list[np.ndarray]] = {}
+    for summary in _shard_summaries(index):
+        if "/calibration/" not in f"/{summary['path']}/":
+            continue
+        payload = _load_shard(field_dir, index, summary)
+        fields = payload["local_likelihood_fields"].numpy()
+        for record in payload["records"]:
+            key = (
+                str(record["dataset"]),
+                str(record["selector"]),
+                str(record["calibration_mode"]),
+            )
+            reference_parts.setdefault(key, []).append(
+                fields[int(record["field_index"])].copy()
+            )
+    position_references = {
+        key: fit_position_reference(parts)
+        for key, parts in reference_parts.items()
+    }
+    for dataset in index["datasets"]:
+        for selector in SELECTORS:
+            if (dataset, selector, "standard") not in position_references:
+                raise ValueError(f"缺少位置reference：{dataset}/{selector}/standard")
+        if (dataset, "real_anomaly", "crossfit5") not in position_references:
+            raise ValueError(f"缺少位置reference：{dataset}/real_anomaly/crossfit5")
+
     records = []
-    for dataset in index["datasets"].values():
-        for shards in dataset.values():
-            for summary in shards:
-                path = field_dir / summary["path"]
-                if _sha256(path) != summary["sha256"]:
-                    raise ValueError(f"Tail field shard哈希漂移：{path}")
-                payload = torch.load(path, weights_only=True)
-                if payload.get("run_identity_sha256") != index["identity_sha256"]:
-                    raise ValueError(f"Tail field shard运行身份漂移：{path}")
-                records.extend(payload["records"])
+    tail_ratios = {
+        name: ratio for name, ratio in TAIL_RATIOS.items() if name != "mean"
+    }
+    for summary in _shard_summaries(index):
+        payload = _load_shard(field_dir, index, summary)
+        fields = payload["local_likelihood_fields"].numpy()
+        for source_record in payload["records"]:
+            record = dict(source_record)
+            field = fields[int(record["field_index"])]
+            selector = str(record["selector"])
+            dataset = str(record["dataset"])
+            for mode in CALIBRATION_MODES:
+                reference_mode = (
+                    "crossfit5"
+                    if selector == "real_anomaly" and mode == "crossfit5"
+                    else "standard"
+                )
+                reference = position_references[(dataset, selector, reference_mode)]
+                for name, ratio in tail_ratios.items():
+                    record[f"local_raw__{name}__{mode}"] = (
+                        conformal_tail_authenticity(field, reference, ratio)
+                    )
+            records.append(record)
     frame = pd.DataFrame(records)
     if frame.empty:
         raise ValueError("Tail field shards没有records")
-    return frame, index
+    reference_metadata = {
+        "/".join(key): {
+            "positions": len(value),
+            "sha256": hashlib.sha256(value.tobytes()).hexdigest(),
+        }
+        for key, value in position_references.items()
+    }
+    return frame, index, reference_metadata
 
 
 def _variant(selector: str, aggregation: str, calibration_mode: str) -> str:
@@ -83,7 +148,11 @@ def _score_variant(
         & records["selector"].eq(selector)
         & records["calibration_mode"].eq("standard")
     ].copy()
-    raw_column = f"local_raw__{aggregation}"
+    raw_column = (
+        "local_raw__mean"
+        if aggregation == "mean"
+        else f"local_raw__{aggregation}__{calibration_mode}"
+    )
     if calibration.empty or evaluation.empty or raw_column not in records:
         raise ValueError(
             f"缺少Tail变体输入：{selector}/{aggregation}/{calibration_mode}"
@@ -122,7 +191,7 @@ def main() -> None:
         import shutil
         shutil.rmtree(args.output_dir)
     args.output_dir.mkdir(parents=True)
-    records, field_index = _load_records(args.field_dir)
+    records, field_index, position_references = _load_records(args.field_dir)
     config = load_config(args.field_dir / "resolved_config.yaml")
     videos = []
     for selector in SELECTORS:
@@ -221,6 +290,8 @@ def main() -> None:
         "selectors": list(SELECTORS),
         "aggregations": TAIL_RATIOS,
         "calibration_modes": list(CALIBRATION_MODES),
+        "tail_definition": "negative_mean_of_top_real_nonconformity",
+        "position_references": position_references,
         "crossfit_control_max_abs": control_max,
         "artifacts": {
             name: _sha256(args.output_dir / name)

@@ -16,6 +16,7 @@ results/runs/
 results/caes/
 precomputed/caes_detector/
 logs/*.log
+results/analysis/*_smoke/
 
 # 仅在正式冻结发布时纳入版本控制
 release/*

@@ -60,6 +60,7 @@ from tail_evidence import (
     local_d2_likelihood_fields,
     merge_tail_window_requests,
 )
+from tail_calibration import conformal_tail_authenticity, fit_position_reference
 import numpy as np
 import pandas as pd
 import torch
@@ -564,6 +565,18 @@ class TemporalSelectorTests(unittest.TestCase):
         })
         self.assertEqual(len(requests), 3)
         self.assertEqual({len(item.uses) for item in requests}, {3})
+
+    def test_conformal_tail_uses_matched_real_position_percentiles(self) -> None:
+        reference = fit_position_reference([
+            np.array([[-4.0, -3.0], [-2.0, -1.0]])
+        ])
+        # 百分位为[0.25,0.50,0.75,1.0]，异常为[0.75,0.50,0.25,0]。
+        field = np.array([[-4.0, -3.0], [-2.0, -1.0]])
+        self.assertAlmostEqual(
+            conformal_tail_authenticity(field, reference, 0.5), -0.625
+        )
+        with self.assertRaisesRegex(ValueError, "ratio"):
+            conformal_tail_authenticity(field, reference, 0.0)
 
 
 if __name__ == "__main__":
