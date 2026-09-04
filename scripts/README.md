@@ -21,6 +21,10 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_window_selection.sh` | CAES FS0-FS5 matched WindowManifest与coarse signals生成 |
 | `freeze_caes_detector_reference.sh` | 冻结并验证FS0 Local D2共享参数 |
 | `run_caes_dense.sh` | CAES FS1-FS5 selected-window并集提取、matched评分与FS0汇总 |
+| `verify_caes_fs0_equivalence.py` | 抽样验证按需FS0与630GB strict cache的特征及raw score等价性 |
+| `run_caes_post_fs.sh` | 等待Stage FS成功结束后自动执行FS0等价审计 |
+| `recompute_caes_metrics.py` | 用FS0共享视频身份重建CAES配对指标、bootstrap与gate |
+| `analyze_caes_stage_fs.py` | 汇总CAES分支、低FPR、覆盖与effective-K敏感性 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |

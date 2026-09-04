@@ -28,6 +28,7 @@ def align_selector_scores(
     selectors = list(dict.fromkeys(scores["selector"].astype(str)))
     if baseline not in selectors:
         raise ValueError(f"CAES分数缺少baseline selector：{baseline}")
+    selectors = [baseline, *[item for item in selectors if item != baseline]]
     aligned = None
     expected_ids = None
     for selector in selectors:
@@ -54,6 +55,74 @@ def align_selector_scores(
     if aligned is None or expected_ids is None or len(aligned) != len(expected_ids):
         raise ValueError("CAES selector视频身份对齐失败")
     return aligned
+
+
+def build_matched_selector_pairwise_table(
+    scores: pd.DataFrame,
+    *,
+    baseline: str = "uniform",
+    seed: int = 42,
+) -> pd.DataFrame:
+    """仅从FS0构造一次配对身份，并对全部selector复用同一视频集合。"""
+
+    aligned = align_selector_scores(scores, baseline=baseline)
+    selectors = [
+        column.removeprefix("final_score__")
+        for column in aligned.columns
+        if column.startswith("final_score__")
+    ]
+    rows: list[dict[str, object]] = []
+    for dataset, dataset_frame in aligned.groupby("dataset", sort=True):
+        real = dataset_frame[dataset_frame["subset"].eq("real")]
+        pairs = [
+            _balanced_real_pair(real, fake, seed)
+            for _, fake in dataset_frame[
+                dataset_frame["subset"].eq("annotated")
+            ].groupby("source_model", sort=True)
+        ]
+        if not pairs:
+            raise ValueError(f"{dataset}没有可用于CAES配对指标的生成器")
+        for selector in selectors:
+            metrics = [
+                binary_metrics(pair, f"final_score__{selector}") for pair in pairs
+            ]
+            rows.append({
+                "selector": selector,
+                "run_name": selector,
+                "scope": "generator_pairwise_dataset_macro",
+                "dataset": dataset,
+                "auc": float(np.mean([item["auc"] for item in metrics])),
+                "ap_real": float(
+                    np.mean([item["real_positive_ap"] for item in metrics])
+                ),
+                "n_generators": len(pairs),
+                "n_pairwise_real": int(sum(
+                    pair["subset"].eq("real").sum() for pair in pairs
+                )),
+                "n_pairwise_fake": int(sum(
+                    pair["subset"].eq("annotated").sum() for pair in pairs
+                )),
+                "pairwise_seed": seed,
+                "pair_identity_source": baseline,
+            })
+    table = pd.DataFrame(rows)
+    macro_rows = []
+    for selector in selectors:
+        selected = table[table["selector"].eq(selector)]
+        macro_rows.append({
+            "selector": selector,
+            "run_name": selector,
+            "scope": "generator_pairwise_macro3",
+            "dataset": "Macro-3",
+            "auc": float(selected["auc"].mean()),
+            "ap_real": float(selected["ap_real"].mean()),
+            "n_generators": int(selected["n_generators"].sum()),
+            "n_pairwise_real": int(selected["n_pairwise_real"].sum()),
+            "n_pairwise_fake": int(selected["n_pairwise_fake"].sum()),
+            "pairwise_seed": seed,
+            "pair_identity_source": baseline,
+        })
+    return pd.concat([table, pd.DataFrame(macro_rows)], ignore_index=True)
 
 
 def _seed(seed: int, *parts: str) -> int:
@@ -216,6 +285,7 @@ def evaluate_selector_gate(
 __all__ = [
     "IDENTITY_COLUMNS",
     "align_selector_scores",
+    "build_matched_selector_pairwise_table",
     "evaluate_selector_gate",
     "paired_selector_bootstrap",
 ]

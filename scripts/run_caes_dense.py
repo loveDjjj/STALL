@@ -32,7 +32,7 @@ from config import config_digest, dump_config, load_config, validate_config
 from data.manifest import load_manifest
 from data.sampling import parse_indices, uniform_windows
 from data.video import decode_all_frames, decode_indexed_frames
-from evaluation.tables import build_metric_tables, build_pairwise_metric_table
+from evaluation.tables import build_metric_tables
 from features import AlphaStallFeatureExtractor
 from pipeline import (
     _calibrate_and_aggregate,
@@ -51,6 +51,7 @@ from temporal_selection.dense_scoring import (
     union_frame_indices,
 )
 from temporal_selection.evaluation import (
+    build_matched_selector_pairwise_table,
     evaluate_selector_gate,
     paired_selector_bootstrap,
 )
@@ -775,21 +776,19 @@ def _execute(args: argparse.Namespace, prepared) -> None:
     write_progress(args.output_dir, progress)
     windows = pd.concat([*fs0_windows, *all_windows], ignore_index=True, sort=False)
     videos = pd.concat([*fs0_videos, *all_videos], ignore_index=True, sort=False)
-    dataset_tables, generator_tables, pairwise_tables = [], [], []
+    dataset_tables, generator_tables = [], []
     for selector, frame in videos.groupby("selector", sort=False):
         clean = frame.drop(columns="selector")
         dataset_table, generator_table = build_metric_tables(clean, selector)
-        pairwise_table = build_pairwise_metric_table(
-            clean, selector, int(config["metrics"]["pairwise_seed"])
-        )
-        for table in (dataset_table, generator_table, pairwise_table):
+        for table in (dataset_table, generator_table):
             table.insert(0, "selector", selector)
         dataset_tables.append(dataset_table)
         generator_tables.append(generator_table)
-        pairwise_tables.append(pairwise_table)
     dataset_metrics = pd.concat(dataset_tables, ignore_index=True)
     generator_metrics = pd.concat(generator_tables, ignore_index=True)
-    pairwise_metrics = pd.concat(pairwise_tables, ignore_index=True)
+    pairwise_metrics = build_matched_selector_pairwise_table(
+        videos, seed=int(config["metrics"]["pairwise_seed"])
+    )
     bootstrap = paired_selector_bootstrap(
         videos,
         seed=int(config["metrics"]["pairwise_seed"]),

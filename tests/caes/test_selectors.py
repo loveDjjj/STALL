@@ -57,6 +57,7 @@ import torch
 
 from temporal_selection.evaluation import (
     align_selector_scores,
+    build_matched_selector_pairwise_table,
     evaluate_selector_gate,
     paired_selector_bootstrap,
 )
@@ -447,6 +448,13 @@ class TemporalSelectorTests(unittest.TestCase):
         scores = pd.DataFrame(rows)
         aligned = align_selector_scores(scores)
         self.assertEqual(len(aligned), 24)
+        pairwise = build_matched_selector_pairwise_table(scores)
+        self.assertEqual(
+            set(pairwise["pair_identity_source"]), {"uniform"}
+        )
+        self.assertEqual(
+            len(pairwise[pairwise["dataset"].eq("Macro-3")]), 2
+        )
         bootstrap = paired_selector_bootstrap(scores, iterations=20)
         self.assertEqual(set(bootstrap["metric"]), {"auc", "ap_real"})
         self.assertIn("Macro-3", set(bootstrap["dataset"]))
