@@ -148,6 +148,46 @@ def _variant(selector: str, aggregation: str, calibration_mode: str) -> str:
     return f"{selector}__{aggregation}__{calibration_mode}"
 
 
+def _attach_frozen_standard_scores(
+    records: pd.DataFrame, source_windows: pd.DataFrame
+) -> pd.DataFrame:
+    """为standard窗口复用Stage FS分量，确保Tail实验只改变Local聚合。"""
+
+    output = records.copy().reset_index(drop=True)
+    output["_record_index"] = np.arange(len(output))
+    score_columns = [
+        "global_spatial_raw", "global_spatial", "global_t1_raw", "global_t1",
+        "patch_temporal_raw",
+    ]
+    for selector in SELECTORS:
+        target = output[
+            output["selector"].eq(selector)
+            & output["calibration_mode"].eq("standard")
+        ].copy()
+        source = source_windows[source_windows["selector"].eq(selector)].copy()
+        keys = ["video_id", "split", "selector"]
+        keys.append("window_id" if selector == "uniform" else "candidate_id")
+        source = source[keys + score_columns]
+        existing_score_columns = [
+            column for column in score_columns if column in target.columns
+        ]
+        merged = target.drop(columns=existing_score_columns).merge(
+            source,
+            on=keys,
+            how="left",
+            validate="one_to_one",
+        )
+        if len(merged) != len(target) or merged[score_columns].isna().any().any():
+            raise ValueError(f"{selector}无法与Stage FS窗口分量严格对齐")
+        indices = merged["_record_index"].to_numpy(dtype=int)
+        for column in score_columns:
+            output.loc[indices, column] = merged[column].to_numpy()
+        output.loc[indices, "local_raw__mean"] = merged[
+            "patch_temporal_raw"
+        ].to_numpy()
+    return output.drop(columns="_record_index")
+
+
 def _score_variant(
     records: pd.DataFrame,
     *,
@@ -216,6 +256,11 @@ def main() -> None:
     args.output_dir.mkdir(parents=True)
     records, field_index, position_references = _load_records(args.field_dir)
     config = load_config(args.field_dir / "resolved_config.yaml")
+    source_windows = pd.read_csv(
+        args.source_stage_fs / "window_scores.csv", float_precision="round_trip",
+        low_memory=False,
+    )
+    records = _attach_frozen_standard_scores(records, source_windows)
     videos = []
     for selector in SELECTORS:
         for aggregation in TAIL_RATIOS:
