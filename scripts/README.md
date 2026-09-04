@@ -25,6 +25,10 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_caes_post_fs.sh` | 等待Stage FS成功结束后自动执行FS0等价审计 |
 | `recompute_caes_metrics.py` | 用FS0共享视频身份重建CAES配对指标、bootstrap与gate |
 | `analyze_caes_stage_fs.py` | 汇总CAES分支、低FPR、覆盖与effective-K敏感性 |
+| `analyze_caes_duration.py` | 对Uniform/Feature-change/Real-anomaly做固定时长分层与配对bootstrap |
+| `run_caes_crossfit.sh` | 为三种selector生成5-fold OOF calibration manifests |
+| `run_caes_tail_fields.sh` | 构建三selector及OOF calibration的Local D2位置似然场小缓存 |
+| `run_caes_tail.sh` | 评估三selector×四Tail聚合×standard/crossfit5真实null |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |

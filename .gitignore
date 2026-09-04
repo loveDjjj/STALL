@@ -15,6 +15,7 @@ results/runs/
 # CAES的全量WindowManifest、score审计和重建参数均可由脚本生成，不提交大产物。
 results/caes/
 precomputed/caes_detector/
+logs/*.log
 
 # 仅在正式冻结发布时纳入版本控制
 release/*

@@ -49,8 +49,17 @@ from temporal_selection.dense_scoring import (
     selected_window_requests,
     union_frame_indices,
 )
+from temporal_selection.crossfit import (
+    balanced_crossfit_assignments,
+    validate_crossfit_partition,
+)
 from math_utils import StableGaussianParams
 from features import AlphaStallFeatureExtractor
+from tail_evidence import (
+    TAIL_RATIOS,
+    local_d2_likelihood_fields,
+    merge_tail_window_requests,
+)
 import numpy as np
 import pandas as pd
 import torch
@@ -502,6 +511,59 @@ class TemporalSelectorTests(unittest.TestCase):
         ])
         with self.assertRaisesRegex(ValueError, "视频身份不一致"):
             align_selector_scores(frame)
+
+    def test_crossfit_assignments_are_balanced_deterministic_and_disjoint(self) -> None:
+        video_ids = [f"real:{index}" for index in range(23)]
+        first = balanced_crossfit_assignments(video_ids, folds=5, seed=17)
+        repeat = balanced_crossfit_assignments(
+            list(reversed(video_ids)), folds=5, seed=17
+        )
+        self.assertEqual(first, repeat)
+        counts = [list(first.values()).count(fold) for fold in range(5)]
+        self.assertLessEqual(max(counts) - min(counts), 1)
+        validate_crossfit_partition(first, folds=5)
+
+    def test_tail_likelihood_field_and_cvar_match_manual_order_statistics(self) -> None:
+        rng = np.random.default_rng(71)
+        patch = rng.normal(size=(2, 5, 4, 3)).astype(np.float32)
+        params = StableGaussianParams(
+            mean=np.zeros(3),
+            whitening=np.eye(3),
+            calibration_raw=np.array([-2.0, -1.0]),
+        )
+        field, scores = local_d2_likelihood_fields(
+            patch, params, device="cpu"
+        )
+        self.assertEqual(field.shape, (2, 3, 4))
+        self.assertEqual(set(scores), set(TAIL_RATIOS))
+        flat = field.astype(np.float64).reshape(2, -1)
+        np.testing.assert_allclose(scores["mean"], flat.mean(axis=1), atol=1e-6)
+        for name, ratio in TAIL_RATIOS.items():
+            if name == "mean":
+                continue
+            count = max(1, int(np.ceil(flat.shape[1] * ratio)))
+            expected = np.sort(flat, axis=1)[:, :count].mean(axis=1)
+            np.testing.assert_allclose(scores[name], expected, atol=1e-6)
+
+    def test_tail_requests_deduplicate_standard_and_crossfit_windows(self) -> None:
+        scored = self._scored(count=40)
+        feature = select_windows(
+            video_id="demo:tail", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="feature_change",
+            scored_candidates=scored,
+        )
+        anomaly = select_windows(
+            video_id="demo:tail", duration_seconds=5.0,
+            downsample_indices=self.indices, selector_name="real_anomaly",
+            scored_candidates=scored,
+        )
+        requests = merge_tail_window_requests({
+            ("standard", "feature_change"): feature,
+            ("standard", "real_anomaly"): anomaly,
+            ("crossfit5", "real_anomaly"): anomaly,
+        })
+        self.assertEqual(len(requests), 3)
+        self.assertEqual({len(item.uses) for item in requests}, {3})
 
 
 if __name__ == "__main__":
