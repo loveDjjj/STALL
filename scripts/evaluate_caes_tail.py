@@ -232,6 +232,36 @@ def _score_variant(
     return videos
 
 
+def _frozen_mean_videos(
+    source: pd.DataFrame,
+    records: pd.DataFrame,
+    *,
+    selector: str,
+    calibration_mode: str,
+) -> pd.DataFrame:
+    """直接复用Stage FS视频分数，作为只改变Tail聚合的精确Mean对照。"""
+
+    evaluation_ids = set(
+        records[
+            records["split"].eq("evaluation")
+            & records["selector"].eq(selector)
+            & records["calibration_mode"].eq("standard")
+        ]["video_id"]
+    )
+    videos = source[
+        source["selector"].eq(selector)
+        & source["video_id"].isin(evaluation_ids)
+    ].copy()
+    if len(videos) != len(evaluation_ids):
+        raise ValueError(f"{selector}冻结Mean视频身份不完整")
+    videos = videos.drop(columns="selector")
+    videos.insert(0, "calibration_mode", calibration_mode)
+    videos.insert(0, "aggregation", "mean")
+    videos.insert(0, "selector", selector)
+    videos.insert(0, "variant", _variant(selector, "mean", calibration_mode))
+    return videos
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -261,17 +291,28 @@ def main() -> None:
         low_memory=False,
     )
     records = _attach_frozen_standard_scores(records, source_windows)
+    source = pd.read_csv(
+        args.source_stage_fs / "video_scores.csv", float_precision="round_trip"
+    )
     videos = []
     for selector in SELECTORS:
         for aggregation in TAIL_RATIOS:
             for calibration_mode in CALIBRATION_MODES:
-                videos.append(_score_variant(
-                    records,
-                    selector=selector,
-                    aggregation=aggregation,
-                    calibration_mode=calibration_mode,
-                    config=config,
-                ))
+                if aggregation == "mean" and (
+                    calibration_mode == "standard" or selector != "real_anomaly"
+                ):
+                    videos.append(_frozen_mean_videos(
+                        source, records, selector=selector,
+                        calibration_mode=calibration_mode,
+                    ))
+                else:
+                    videos.append(_score_variant(
+                        records,
+                        selector=selector,
+                        aggregation=aggregation,
+                        calibration_mode=calibration_mode,
+                        config=config,
+                    ))
     video_scores = pd.concat(videos, ignore_index=True)
     dataset_tables, generator_tables = [], []
     for variant, frame in video_scores.groupby("variant", sort=False):
@@ -299,9 +340,6 @@ def main() -> None:
     ]].drop_duplicates()
     pairwise = pairwise.merge(metadata, on="variant", how="left", validate="many_to_one")
 
-    source = pd.read_csv(
-        args.source_stage_fs / "video_scores.csv", float_precision="round_trip"
-    )
     regression_rows = []
     for selector in SELECTORS:
         current = video_scores[
