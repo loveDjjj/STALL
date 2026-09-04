@@ -1,0 +1,33 @@
+{
+  "duration_bins_seconds": [
+    {
+      "name": "2_to_4",
+      "lower_inclusive": 2.0,
+      "upper_exclusive": 4.0
+    },
+    {
+      "name": "4_to_8",
+      "lower_inclusive": 4.0,
+      "upper_exclusive": 8.0
+    },
+    {
+      "name": "8_to_16",
+      "lower_inclusive": 8.0,
+      "upper_exclusive": 16.0
+    },
+    {
+      "name": "16_plus",
+      "lower_inclusive": 16.0,
+      "upper_exclusive": Infinity
+    }
+  ],
+  "minimum_real_and_fake_per_generator_cell": 20,
+  "selectors": [
+    "uniform",
+    "feature_change",
+    "real_anomaly"
+  ],
+  "pair_identity_source": "uniform",
+  "bootstrap_iterations": 1000,
+  "note": "固定结构区间，不依据fake结果选择边界"
+}
