@@ -18,7 +18,7 @@
     {
       "name": "16_plus",
       "lower_inclusive": 16.0,
-      "upper_exclusive": Infinity
+      "upper_exclusive": null
     }
   ],
   "minimum_real_and_fake_per_generator_cell": 20,
