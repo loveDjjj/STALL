@@ -127,8 +127,9 @@ Top-K anomaly 明显聚集在局部时间段。NMS增加了间距，但不能恢
 
 1. **Stage FS 判定为 No-Go。** 不继续 wavelet、DPP、bandit 或复杂 change-point。
 2. 不把 Feature-change 写成最终方法；保留为重要的域依赖正对照和机制诊断。
-3. 不进行 FS cross-fitting。核心 real-anomaly 已显著下降，cross-fitting不可能解决
-   coarse signal 与 Local D2 evidence 不对齐的问题。
+3. Stage FS 的原始预注册决策是不继续cross-fitting；后续按研究要求仍完成了三种
+   selector的5-fold控制。结果见`reports/caes_tail_crossfit_results.md`：Uniform与
+   Feature-change严格不变，Real-anomaly提高约`+0.0024/+0.0023`，但仍低于Uniform。
 4. 正式方法继续使用 uniform K=3。
 5. 按预注册计划转入 FS0 上的 Tail/CVaR aggregation，然后检验 real-only fusion。
 

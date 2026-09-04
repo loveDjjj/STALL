@@ -84,6 +84,9 @@ Macro增益`+0.008`至`+0.010`以上，且低FPR不退化。
 
 ## 6. Cross-fitting
 
+> 后续执行说明：尽管Stage FS未过Go，仍按研究要求对Uniform、Feature-change和
+> Real-anomaly全部完成5-fold控制；正式结果见`reports/caes_tail_crossfit_results.md`。
+
 首轮standard matched calibration；若FS Go，补5-fold OOF real null并比较：
 
 | ID | Calibration selector reference | Calibration video scores | Test reference |
