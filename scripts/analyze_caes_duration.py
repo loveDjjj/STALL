@@ -113,11 +113,21 @@ def main() -> None:
         if selected.empty:
             continue
         table = build_matched_selector_pairwise_table(selected, seed=42)
+        table.loc[table["dataset"].eq("Macro-3"), "dataset"] = "Eligible-Macro"
+        table.loc[
+            table["scope"].eq("generator_pairwise_macro3"), "scope"
+        ] = "eligible_dataset_macro"
         table.insert(0, "duration_bin", label)
         metric_tables.append(table)
         bootstrap = paired_selector_bootstrap(
             selected, seed=42, iterations=args.bootstrap_iterations
         )
+        bootstrap.loc[
+            bootstrap["dataset"].eq("Macro-3"), "dataset"
+        ] = "Eligible-Macro"
+        bootstrap.loc[
+            bootstrap["scope"].eq("generator_pairwise_macro3"), "scope"
+        ] = "eligible_dataset_macro"
         bootstrap.insert(0, "duration_bin", label)
         bootstrap_tables.append(bootstrap)
         for item in cells:
@@ -148,7 +158,7 @@ def main() -> None:
         encoding="utf-8",
     )
     print(
-        metrics[metrics["dataset"].eq("Macro-3")][
+        metrics[metrics["dataset"].eq("Eligible-Macro")][
             ["duration_bin", "selector", "auc", "ap_real", "n_generators"]
         ].to_string(index=False)
     )
