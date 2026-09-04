@@ -29,6 +29,8 @@ override；算法、校准、评分、指标和产物写入都在 `src/`。
 | `run_caes_crossfit.sh` | 为三种selector生成5-fold OOF calibration manifests |
 | `run_caes_tail_fields.sh` | 构建三selector及OOF calibration的Local D2位置似然场小缓存 |
 | `run_caes_tail.sh` | 评估三selector×四Tail聚合×standard/crossfit5真实null |
+| `run_caes_tail_post.sh` | Tail field完成后自动运行三selector的Tail/crossfit矩阵 |
+| `analyze_caes_tail.py` | 分析三selector的CVaR 10%与Real-anomaly crossfit主对照 |
 | `run_ablation.sh` | 单个结构与时间覆盖消融；名称区分 locked 与 refit 协议 |
 | `run_development_matrix.sh` | 顺序执行最终无 Spatial 方法的开发集核心消融矩阵 |
 | `run_refit_control_matrix.sh` | 复核旧 Spatial 方法的 D1/D2、K1/K3 重拟合结果，仅作历史对照 |
