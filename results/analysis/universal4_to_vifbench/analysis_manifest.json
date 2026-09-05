@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "created_at_utc": "2026-09-04T15:13:07.876065+00:00",
+  "universal_source_domains": [
+    "comgenvid",
+    "videofeedback",
+    "genvideo",
+    "genvidbench"
+  ],
+  "vifbench_real_used_by_universal": 0,
+  "artifacts": {
+    "pairwise_metrics.csv": "3148d1592671be23abe4fc55f7887e3d60b6dce44fbb237ad16183fb082119f4",
+    "paired_bootstrap.csv": "4392fa65971a0193ce91d85354d0854a7997d44c01fd7c86c0e9d9a6317ae35d",
+    "video_scores.csv": "12bb4b32f315331c21dcf9a1ea3fd983292e9645dfa772bc9762a64bd9bcd535"
+  }
+}

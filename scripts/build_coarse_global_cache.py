@@ -46,6 +46,8 @@ MANIFESTS = (
     ManifestSpec("genvideo", "evaluation", ROOT / "data/manifests/development/genvideo_evaluation.csv", "development"),
     ManifestSpec("genvidbench", "calibration", ROOT / "data/manifests/external/calibration.csv", "external"),
     ManifestSpec("genvidbench", "evaluation", ROOT / "data/manifests/external/evaluation.csv", "external"),
+    ManifestSpec("vifbench", "calibration", ROOT / "data/manifests/confirmation/vifbench_calibration.csv", "confirmation"),
+    ManifestSpec("vifbench", "evaluation", ROOT / "data/manifests/confirmation/vifbench_evaluation.csv", "confirmation"),
 )
 
 
@@ -70,7 +72,11 @@ def _decode(path: Path, indices: list[int]):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scope", choices=["development", "external", "all"], default="development")
+    parser.add_argument(
+        "--scope",
+        choices=["development", "external", "confirmation", "all"],
+        default="development",
+    )
     parser.add_argument("--cache-dir", type=Path, default=ROOT / "cache/coarse_global_1fps")
     parser.add_argument("--device", default="cuda:1")
     parser.add_argument("--frame-batch-size", type=int, default=64)
@@ -122,6 +128,9 @@ def main() -> None:
         flush=True,
     )
     if args.audit_only:
+        return
+    if not misses:
+        print("[完成] coarse cache 已完整，无需加载模型", flush=True)
         return
 
     model = AlphaStallFeatureExtractor(args.device)

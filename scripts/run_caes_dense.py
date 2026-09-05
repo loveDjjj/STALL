@@ -58,7 +58,7 @@ from temporal_selection.evaluation import (
 from temporal_selection.manifest import read_window_manifests
 
 
-SOURCE_RUN = "alpha_stall_full_d2_k3_no_spatial_refit"
+DEFAULT_SOURCE_RUN = "alpha_stall_full_d2_k3_no_spatial_refit"
 SELECTORS = (
     "uniform",
     "random",
@@ -67,10 +67,13 @@ SELECTORS = (
     "real_anomaly_nms",
     "stratified_real_anomaly",
 )
-ADAPTIVE_SELECTORS = SELECTORS[1:]
-DATASETS = ("comgenvid", "videofeedback", "genvideo")
+DEVELOPMENT_DATASETS = ("comgenvid", "videofeedback", "genvideo")
+EXTERNAL_DATASETS = ("genvidbench",)
+CONFIRMATION_DATASETS = ("vifbench",)
+DATASETS = (*DEVELOPMENT_DATASETS, *EXTERNAL_DATASETS, *CONFIRMATION_DATASETS)
 RAW_SHARD_SCHEMA = "caes_raw_score_shard_v3"
 RUN_IDENTITY_SCHEMA = "caes_dense_identity_v1"
+SELECTION_CONFIG = ROOT / "configs/benchmark.yaml"
 
 
 class RunTerminated(RuntimeError):
@@ -83,8 +86,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--window-dir", type=Path, default=ROOT / "results/caes/window_selection_seed17")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "results/runs/caes_stage_fs")
     parser.add_argument("--detector-reference-dir", type=Path, default=ROOT / "precomputed/caes_detector")
+    parser.add_argument("--source-run", default=DEFAULT_SOURCE_RUN)
+    parser.add_argument(
+        "--manifest-scope",
+        choices=("development", "external", "confirmation"),
+        default="development",
+    )
+    parser.add_argument(
+        "--score-uniform-on-demand",
+        action="store_true",
+        help="确认集没有既有source run时，现场评分Uniform与其他selector",
+    )
+    parser.add_argument(
+        "--calibration-real-count", type=int,
+        help="覆盖real-only校准数量；ViF-Bench冻结协议固定为80",
+    )
+    parser.add_argument(
+        "--fusion-global-weight", type=float,
+        help="覆盖最终Global权重，Local自动使用1减该值",
+    )
     parser.add_argument("--device", default="cuda:1")
-    parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))
+    parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DEVELOPMENT_DATASETS))
+    parser.add_argument(
+        "--selectors", nargs="+", choices=SELECTORS, default=list(SELECTORS),
+        help="必须包含uniform；外部确认可仅运行uniform与feature_change",
+    )
     parser.add_argument("--chunk-videos", type=int, default=64)
     parser.add_argument("--frame-batch-size", type=int, default=8)
     parser.add_argument("--score-window-batch-size", type=int, default=48)
@@ -97,6 +123,22 @@ def parse_args() -> argparse.Namespace:
 def _source_path(value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else ROOT / path
+
+
+def _with_temporal_selection(config: dict) -> dict:
+    """为早于CAES的外部run补入明确版本化的冻结选择合同。"""
+
+    if "temporal_selection" in config:
+        return config
+    defaults = load_config(SELECTION_CONFIG)
+    merged = dict(config)
+    merged["temporal_selection"] = defaults["temporal_selection"]
+    runtime = dict(merged["runtime"])
+    runtime["coarse_global_cache_dir"] = defaults["runtime"][
+        "coarse_global_cache_dir"
+    ]
+    merged["runtime"] = runtime
+    return merged
 
 
 def _sha256(path: Path) -> str:
@@ -179,11 +221,12 @@ def _load_manifests(
     window_run: dict,
     dataset: str,
     split: str,
+    selectors: tuple[str, ...],
 ) -> dict[str, dict[str, object]]:
     output = {}
     expected_ids = None
     split_contract = window_run["datasets"][dataset]["splits"][split]["selectors"]
-    for selector in SELECTORS:
+    for selector in selectors:
         path = window_dir / "manifests" / dataset / f"{selector}_{split}.jsonl"
         expected_sha = split_contract[selector]["sha256"]
         if _sha256(path) != expected_sha:
@@ -198,6 +241,25 @@ def _load_manifests(
             raise ValueError(f"{dataset}/{split} selector视频身份不一致")
         output[selector] = mapping
     return output
+
+
+def _manifest_paths(config: dict, dataset: str, scope: str) -> tuple[Path, Path]:
+    """解析开发集或单一外部集manifest路径。"""
+
+    if scope == "external":
+        if dataset not in EXTERNAL_DATASETS:
+            raise ValueError(f"外部manifest不支持数据集：{dataset}")
+        root = ROOT / config["data"]["external_manifests"]
+        return root / "calibration.csv", root / "evaluation.csv"
+    if scope == "confirmation":
+        if dataset not in CONFIRMATION_DATASETS:
+            raise ValueError(f"确认集manifest不支持数据集：{dataset}")
+        root = ROOT / config["data"]["confirmation_manifests"]
+        return root / f"{dataset}_calibration.csv", root / f"{dataset}_evaluation.csv"
+    if dataset not in DEVELOPMENT_DATASETS:
+        raise ValueError(f"开发manifest不支持数据集：{dataset}")
+    root = ROOT / config["data"]["development_manifests"]
+    return root / f"{dataset}_calibration.csv", root / f"{dataset}_evaluation.csv"
 
 
 def _verify_uniform_manifests(
@@ -313,9 +375,16 @@ def _score_split(
     score_window_batch_size: int,
     decode_workers: int,
     run_identity_sha256: str,
+    score_uniform_on_demand: bool,
     report,
 ) -> tuple[pd.DataFrame, dict[str, object]]:
-    adaptive = {name: manifests[name] for name in ADAPTIVE_SELECTORS}
+    adaptive_selectors = tuple(
+        name for name in manifests
+        if score_uniform_on_demand or name != "uniform"
+    )
+    if not adaptive_selectors:
+        raise ValueError("dense评分至少需要一个非uniform selector")
+    adaptive = {name: manifests[name] for name in adaptive_selectors}
     expected = [f"{dataset}:{path}" for path in rows["video_path"].astype(str)]
     manifest_ids = set(next(iter(adaptive.values())))
     if len(expected) != len(set(expected)) or set(expected) != manifest_ids:
@@ -337,7 +406,7 @@ def _score_split(
         expected_records = sum(
             adaptive[selector][video_id].effective_k
             for video_id in video_ids
-            for selector in ADAPTIVE_SELECTORS
+            for selector in adaptive_selectors
         )
         if shard_path.is_file():
             payload = json.loads(shard_path.read_text(encoding="utf-8"))
@@ -434,7 +503,7 @@ def _score_split(
                 selector for current_video, selector in grouped_records
                 if current_video == video_id
             }
-            if present != set(ADAPTIVE_SELECTORS):
+            if present != set(adaptive_selectors):
                 raise ValueError(f"{video_id}评分结果缺少selector")
         shard_records = []
         for key in sorted(grouped_records):
@@ -523,15 +592,35 @@ def _prepare(args: argparse.Namespace):
     args.window_dir = args.window_dir.resolve()
     args.output_dir = args.output_dir.resolve()
     args.detector_reference_dir = args.detector_reference_dir.resolve()
-    config = load_config(args.config)
+    selectors = tuple(dict.fromkeys(args.selectors))
+    if "uniform" not in selectors:
+        raise ValueError("--selectors必须包含uniform，作为冻结FS0对照")
+    args.selectors = selectors
+    config = _with_temporal_selection(load_config(args.config))
+    if args.calibration_real_count is not None:
+        if args.calibration_real_count < 2:
+            raise ValueError("--calibration-real-count至少为2")
+        config["calibration"]["real_videos_per_dataset"] = (
+            args.calibration_real_count
+        )
+    if args.fusion_global_weight is not None:
+        if not 0.0 < args.fusion_global_weight < 1.0:
+            raise ValueError("--fusion-global-weight必须位于(0,1)")
+        config["method"]["fusion"]["global_weight"] = args.fusion_global_weight
+        config["method"]["fusion"]["local_weight"] = (
+            1.0 - args.fusion_global_weight
+        )
     validate_config(config)
-    source_dir = ROOT / "results/runs" / SOURCE_RUN
-    source_manifest = json.loads(
-        (source_dir / "run_manifest.json").read_text(encoding="utf-8")
-    )
-    source_config = load_config(source_dir / "resolved_config.yaml")
-    if _detector_contract(config) != _detector_contract(source_config):
-        raise ValueError("当前配置的冻结检测器合同与C0 source run不一致")
+    source_dir = None
+    source_manifest = {"config_hash": config_digest(config)}
+    if not args.score_uniform_on_demand:
+        source_dir = ROOT / "results/runs" / args.source_run
+        source_manifest = json.loads(
+            (source_dir / "run_manifest.json").read_text(encoding="utf-8")
+        )
+        source_config = load_config(source_dir / "resolved_config.yaml")
+        if _detector_contract(config) != _detector_contract(source_config):
+            raise ValueError("当前配置的冻结检测器合同与C0 source run不一致")
     window_manifest_path = args.window_dir / "run_manifest.json"
     window_run = json.loads(window_manifest_path.read_text(encoding="utf-8"))
     if window_run.get("schema_version") != "caes_window_selection_run_v1":
@@ -548,12 +637,12 @@ def _prepare(args: argparse.Namespace):
     local_references = {}
     manifest_hashes = {}
     dataset_fingerprints = {}
-    manifest_root = ROOT / config["data"]["development_manifests"]
     for dataset in args.datasets:
         if dataset not in window_run.get("datasets", {}):
             raise ValueError(f"WindowManifest run不包含数据集：{dataset}")
-        calibration_path = manifest_root / f"{dataset}_calibration.csv"
-        evaluation_path = manifest_root / f"{dataset}_evaluation.csv"
+        calibration_path, evaluation_path = _manifest_paths(
+            config, dataset, args.manifest_scope
+        )
         calibration_rows = load_manifest(str(calibration_path))
         evaluation_rows = load_manifest(str(evaluation_path))
         _ensure_disjoint(calibration_rows, evaluation_rows, dataset)
@@ -569,9 +658,11 @@ def _prepare(args: argparse.Namespace):
             int(config["calibration"]["seed"]),
         )
         for split in ("calibration", "evaluation"):
-            manifests = _load_manifests(args.window_dir, window_run, dataset, split)
+            manifests = _load_manifests(
+                args.window_dir, window_run, dataset, split, args.selectors
+            )
             manifests_by_split[(dataset, split)] = manifests
-            for selector in SELECTORS:
+            for selector in args.selectors:
                 path = args.window_dir / "manifests" / dataset / f"{selector}_{split}.jsonl"
                 manifest_hashes[f"{dataset}/{split}/{selector}"] = _sha256(path)
         evaluation_ids = set(manifests_by_split[(dataset, "evaluation")]["uniform"])
@@ -595,10 +686,15 @@ def _prepare(args: argparse.Namespace):
         expected_calibration_ids = tuple(
             f"{dataset}:{path}" for path in selected_calibration["video_path"].astype(str)
         )
+        source_matches = (
+            reference.source_config_hash == source_manifest["config_hash"]
+            if args.score_uniform_on_demand
+            else reference.source_run == args.source_run
+            and reference.source_config_hash == source_manifest["config_hash"]
+        )
         if (
             reference.dataset != dataset
-            or reference.source_run != SOURCE_RUN
-            or reference.source_config_hash != source_manifest["config_hash"]
+            or not source_matches
             or reference.calibration_ids != expected_calibration_ids
         ):
             raise ValueError(f"{dataset} frozen Local reference身份与本次run不一致")
@@ -615,7 +711,7 @@ def _prepare(args: argparse.Namespace):
         "config_hash": config_digest(config),
         "config_file_sha256": _sha256(args.config),
         "detector_contract": _detector_contract(config),
-        "source_run": SOURCE_RUN,
+        "source_run": None if args.score_uniform_on_demand else args.source_run,
         "source_config_hash": source_manifest["config_hash"],
         "window_run_manifest_sha256": _sha256(window_manifest_path),
         "coarse_contract_sha256": window_run["coarse_contract_sha256"],
@@ -625,7 +721,8 @@ def _prepare(args: argparse.Namespace):
         "frozen_local_reference_sha256": {
             dataset: local_references[dataset].digest() for dataset in args.datasets
         },
-        "selectors": list(SELECTORS),
+        "selectors": list(args.selectors),
+        "score_uniform_on_demand": args.score_uniform_on_demand,
         "chunk_videos": args.chunk_videos,
         "frame_batch_size": args.frame_batch_size,
         "score_window_batch_size": args.score_window_batch_size,
@@ -686,12 +783,15 @@ def _execute(args: argparse.Namespace, prepared) -> None:
         "window_run": str(args.window_dir),
         "window_run_manifest_sha256": identity["window_run_manifest_sha256"],
     }
-    source_windows_all = pd.read_csv(
-        source_dir / "window_scores.csv", float_precision="round_trip"
-    )
-    source_videos_all = pd.read_csv(
-        source_dir / "video_scores.csv", float_precision="round_trip"
-    )
+    source_windows_all = None
+    source_videos_all = None
+    if source_dir is not None:
+        source_windows_all = pd.read_csv(
+            source_dir / "window_scores.csv", float_precision="round_trip"
+        )
+        source_videos_all = pd.read_csv(
+            source_dir / "video_scores.csv", float_precision="round_trip"
+        )
     fs0_windows, fs0_videos = [], []
 
     for dataset in args.datasets:
@@ -715,7 +815,9 @@ def _execute(args: argparse.Namespace, prepared) -> None:
             frame_batch_size=args.frame_batch_size,
             score_window_batch_size=args.score_window_batch_size,
             decode_workers=args.decode_workers,
-            run_identity_sha256=identity_sha, report=report,
+            run_identity_sha256=identity_sha,
+            score_uniform_on_demand=args.score_uniform_on_demand,
+            report=report,
         )
         evaluation_raw, evaluation_meta = _score_split(
             dataset=dataset, split="evaluation", rows=evaluation_rows,
@@ -725,9 +827,14 @@ def _execute(args: argparse.Namespace, prepared) -> None:
             frame_batch_size=args.frame_batch_size,
             score_window_batch_size=args.score_window_batch_size,
             decode_workers=args.decode_workers,
-            run_identity_sha256=identity_sha, report=report,
+            run_identity_sha256=identity_sha,
+            score_uniform_on_demand=args.score_uniform_on_demand,
+            report=report,
         )
-        for selector in ADAPTIVE_SELECTORS:
+        for selector in (
+            item for item in args.selectors
+            if args.score_uniform_on_demand or item != "uniform"
+        ):
             calibration = calibration_raw[calibration_raw["selector"].eq(selector)].copy()
             evaluation = evaluation_raw[evaluation_raw["selector"].eq(selector)].copy()
             windows, videos = _calibrate_selector(calibration, evaluation, config)
@@ -737,34 +844,45 @@ def _execute(args: argparse.Namespace, prepared) -> None:
             all_windows.append(windows)
             all_videos.append(videos)
 
-        calibration_ids = {
-            f"{dataset}:{path}" for path in selected_calibration["video_path"].astype(str)
-        }
-        evaluation_ids = {
-            f"{dataset}:{path}" for path in evaluation_rows["video_path"].astype(str)
-        }
-        source_windows = source_windows_all[source_windows_all["dataset"].eq(dataset)]
-        source_windows = source_windows[
-            (source_windows["split"].eq("calibration") & source_windows["video_id"].isin(calibration_ids))
-            | (source_windows["split"].eq("evaluation") & source_windows["video_id"].isin(evaluation_ids))
-        ].copy()
-        source_videos = source_videos_all[
-            source_videos_all["dataset"].eq(dataset)
-            & source_videos_all["video_id"].isin(evaluation_ids)
-        ].copy()
-        expected_fs0_windows = sum(
-            item.effective_k for item in calibration_manifests["uniform"].values()
-        ) + sum(item.effective_k for item in evaluation_manifests["uniform"].values())
-        if (
-            len(source_windows) != expected_fs0_windows
-            or len(source_videos) != len(evaluation_ids)
-            or source_videos["video_id"].duplicated().any()
-        ):
-            raise ValueError(f"{dataset} FS0 source分数与WindowManifest身份不一致")
-        source_windows.insert(0, "selector", "uniform")
-        source_videos.insert(0, "selector", "uniform")
-        fs0_windows.append(source_windows)
-        fs0_videos.append(source_videos)
+        if not args.score_uniform_on_demand:
+            calibration_ids = {
+                f"{dataset}:{path}"
+                for path in selected_calibration["video_path"].astype(str)
+            }
+            evaluation_ids = {
+                f"{dataset}:{path}"
+                for path in evaluation_rows["video_path"].astype(str)
+            }
+            source_windows = source_windows_all[
+                source_windows_all["dataset"].eq(dataset)
+            ]
+            source_windows = source_windows[
+                (source_windows["split"].eq("calibration") & source_windows["video_id"].isin(calibration_ids))
+                | (source_windows["split"].eq("evaluation") & source_windows["video_id"].isin(evaluation_ids))
+            ].copy()
+            source_videos = source_videos_all[
+                source_videos_all["dataset"].eq(dataset)
+                & source_videos_all["video_id"].isin(evaluation_ids)
+            ].copy()
+            expected_fs0_windows = sum(
+                item.effective_k
+                for item in calibration_manifests["uniform"].values()
+            ) + sum(
+                item.effective_k
+                for item in evaluation_manifests["uniform"].values()
+            )
+            if (
+                len(source_windows) != expected_fs0_windows
+                or len(source_videos) != len(evaluation_ids)
+                or source_videos["video_id"].duplicated().any()
+            ):
+                raise ValueError(
+                    f"{dataset} FS0 source分数与WindowManifest身份不一致"
+                )
+            source_windows.insert(0, "selector", "uniform")
+            source_videos.insert(0, "selector", "uniform")
+            fs0_windows.append(source_windows)
+            fs0_videos.append(source_videos)
         run_metadata["datasets"][dataset] = {
             "calibration": calibration_meta,
             "evaluation": evaluation_meta,
@@ -818,9 +936,9 @@ def _execute(args: argparse.Namespace, prepared) -> None:
         ).strip(),
         "run_identity_sha256": identity_sha,
         "config_hash": config_digest(config),
-        "source_run": SOURCE_RUN,
+        "source_run": None if args.score_uniform_on_demand else args.source_run,
         "source_config_hash": source_manifest["config_hash"],
-        "selectors": list(SELECTORS),
+        "selectors": list(args.selectors),
         "score_artifact_sha256": score_hashes,
         **run_metadata,
     })

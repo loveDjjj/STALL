@@ -120,6 +120,8 @@ data:
   development_manifests: data/manifests/development
   # 外部数据集的 calibration/evaluation manifest 所在目录。
   external_manifests: data/manifests/external
+  # 冻结方法后一次性运行的未见生成器确认集 manifest 所在目录。
+  confirmation_manifests: data/manifests/confirmation
   # 2 秒窗口不足时的处理。当前固定为 exclude，并在每个 run manifest 记录排除数量。
   short_video_policy: exclude
 

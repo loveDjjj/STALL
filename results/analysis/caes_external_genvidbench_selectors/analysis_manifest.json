@@ -1,0 +1,19 @@
+{
+  "status": "completed",
+  "created_at_utc": "2026-09-04T09:30:10.331273+00:00",
+  "runs": {
+    "feature_change": "caes_external_genvidbench_feature_change",
+    "random": "caes_external_genvidbench_random"
+  },
+  "bootstrap_iterations": 1000,
+  "bootstrap_seed": 42,
+  "uniform_max_abs_difference": {
+    "global_score": 0.0,
+    "local_score": 0.0,
+    "final_score": 0.0
+  },
+  "artifacts": {
+    "pairwise_metrics.csv": "7ade731df07c2d33fef91288428b19508b10a7f61c6d4b4e1568cebbe4f631ff",
+    "paired_bootstrap.csv": "0d341efd5461a05c0d9d24f52ecf04c9ca0b3de5dd42383d70e3ead06edfad95"
+  }
+}

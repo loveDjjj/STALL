@@ -1,0 +1,5 @@
+selector,baseline,scope,dataset,metric,delta_mean,ci95_low,ci95_high,bootstrap_iterations
+universal4,target_real,generator_pairwise_dataset_macro,vifbench,auc,-0.0018103592323070342,-0.0098721390739545,0.006454203690520073,1000
+universal4,target_real,generator_pairwise_dataset_macro,vifbench,ap_real,0.0048455759286241944,-0.0036836213016790175,0.013639440763000386,1000
+universal4,target_real,generator_pairwise_macro3,Macro-3,auc,-0.0018103592323070342,-0.0098721390739545,0.006454203690520073,1000
+universal4,target_real,generator_pairwise_macro3,Macro-3,ap_real,0.0048455759286241944,-0.0036836213016790175,0.013639440763000386,1000

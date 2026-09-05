@@ -1,0 +1,13 @@
+{
+  "schema_version": "confirmation_local_reference_v1",
+  "created_at_utc": "2026-09-04T13:01:40.327801+00:00",
+  "dataset": "vifbench",
+  "source_identity": "vifbench_confirmation_protocol_v1",
+  "config_hash": "a1cae8e28b13dd37c9fe0624c9f6428b4b9c49603c7a880fa205b8cdfae3ca43",
+  "calibration_manifest_sha256": "9e92ed3f709b80949f8bbc4b89f5ad08a4f79d8a6c5ad978d3f60ef3cc76a912",
+  "cache_contract_sha256": "86ff04f7c24927e22af2955ce9efdb92a19a65ad018d778e6c584414ed2c219f",
+  "calibration_videos": 80,
+  "calibration_windows": 240,
+  "reference_sha256": "aaedfc805f3681dd7c721e180655b0768adf9d900ca5d290b331066f64542f7e",
+  "file_sha256": "2023bd44ae4ff5fe1265a15628cf3326980b0b1dad1ace3aab419d237fba0879"
+}

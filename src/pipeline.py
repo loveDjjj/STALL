@@ -73,6 +73,13 @@ def resolve_dataset_manifests(repository_root: Path, config: dict, dataset: str)
     if dataset == "genvidbench":
         root = repository_root / config["data"]["external_manifests"]
         return DatasetManifests(dataset, root / "calibration.csv", root / "evaluation.csv")
+    if dataset == "vifbench":
+        root = repository_root / config["data"]["confirmation_manifests"]
+        return DatasetManifests(
+            dataset,
+            root / "vifbench_calibration.csv",
+            root / "vifbench_evaluation.csv",
+        )
     root = repository_root / config["data"]["development_manifests"]
     return DatasetManifests(
         dataset,

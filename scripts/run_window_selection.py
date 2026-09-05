@@ -42,7 +42,10 @@ from temporal_selection.reference import (
 from temporal_selection.selectors import select_windows
 
 
-DATASETS = ("comgenvid", "videofeedback", "genvideo")
+DEVELOPMENT_DATASETS = ("comgenvid", "videofeedback", "genvideo")
+EXTERNAL_DATASETS = ("genvidbench",)
+CONFIRMATION_DATASETS = ("vifbench",)
+DATASETS = (*DEVELOPMENT_DATASETS, *EXTERNAL_DATASETS, *CONFIRMATION_DATASETS)
 SELECTORS = (
     "uniform",
     "random",
@@ -51,6 +54,7 @@ SELECTORS = (
     "real_anomaly_nms",
     "stratified_real_anomaly",
 )
+SELECTION_CONFIG = ROOT / "configs/benchmark.yaml"
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,8 +63,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cache-dir", type=Path)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "results/caes/window_selection_seed17")
     parser.add_argument("--device", default="cuda:1")
-    parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))
+    parser.add_argument(
+        "--datasets", nargs="+", choices=DATASETS,
+        default=list(DEVELOPMENT_DATASETS),
+    )
+    parser.add_argument(
+        "--manifest-scope",
+        choices=("development", "external", "confirmation"),
+        default="development",
+        help="选择开发集或外部集manifest；外部集当前仅支持genvidbench",
+    )
+    parser.add_argument(
+        "--selectors", nargs="+", choices=SELECTORS, default=list(SELECTORS),
+        help="只生成指定selector；外部确认可仅运行uniform与feature_change",
+    )
     parser.add_argument("--limit-evaluation", type=int)
+    parser.add_argument(
+        "--calibration-real-count", type=int,
+        help="覆盖real-only校准数量；ViF-Bench冻结协议固定为80",
+    )
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
 
@@ -68,6 +89,41 @@ def parse_args() -> argparse.Namespace:
 def _source_path(value: str) -> Path:
     path = Path(value)
     return path if path.is_absolute() else ROOT / path
+
+
+def _with_temporal_selection(config: dict) -> tuple[dict, str]:
+    """为早于CAES的外部run显式继承当前冻结的选择合同。"""
+
+    if "temporal_selection" in config:
+        return config, "input_config"
+    defaults = load_config(SELECTION_CONFIG)
+    merged = dict(config)
+    merged["temporal_selection"] = defaults["temporal_selection"]
+    runtime = dict(merged["runtime"])
+    runtime["coarse_global_cache_dir"] = defaults["runtime"][
+        "coarse_global_cache_dir"
+    ]
+    merged["runtime"] = runtime
+    return merged, str(SELECTION_CONFIG.relative_to(ROOT))
+
+
+def _manifest_paths(config: dict, dataset: str, scope: str) -> tuple[Path, Path]:
+    """解析开发集或单一外部集manifest路径。"""
+
+    if scope == "external":
+        if dataset not in EXTERNAL_DATASETS:
+            raise ValueError(f"外部manifest不支持数据集：{dataset}")
+        root = ROOT / config["data"]["external_manifests"]
+        return root / "calibration.csv", root / "evaluation.csv"
+    if scope == "confirmation":
+        if dataset not in CONFIRMATION_DATASETS:
+            raise ValueError(f"确认集manifest不支持数据集：{dataset}")
+        root = ROOT / config["data"]["confirmation_manifests"]
+        return root / f"{dataset}_calibration.csv", root / f"{dataset}_evaluation.csv"
+    if dataset not in DEVELOPMENT_DATASETS:
+        raise ValueError(f"开发manifest不支持数据集：{dataset}")
+    root = ROOT / config["data"]["development_manifests"]
+    return root / f"{dataset}_calibration.csv", root / f"{dataset}_evaluation.csv"
 
 
 def _load_payload(context, cache_root: Path, dataset: str, split: str, row: pd.Series):
@@ -91,7 +147,11 @@ def main() -> None:
     args = parse_args()
     args.config = args.config.resolve()
     args.output_dir = args.output_dir.resolve()
-    config = load_config(args.config)
+    config, selection_config_source = _with_temporal_selection(load_config(args.config))
+    if args.calibration_real_count is not None:
+        if args.calibration_real_count < 2:
+            raise ValueError("--calibration-real-count至少为2")
+        config["calibration"]["real_videos_per_dataset"] = args.calibration_real_count
     validate_config(config)
     selection = config["temporal_selection"]
     cache_root = args.cache_dir or ROOT / config["runtime"]["coarse_global_cache_dir"]
@@ -129,6 +189,13 @@ def main() -> None:
         "config_hash": config_digest(config),
         "config_sha256": hashlib.sha256(args.config.read_bytes()).hexdigest(),
         "coarse_contract_sha256": context.contract_sha256,
+        "temporal_selection_source": selection_config_source,
+        "temporal_selection_source_sha256": (
+            hashlib.sha256(SELECTION_CONFIG.read_bytes()).hexdigest()
+            if selection_config_source != "input_config"
+            else hashlib.sha256(args.config.read_bytes()).hexdigest()
+        ),
+        "manifest_scope": args.manifest_scope,
         "selectors": {},
         "datasets": {},
     }
@@ -136,9 +203,11 @@ def main() -> None:
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     for dataset in args.datasets:
-        manifest_root = ROOT / config["data"]["development_manifests"]
-        calibration = load_manifest(str(manifest_root / f"{dataset}_calibration.csv"))
-        evaluation = load_manifest(str(manifest_root / f"{dataset}_evaluation.csv"))
+        calibration_path, evaluation_path = _manifest_paths(
+            config, dataset, args.manifest_scope
+        )
+        calibration = load_manifest(str(calibration_path))
+        evaluation = load_manifest(str(evaluation_path))
         _ensure_disjoint(calibration, evaluation, dataset)
         calibration = calibration[
             calibration["downsample_idxs"].map(lambda value: len(parse_indices(value)) >= 16)
@@ -181,7 +250,7 @@ def main() -> None:
             "splits": {},
         }
         for split, frame in (("calibration", selected_calibration), ("evaluation", evaluation)):
-            manifests = {name: [] for name in SELECTORS}
+            manifests = {name: [] for name in args.selectors}
             signal_rows = []
             for row_index, row in frame.iterrows():
                 video_id, payload = _load_payload(
@@ -215,7 +284,7 @@ def main() -> None:
                         "percentile": float(coarse_scores["percentile"][transition_id]),
                         "anomaly": float(coarse_scores["anomaly"][transition_id]),
                     })
-                for selector_name in SELECTORS:
+                for selector_name in args.selectors:
                     manifests[selector_name].append(select_windows(
                         video_id=video_id,
                         duration_seconds=float(row["duration_seconds"]),
@@ -255,7 +324,7 @@ def main() -> None:
                 }
             dataset_summary["splits"][split] = split_summary
         summary["datasets"][dataset] = dataset_summary
-    for selector_name in SELECTORS:
+    for selector_name in args.selectors:
         summary["selectors"][selector_name] = {
             "seed": int(selection["seed"]),
             "k": int(selection["k"]),

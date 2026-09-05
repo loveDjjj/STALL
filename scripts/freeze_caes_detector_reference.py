@@ -38,15 +38,21 @@ from temporal_selection.calibration import (
 )
 
 
-SOURCE_RUN = "alpha_stall_full_d2_k3_no_spatial_refit"
-DATASETS = ("comgenvid", "videofeedback", "genvideo")
+DEFAULT_SOURCE_RUN = "alpha_stall_full_d2_k3_no_spatial_refit"
+DEVELOPMENT_DATASETS = ("comgenvid", "videofeedback", "genvideo")
+EXTERNAL_DATASETS = ("genvidbench",)
+DATASETS = (*DEVELOPMENT_DATASETS, *EXTERNAL_DATASETS)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", default="cuda:1")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "precomputed/caes_detector")
-    parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DATASETS))
+    parser.add_argument("--datasets", nargs="+", choices=DATASETS, default=list(DEVELOPMENT_DATASETS))
+    parser.add_argument("--source-run", default=DEFAULT_SOURCE_RUN)
+    parser.add_argument(
+        "--manifest-scope", choices=("development", "external"), default="development"
+    )
     parser.add_argument(
         "--max-raw-abs-difference", type=float, default=5e-5,
         help="旧C0未保存参数时允许的CUDA重拟合raw绝对误差上限",
@@ -61,7 +67,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    source_dir = ROOT / "results/runs" / SOURCE_RUN
+    source_dir = ROOT / "results/runs" / args.source_run
     source_manifest = json.loads((source_dir / "run_manifest.json").read_text(encoding="utf-8"))
     config = load_config(source_dir / "resolved_config.yaml")
     cache_root = ROOT / config["runtime"]["cache_dir"]
@@ -78,8 +84,18 @@ def main() -> None:
         output_path = args.output_dir / f"{dataset}_local_d2.npz"
         if output_path.exists() and not args.overwrite:
             raise FileExistsError(f"CAES detector reference已存在：{output_path}")
-        manifest_root = ROOT / config["data"]["development_manifests"]
-        calibration = load_manifest(str(manifest_root / f"{dataset}_calibration.csv"))
+        if args.manifest_scope == "external":
+            if dataset not in EXTERNAL_DATASETS:
+                raise ValueError(f"外部manifest不支持数据集：{dataset}")
+            calibration_path = ROOT / config["data"]["external_manifests"] / "calibration.csv"
+        else:
+            if dataset not in DEVELOPMENT_DATASETS:
+                raise ValueError(f"开发manifest不支持数据集：{dataset}")
+            calibration_path = (
+                ROOT / config["data"]["development_manifests"]
+                / f"{dataset}_calibration.csv"
+            )
+        calibration = load_manifest(str(calibration_path))
         selected = _choose_calibration(
             calibration,
             dataset,
@@ -149,7 +165,7 @@ def main() -> None:
             dataset=dataset,
             params=params,
             calibration_ids=calibration_ids,
-            source_run=SOURCE_RUN,
+            source_run=args.source_run,
             source_config_hash=str(source_manifest["config_hash"]),
         )
         file_sha = save_frozen_local_reference(output_path, reference)
@@ -173,7 +189,7 @@ def main() -> None:
     (args.output_dir / "manifest.json").write_text(
         json.dumps({
             "schema_version": "caes_detector_reference_manifest_v1",
-            "source_run": SOURCE_RUN,
+            "source_run": args.source_run,
             "source_config_hash": source_manifest["config_hash"],
             "source_cache_contract_sha256": context.contract_sha256,
             "datasets": summaries,
