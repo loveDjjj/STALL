@@ -24,6 +24,8 @@
 
 ## 编译与校验
 
+Git跟踪本目录源码、已生成TeX表格及main.pdf，忽略build和编译临时文件。results目录不跟踪；以下--check及重新导出依赖本地结果CSV。没有results的新检出可直接运行build.sh，用已提交表格编译。
+
 在仓库根运行：
 
 ~~~bash

@@ -45,7 +45,7 @@ tests/                         活跃功能、数值与恢复测试
 paper/ieee_alpha_stalled/       论文与三张自动导出表
 data/manifests/                 冻结身份，不做格式化或换行转换
 precomputed/target_reference/   本地NPZ；Git只记录清单与验收
-results/                       轻量指标版本化，大raw/检查点留本地
+results/                       全部仅保留本地，不纳入Git
 ~~~
 
 已退役的专家、MoE与Looped源码保存在Git恢复点 **efede85**，当前分支只维护论文主线及必要验证。已有研究结果、检查点和可复用Patch仍在原位置；资产目录中出现旧研究名，不代表依赖已删除的Python包。
@@ -60,6 +60,6 @@ conda run -n stall python -m pytest -q
 python3 paper/ieee_alpha_stalled/export_tables.py --check
 ~~~
 
-Ruff版本及规则固定在pyproject.toml；pytest.ini显式设置src导入路径。格式化只针对代码，不处理模型、结果、清单或缓存。论文所需轻量CSV已纳入Git，新检出仓库可直接执行表格校验，无需GPU。
+Ruff版本及规则固定在pyproject.toml；pytest.ini显式设置src导入路径。格式化只针对代码，不处理模型、结果、清单或缓存。paper目录的源码、已生成表格和最终PDF纳入Git；results全部留本地。表格重新导出或--check需要本地结果CSV，新检出可直接使用已提交TeX表格编译。
 
 修改约束见[仓库规范](docs/REPOSITORY_RULES_zh.md)和[AGENTS.md](AGENTS.md)。历史方法、结果及边界见[实验总账](docs/All_Branches_Experiments_and_Data_Summary_zh.md)。

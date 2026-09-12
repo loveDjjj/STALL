@@ -11,49 +11,12 @@ __pycache__/
 dinov3/
 datasets/
 cache/
-results/runs/*
-# 仅纳入论文表格及其验收所需的轻量证据，不提交训练检查点和逐视频raw。
-!results/runs/local_direction_evidence/
-results/runs/local_direction_evidence/*
-!results/runs/local_direction_evidence/dataset_metrics.csv
-!results/runs/local_direction_evidence/macro_metrics.csv
-!results/runs/local_direction_evidence/contrasts.csv
-!results/runs/local_direction_evidence/verification.json
-!results/runs/local_direction_evidence/independent_audit.json
-!results/runs/local_direction_evidence/scalar_control/
-results/runs/local_direction_evidence/scalar_control/*
-!results/runs/local_direction_evidence/scalar_control/dataset_metrics.csv
-!results/runs/local_direction_evidence/scalar_control/macro_metrics.csv
-!results/runs/local_direction_evidence/scalar_control/contrasts.csv
-!results/runs/local_direction_evidence/scalar_control/manifest.json
-!results/runs/local_direction_evidence/scalar_control/independent_metrics_audit.json
-!results/runs/reference_confirmation/
-results/runs/reference_confirmation/*
-!results/runs/reference_confirmation/results/
-results/runs/reference_confirmation/results/*
-!results/runs/reference_confirmation/results/dataset_metrics.csv
-!results/runs/reference_confirmation/results/macro_metrics.csv
-!results/runs/reference_confirmation/results/reference_means.csv
-!results/runs/reference_confirmation/results/contrasts.csv
-!results/runs/reference_confirmation/results/manifest.json
-!results/runs/reference_confirmation/results/independent_audit.json
-!results/runs/reference_confirmation/encoding/
-results/runs/reference_confirmation/encoding/*
-!results/runs/reference_confirmation/encoding/dataset_metrics.csv
-!results/runs/reference_confirmation/encoding/macro_metrics.csv
-!results/runs/reference_confirmation/encoding/contrasts.csv
-!results/runs/reference_confirmation/encoding/independent_audit.json
+# 所有实验结果仅保留本地，不纳入Git。
+results/
 precomputed/target_reference/*.npz
-results/paper_complete/scores_*.csv.gz
-# 新主线运行含本地数据路径、源码快照和大raw，论文轻量tables可单独版本化。
-results/reference/baseline/*.csv
-results/reference/baseline/*.csv.gz
-# CAES的全量WindowManifest、score审计和重建参数均可由脚本生成，不提交大产物。
 logs/*.log
-results/analysis/*_smoke/
 
-
-# 论文 LaTeX 编译产物，不纳入版本控制
+# 论文源码、表格和最终PDF纳入Git；仅忽略编译临时文件
 paper/ieee_alpha_stalled/.DS_Store
 paper/ieee_alpha_stalled/figures/.DS_Store
 paper/ieee_alpha_stalled/main.aux
@@ -62,7 +25,6 @@ paper/ieee_alpha_stalled/main.blg
 paper/ieee_alpha_stalled/main.fdb_latexmk
 paper/ieee_alpha_stalled/main.fls
 paper/ieee_alpha_stalled/main.log
-paper/ieee_alpha_stalled/main.pdf
 paper/ieee_alpha_stalled/main.synctex.gz
 paper/ieee_alpha_stalled/main.xdv
 paper/ieee_alpha_stalled/missfont.log

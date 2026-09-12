@@ -42,7 +42,7 @@
 - 新run禁止覆盖、并发持锁；进度以真实PID和完成产物核对，不凭旧status或瞬时GPU利用率重启。
 - 中文说明和配置注释，稳定ASCII标识符；不输出凭据，不自动发送消息、发布或推送。
 - 保留用户未提交修改，main分支不改，不使用reset --hard或checkout覆盖。提交前核对范围；重构前保护未跟踪源码。
-- .gitattributes保护冻结数据原字节，.gitignore排除大权重/raw并精确纳入论文轻表。
+- .gitattributes保护冻结数据原字节；results整个目录仅保留本地，不得强制加入Git。paper源码、生成表格和最终PDF纳入Git，编译临时文件忽略。
 - 论文表格校验：python3 paper/ieee_alpha_stalled/export_tables.py --check。
 - 完成时说明实际修改、验证、提交及仍存在的限制，不以格式整理宣称新检测收益。
 
