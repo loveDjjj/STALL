@@ -1,5 +1,0 @@
-selector,run_name,scope,dataset,auc,ap_real,n_generators,n_pairwise_real,n_pairwise_fake,pairwise_seed
-target_real,target_real,generator_pairwise_dataset_macro,vifbench,0.6043106504427712,0.624623831061315,19,1531,1531,42
-target_real,target_real,generator_pairwise_macro3,Macro-3,0.6043106504427712,0.624623831061315,19,1531,1531,42
-universal4,universal4,generator_pairwise_dataset_macro,vifbench,0.6025626778557358,0.6296633509548305,19,1531,1531,42
-universal4,universal4,generator_pairwise_macro3,Macro-3,0.6025626778557358,0.6296633509548305,19,1531,1531,42

@@ -1,0 +1,18 @@
+{
+  "status": "complete",
+  "domains": [
+    "comgenvid",
+    "videofeedback",
+    "genvideo"
+  ],
+  "identity": "6905212e2ce7f0179abf931f936893251ee6eea7e57e4fd03b1c201a4b8daccf",
+  "average": "mean of five per-model metrics, not metric of averaged predictions",
+  "files": {
+    "generator_metrics.csv": "5ffc42337d1e30840ce9651ecf6a355dc77e6c98b7d243d9b33fd1bfaa7515d6",
+    "video_scores.csv.gz": "305ddffba7dbbc5d3dbe5ba1caa2bb6610256fbf0c65bc4084dfdf4f6902ee7c",
+    "full_population_metrics.csv": "db427429abfb6fb7a00fced9e7c3dc59c28b1832e89eaaa856d15820d516d233",
+    "macro_metrics.csv": "233219e75036601c4bb4328a20ba9e12c5e2ea88fd1651961a725e24a23efaaa",
+    "dataset_metrics.csv": "54110256e0609f55300b070d4f5b09226d65c9f57db48bd928c50a867ab6b72b",
+    "reference_means.csv": "86b1c96777b7ddce1f1c8851faeb98c4bb7bb9518090e7bc45fadf758ee298b0"
+  }
+}

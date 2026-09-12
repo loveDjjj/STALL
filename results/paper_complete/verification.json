@@ -1,0 +1,21 @@
+{
+  "status": "verified",
+  "scope": "paper_aligned",
+  "cells": 23,
+  "table_configuration_rows": 37,
+  "evaluation_clip_ids": 15569,
+  "physical_video_paths": 14573,
+  "source_groups": 14366,
+  "pair_rows": 23550,
+  "unchanged_long_score_rows": 1141413,
+  "verified_short_raw_records": 11026,
+  "official_native_source": "/data/OneDay/STALL_project/STALL/results/runs/complete23_native_stall_tables",
+  "contrasts": 19,
+  "bootstrap_repetitions": 1000,
+  "short_runtime_measurements": 96,
+  "limitations": [
+    "参考固定的区间，不包含重新拟合不确定性",
+    "同原文生成器覆盖与短窗规则，不等同逐视频池完全复现",
+    "原文AP文字/实现与整体Average仍存在未解歧义"
+  ]
+}

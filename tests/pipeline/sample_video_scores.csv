@@ -1,5 +1,0 @@
-video_id,dataset,subset,source_model,final_score
-real_1,comgenvid,real,real,0.95
-real_2,comgenvid,real,real,0.85
-fake_1,comgenvid,annotated,generator_a,0.20
-fake_2,comgenvid,annotated,generator_a,0.10

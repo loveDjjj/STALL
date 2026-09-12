@@ -13,8 +13,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from data.video import load_video_frames
-
 
 DINO_V3_MODEL_NAME = "dinov3_vitl16"
 DINOV3_GITHUB_URL = "https://github.com/facebookresearch/dinov3"
@@ -110,6 +108,7 @@ class AlphaStallFeatureExtractor:
         dino_repo: str | None = None,
         dino_weights: str | None = None,
         load_dino: bool = True,
+        pad_tail_batch: bool = False,
     ):
         self.dino_repo_path, self.dino_weights_path = resolve_dinov3_paths(
             dino_repo, dino_weights
@@ -127,6 +126,8 @@ class AlphaStallFeatureExtractor:
             self.transform = None
 
         self.device = device
+        # 新协议必须显式启用，历史缓存和参考统计不自动迁移。
+        self.pad_tail_batch = bool(pad_tail_batch)
 
     def _forward_features_dict(
         self, x: torch.Tensor, *, require_patch_tokens: bool = True
@@ -146,6 +147,27 @@ class AlphaStallFeatureExtractor:
             raise KeyError("forward_features() 输出中缺少 'x_norm_patchtokens'")
         return features
 
+    def _frame_tensor(self, frame):
+        """允许预取线程提供已完成相同变换的CPU张量；普通BGR输入路径不变。"""
+        if isinstance(frame, torch.Tensor):
+            if frame.device.type != 'cpu' or frame.dtype != torch.float32 or tuple(frame.shape) != (3,224,224):
+                raise ValueError('预处理帧必须是CPU float32 [3,224,224]')
+            return frame
+        return self.transform(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
+
+    def prepare_frames(self, frames):
+        """固定的CPU预处理，无随机变换、无模型前向，可由解码线程调用。"""
+        with torch.no_grad():
+            return torch.stack([self._frame_tensor(frame) for frame in frames])
+
+    def _batch_tensor(self, tensors, batch_size):
+        """重复末帧补齐计算batch；调用者必须裁去补齐输出。"""
+        if batch_size < 1 or not tensors or len(tensors) > batch_size:
+            raise ValueError('帧batch为空或尺寸非法')
+        if getattr(self, 'pad_tail_batch', False) and len(tensors) < batch_size:
+            tensors = [*tensors, *([tensors[-1]] * (batch_size-len(tensors)))]
+        return torch.stack(tensors)
+
     def _embed_flat_frames_global(
         self, flat_frames: List[np.ndarray], batch_size: int = 32
     ) -> np.ndarray:
@@ -158,14 +180,9 @@ class AlphaStallFeatureExtractor:
         with torch.no_grad():
             for start in range(0, len(flat_frames), batch_size):
                 batch = flat_frames[start : start + batch_size]
-                tensors = [
-                    self.transform(
-                        Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                    )
-                    for frame in batch
-                ]
+                tensors = [self._frame_tensor(frame) for frame in batch]
                 features = self._forward_features_dict(
-                    torch.stack(tensors).to(device), require_patch_tokens=False
+                    self._batch_tensor(tensors,batch_size).to(device), require_patch_tokens=False
                 )
                 if "x_norm_clstoken" not in features:
                     raise KeyError("forward_features() 输出中缺少 'x_norm_clstoken'")
@@ -173,7 +190,7 @@ class AlphaStallFeatureExtractor:
                     self.model.module if hasattr(self.model, "module") else self.model
                 )
                 outputs.append(
-                    core_model.head(features["x_norm_clstoken"]).detach().cpu()
+                    core_model.head(features["x_norm_clstoken"])[:len(batch)].detach().cpu()
                 )
         return torch.cat(outputs, dim=0).numpy()
 
@@ -192,11 +209,8 @@ class AlphaStallFeatureExtractor:
         with torch.no_grad():
             for start in range(0, len(flat_frames), batch_size):
                 batch = flat_frames[start : start + batch_size]
-                tensors = [
-                    self.transform(Image.fromarray(cv2.cvtColor(fr, cv2.COLOR_BGR2RGB)))
-                    for fr in batch
-                ]
-                x = torch.stack(tensors).to(device)
+                tensors = [self._frame_tensor(fr) for fr in batch]
+                x = self._batch_tensor(tensors,batch_size).to(device)
 
                 feature_dict = self._forward_features_dict(x)
                 if "x_norm_clstoken" not in feature_dict:
@@ -221,101 +235,13 @@ class AlphaStallFeatureExtractor:
                         f"Patch 网格尺寸不一致: {patch_grid_size} vs {batch_grid_size}"
                     )
 
-                global_embs.append(global_batch.detach().cpu())
-                patch_embs.append(patch_batch.detach().cpu())
+                global_embs.append(global_batch[:len(batch)].detach().cpu())
+                patch_embs.append(patch_batch[:len(batch)].detach().cpu())
 
         global_out = torch.cat(global_embs, dim=0).numpy()
         patch_out = torch.cat(patch_embs, dim=0).numpy()
         return global_out, patch_out, patch_grid_size
 
-    def _embed_flat_frames_with_layers(
-        self,
-        flat_frames: List[np.ndarray],
-        layers: tuple[int, ...],
-        batch_size: int = 32,
-    ) -> Tuple[Dict[int, np.ndarray], Tuple[int, int]]:
-        """Return normalized patch tokens for several blocks in one traversal."""
-        if not flat_frames:
-            raise ValueError("flat_frames 为空")
-        if not layers or len(set(layers)) != len(layers):
-            raise ValueError("layers 必须是非空且不重复的层号")
-
-        core_model = self.model.module if hasattr(self.model, "module") else self.model
-        if not hasattr(core_model, "get_intermediate_layers"):
-            raise AttributeError("DINOv3 模型没有暴露 get_intermediate_layers()")
-
-        device = next(self.model.parameters()).device
-        collected: Dict[int, list[torch.Tensor]] = {layer: [] for layer in layers}
-        patch_grid_size = None
-        with torch.no_grad():
-            for start in range(0, len(flat_frames), batch_size):
-                batch = flat_frames[start : start + batch_size]
-                tensors = [
-                    self.transform(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
-                    for frame in batch
-                ]
-                x = torch.stack(tensors).to(device)
-                outputs = core_model.get_intermediate_layers(
-                    x,
-                    n=list(layers),
-                    reshape=False,
-                    return_class_token=False,
-                    norm=True,
-                )
-                if len(outputs) != len(layers):
-                    raise ValueError(
-                        f"中间层输出数量不匹配: expected={len(layers)} actual={len(outputs)}"
-                    )
-                for layer, patch_batch in zip(layers, outputs):
-                    if isinstance(patch_batch, tuple):
-                        patch_batch = patch_batch[0]
-                    num_patches = patch_batch.shape[1]
-                    side = int(round(num_patches**0.5))
-                    if side * side != num_patches:
-                        raise ValueError(f"Layer {layer} patch token 数量不是平方网格: {num_patches}")
-                    current_grid = (side, side)
-                    if patch_grid_size is None:
-                        patch_grid_size = current_grid
-                    elif patch_grid_size != current_grid:
-                        raise ValueError(
-                            f"Patch 网格尺寸不一致: {patch_grid_size} vs {current_grid}"
-                        )
-                    collected[layer].append(patch_batch.detach().cpu())
-
-        return {
-            layer: torch.cat(parts, dim=0).numpy() for layer, parts in collected.items()
-        }, patch_grid_size
-
-    def frames_to_layer_patch_embeddings(
-        self,
-        video_arrays: List[np.ndarray],
-        layers: tuple[int, ...] = (11, 17, 23),
-        batch_size: int = 32,
-    ) -> List[Dict[str, object]]:
-        """Extract requested patch layers and split the flat output by video."""
-        if not video_arrays:
-            return []
-        lengths = [len(video) for video in video_arrays]
-        if any(length == 0 for length in lengths):
-            raise ValueError("video_arrays 至少包含一个空视频")
-        flat_frames = [frame for video in video_arrays for frame in video]
-        layer_flat, grid_size = self._embed_flat_frames_with_layers(
-            flat_frames, layers=layers, batch_size=batch_size
-        )
-        outputs: List[Dict[str, object]] = []
-        cursor = 0
-        for length in lengths:
-            outputs.append(
-                {
-                    "layers": {
-                        layer: values[cursor : cursor + length]
-                        for layer, values in layer_flat.items()
-                    },
-                    "grid_size": grid_size,
-                }
-            )
-            cursor += length
-        return outputs
 
     def frames_to_global_patch_embeddings(
         self, video_arrays: List[np.ndarray], batch_size: int = 32
@@ -363,12 +289,3 @@ class AlphaStallFeatureExtractor:
             outputs.append(flat[cursor : cursor + length])
             cursor += length
         return outputs
-
-    def video_to_global_patch_embeddings(
-        self, video_path: str, frame_indices=None, batch_size: int = 32
-    ) -> Dict[str, np.ndarray | List[int]]:
-        """单个视频路径的便捷包装。"""
-        frames = load_video_frames(video_path, frame_indices)
-        if len(frames) == 0:
-            raise ValueError(f"未能从 {video_path} 解码出帧")
-        return self.frames_to_global_patch_embeddings([frames], batch_size=batch_size)[0]

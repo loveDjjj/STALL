@@ -1,9 +1,0 @@
-selector,aggregation,max,mean
-feature_change,cvar_10,0.0,0.0
-feature_change,cvar_20,0.0,0.0
-feature_change,mean,0.0,0.0
-feature_change,worst_05,0.0,0.0
-uniform,cvar_10,0.0,0.0
-uniform,cvar_20,0.0,0.0
-uniform,mean,0.0,0.0
-uniform,worst_05,0.0,0.0

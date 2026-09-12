@@ -9,6 +9,36 @@ import cv2
 import numpy as np
 
 
+def video_metadata(path):
+    """沿既有avg_frame_rate与stream duration规则探测，失败显式拒绝。"""
+    import json
+    import math
+    import subprocess
+    from fractions import Fraction
+    result=subprocess.run(['ffprobe','-v','quiet','-select_streams','v:0','-show_entries',
+                           'stream=duration,avg_frame_rate','-print_format','json',str(path)],
+                          check=True,capture_output=True,text=True,timeout=30)
+    streams=json.loads(result.stdout).get('streams',[])
+    if not streams:raise ValueError('视频缺少可用流')
+    fps=float(Fraction(streams[0].get('avg_frame_rate','0/1')))
+    duration=float(streams[0].get('duration',0))
+    if not math.isfinite(fps) or not math.isfinite(duration) or fps<=0 or duration<=0:
+        raise ValueError('视频帧率或时长无效')
+    return dict(fps=fps,duration_seconds=duration,num_frames=round(fps*duration))
+
+
+def downsample_indices(num_frames,current_fps,target_fps=8):
+    import math
+    if num_frames<1 or not math.isfinite(current_fps) or not math.isfinite(target_fps) or target_fps<=0 or current_fps<target_fps:
+        raise ValueError('不能复制帧上采样，帧率和帧数必须有效')
+    ratio=current_fps/target_fps;indices=[];position=0
+    while True:
+        index=round(ratio*position)
+        if index>=num_frames:break
+        indices.append(index);position+=1
+    return indices
+
+
 def _open_video_capture(video_path: str | Path) -> cv2.VideoCapture:
     """Open with explicit FFMPEG first, then the platform default backend."""
 
@@ -91,54 +121,27 @@ def load_video_frames(video_path: str | Path, frame_indices=None) -> np.ndarray:
     return decode_indexed_frames(video_path, frame_indices, require_all=False)
 
 
-def decode_spans(targets: list[int], seek_gap: int) -> list[tuple[int, int]]:
-    """Group sorted target indices into nearby sequential decode spans."""
-    if not targets:
-        return []
-    spans: list[tuple[int, int]] = []
-    start = previous = targets[0]
-    for index in targets[1:]:
-        if index - previous > seek_gap:
-            spans.append((start, previous))
-            start = index
-        previous = index
-    spans.append((start, previous))
-    return spans
-
-
-def decode_selected_frames(
-    video_path: str | Path,
-    frame_indices: Iterable[int],
-    seek_gap: int = 64,
-) -> np.ndarray:
-    """Decode sorted unique native frames with one pass per nearby span."""
-    targets = sorted(set(int(index) for index in frame_indices))
-    if not targets:
-        raise ValueError("frame_indices is empty")
-    if targets[0] < 0:
-        raise ValueError("frame indices must be non-negative")
-    if seek_gap < 0:
-        raise ValueError("seek_gap must be non-negative")
-    target_set = set(targets)
-    decoded: dict[int, np.ndarray] = {}
-    cap = _open_video_capture(video_path)
-    if not cap.isOpened():
-        raise ValueError(f"cannot open video: {video_path}")
+def decode_bounded(video_path: str | Path, frame_indices: Iterable[int]) -> np.ndarray:
+    """严格随机定位失败时顺序恢复，只保留所需帧，保持原协议的BGR和请求次序。"""
+    indices = list(frame_indices)
+    if not indices:
+        raise ValueError('解码索引为空')
     try:
-        for start, end in decode_spans(targets, seek_gap):
-            cap.set(cv2.CAP_PROP_POS_FRAMES, start)
-            for index in range(start, end + 1):
-                ok, frame = cap.read()
-                if not ok:
-                    break
-                if index in target_set:
-                    decoded[index] = frame
-    finally:
-        cap.release()
-    missing = [index for index in targets if index not in decoded]
-    if missing:
-        raise ValueError(f"missing {len(missing)} decoded frames, first={missing[:5]}")
-    return np.stack([decoded[index] for index in targets])
+        return decode_indexed_frames(video_path, indices, require_all=True)
+    except ValueError:
+        capture = _open_video_capture(video_path)
+        selected = {}
+        targets = set(indices)
+        try:
+            for index in range(max(indices)+1):
+                ok, frame = capture.read()
+                if not ok:break
+                if index in targets:selected[index] = frame
+        finally:
+            capture.release()
+        if targets-selected.keys():
+            raise ValueError(f'严格解码帧不足：{video_path}')
+        return np.stack([selected[index] for index in indices])
 
 
 __all__ = [
@@ -147,4 +150,5 @@ __all__ = [
     "decode_selected_frames",
     "decode_spans",
     "load_video_frames",
+    "decode_bounded",
 ]

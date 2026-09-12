@@ -1,6 +1,0 @@
-selector,matching_videos,total_videos,mismatching_videos
-feature_change,21236,21421,185
-random,21236,21421,185
-real_anomaly,21236,21421,185
-real_anomaly_nms,18288,21421,3133
-stratified_real_anomaly,21236,21421,185

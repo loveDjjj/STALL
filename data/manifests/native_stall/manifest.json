@@ -1,0 +1,9 @@
+{
+  "source_sha256": "9f7b9ca3ace243265eefe6ed4d5edb717123f8975f01c1a37a2272e25617ca62",
+  "rows": 16059,
+  "scope": "coverage_only包含paper_filter全部身份；不重新采样",
+  "files": {
+    "evaluation_8.csv": "77eac10ab5b8852c25f0942482a4f75f4e839e0d956b8036a6b4a787bababf0a",
+    "evaluation_16.csv": "bd8e96e4de43cc60e88c71032fea95a8980171c06e06e06827b7a9b7b1d614d4"
+  }
+}

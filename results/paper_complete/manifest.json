@@ -1,0 +1,78 @@
+{
+  "status": "completed",
+  "scope": "paper_aligned",
+  "cells": 23,
+  "official_native_source": "/data/OneDay/STALL_project/STALL/results/runs/complete23_native_stall_tables",
+  "unique_evaluation": 15569,
+  "pair_rows": 23550,
+  "source_manifests": {
+    "results/runs/complete23_native_stall_tables": "3592cff3feca2da12c0eadaed184d9411871685b7f844caa88b6a5d65e6b6dc9",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_tables_all_fc3": "07ea6b9447728b12ed4291f8408cca01fe4ab1d0fb01a75a6c49d1040530e587",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_tables_all_uniform1": "78230f1336a8e452839a0db7412397e801812e36d56839ddb9a362cbf50802d2",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_tables_all_fc1": "6368799bc6badb5cfcd42ce38bfca1d78366f6d2901572677d0a712f328a4418",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_tables_all_uniform3": "f0de3acbb6c9ae270c7a41cc80a3da8a7256649ba6500898f4ce1a28a6cea0b3"
+  },
+  "short_sources": {
+    "genvideo": "602437de2e700de905b685c9e65b0b71e0df5dd795bfefe9ee21634928a49339",
+    "videofeedback": "928d80ba2b6bc05b129698d0528fe1c2aaffdcbf0280d696fc911009089dec4b"
+  },
+  "note": "短视频在四个观察策略上是相同8帧/单窗；动态过滤仅由官方元数据决定，不按检测结果选择",
+  "files": {
+    "observation.csv": "ead69fefead008a9eaaa4e377d9b6467afd33cdb11de03add94e8b54db8e3ad2",
+    "local_metric.csv": "d818f24caa2af9791f3396bdf375cdc5920af52d557572b3791e8661b7a726bd",
+    "representation_generators.csv": "3c05d9866f5d3bd0d2b30bd71c05d1b6b2e6d1d27585e2628eba777ad6ea6b32",
+    "representation.csv": "bfcf14ce571cec55816a94d5484d304c4f253d9574f6196d30ea30df9584bd6e",
+    "RESULTS_zh.md": "00ea335bca57ee52fc289fd5a88a7db46f2198f929f415e33727835b4e138155",
+    "pairs.csv": "ec5522ee314a6bfae0ff2202d73b78d36ff1df8c7398f39b22631fc24e9471e8",
+    "observation_generators.csv": "11bb627e191f3b73b0ad19a80a1a2a504ed64b81cad174ee5538a67419377599",
+    "representation_local.csv": "e8848822f2cd1a90ce2db749c013bdd594477283df45a636d440550b8852b1dd",
+    "main_generators.csv": "636f2c9fbd129d37bfc6fb8139a6691cbf8504109701226f419afaf47d829887",
+    "scores_uniform3.csv.gz": "f09af7547cdcaf3d45d311085d320beab78a850ef2e5fd357269306d1938fb37",
+    "reference_sources.csv": "a14b09024b8e8b6262e3d22357d9678ba16934675b22c5ffbe62ccba165f77cb",
+    "scores_official.csv.gz": "7d0ae855e78d63da30870b5b2fb771e5c2321de416228e15badc1e51731f6876",
+    "scores_fc3.csv.gz": "1dcda535880f01f0f8353147b60c1c896958102d47227c6da79e53d2d98d8539",
+    "representation_local_generators.csv": "3f93cc618ed109a8b8da4327760d5eee9991116a70e2e8a0c5ef706e63104e32",
+    "components_generators.csv": "a666b137b2304a9e8ff2e84672a1ec2305d0bfd09b6b2d17365efeb6cd1e059c",
+    "runtime_summary.csv": "7183dea9b01ccfcff19b1afed15ddf5abc96fe15d3017ee4db6e10f37ef90ca4",
+    "scores_uniform1.csv.gz": "a200d80961743d129a2e32ae9883fbab4b5916ccf3428c0f144ddedce719c838",
+    "operating_points.csv": "9e5cee4ebd7510fdba5449ff26eaf449953c69e3566899eadf99849da48c8be2",
+    "runtime_videos.csv": "c6eada9076823d3cb27e3920233c3b4de5d7a3405b69ac81fd47538c216ee187",
+    "reference_sources_generators.csv": "d258878c080dd1775cfb31b9311f867d089d1d6757f5bb7c0e78097d841180a8",
+    "main.csv": "77bd40dd2d8bc30a58ffd8f86fa40a983696df8ab18adc6c92130f85924b5329",
+    "confidence_intervals.csv": "647dcf6385cf3ac902f25ad8ece3ed283a506baedc0b2ec115125cee252c3b22",
+    "verification.json": "17f504ebbe31421bcce105d56a6ef6dbf4c8c1b07eb146d3788456708b592c25",
+    "local_metric_generators.csv": "25b8a84bd4fb0f59656637b06b2f578cb30ffb31827561674fc33dfd08b1126b",
+    "components.csv": "97c30b7eea0ed9a1499c22564bcdefffc731426bd987f13f3cbfba858f6b9842",
+    "evaluation.csv": "1f036ccd5b42b3cd9c0a1b6449d8e6e9c424f8d9b7ac6461c77c527bc8edf7f6",
+    "scores_fc1.csv.gz": "39994c05168c263920424819620ef76efaf5f6137a60a3c9a12aa26db1b87193"
+  },
+  "verification": {
+    "status": "verified",
+    "scope": "paper_aligned",
+    "cells": 23,
+    "table_configuration_rows": 37,
+    "evaluation_clip_ids": 15569,
+    "physical_video_paths": 14573,
+    "source_groups": 14366,
+    "pair_rows": 23550,
+    "unchanged_long_score_rows": 1141413,
+    "verified_short_raw_records": 11026,
+    "official_native_source": "/data/OneDay/STALL_project/STALL/results/runs/complete23_native_stall_tables",
+    "contrasts": 19,
+    "bootstrap_repetitions": 1000,
+    "short_runtime_measurements": 96,
+    "limitations": [
+      "参考固定的区间，不包含重新拟合不确定性",
+      "同原文生成器覆盖与短窗规则，不等同逐视频池完全复现",
+      "原文AP文字/实现与整体Average仍存在未解歧义"
+    ]
+  },
+  "tests_passed": 52,
+  "runtime_sources": {
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_runtime_comgenvid/timings.csv": "db9b0548820fb13f949d702ae308803edbc369bcc7ac9954bf439e53f2597f90",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_runtime_videofeedback/timings.csv": "57d23343bc615d8ae93a5ba611f99e7c883418b706d66789cf693dd61fcdd852",
+    "/data/OneDay/STALL_project/STALL/results/runs/paper_runtime_genvideo/timings.csv": "9e33ea81bc3c108b418b4f4cb24e28e25e1d7335ced98ffef92afec60d6f7e14",
+    "/data/OneDay/STALL_project/STALL/results/runs/complete23_short_runtime/timings.csv": "503bd0d284d1f5429d9b60f1fb362ed9ff16dcf21d8c81b15da47af7b3bdc17d"
+  },
+  "finalized_code_sha256": "344d070754576afbc3ac664f69e905aa361b4fdae4d862791189d5677338fedc"
+}

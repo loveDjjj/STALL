@@ -1,0 +1,14 @@
+{
+  "status": "completed",
+  "inputs": {
+    "scores_fc3.csv.gz": "1dcda535880f01f0f8353147b60c1c896958102d47227c6da79e53d2d98d8539",
+    "evaluation.csv": "1f036ccd5b42b3cd9c0a1b6449d8e6e9c424f8d9b7ac6461c77c527bc8edf7f6",
+    "pairs.csv": "ec5522ee314a6bfae0ff2202d73b78d36ff1df8c7398f39b22631fc24e9471e8"
+  },
+  "iterations": 1000,
+  "source_groups": "原始源组保留；同一真实视频1秒/2秒共享Poisson权重",
+  "files": {
+    "deltas.csv": "8ba9a0d08798bcc6514517430513494e40d4243c9e5374f8e7018b508ac6148e",
+    "intervals.csv": "0bc98f214b6f875c38be82b169e15b0157eb48bbe05a07dc524c4d980bd182e0"
+  }
+}

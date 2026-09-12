@@ -1,0 +1,28 @@
+# 局部方向的强替代控制；固定论文Global，不训练分类器、不搜索fake参数。
+protocol: local_direction_evidence_v1
+# 一个不可覆盖的研究输出根，阶段恢复必须通过输入/代码身份检查。
+output: results/runs/local_direction_evidence
+# 当前23单元及8/16帧的冻结窗口计划，只读取数据，不导入专家算法。
+plans: results/runs/mainline_experts/plans.json
+# 主线逐视频分数与配对身份；Average显式导出三域等权。
+baseline: results/paper_complete
+# 冻结编码器的可复用FC评价Patch；不采用监督划分或模型。
+patch_cache: cache/patch/looped_video
+# 原池源组bootstrap，仅分析参考拟合敏感性，不冒充五个新数据池。
+reference_seeds: [17, 29, 43, 59, 71]
+# 位置向量在CPU float32构造，Gaussian在指定CUDA设备float64评分。
+devices: [cuda:0, cuda:1]
+# 每GPU的有界CPU读取/解码线程和在途视频数。
+decode_workers: 3
+prefetch_depth: 4
+# 每进程预取预留内存及数据盘最小剩余空间，单位GiB。
+prefetch_gib: 4
+disk_floor_gib: 40
+# 原池拟合片段预算，ridge、SPLIT epsilon/指数均预先固定。
+fit_clips: 200
+ridge: 0.00001
+split_epsilon: 0.00000001
+split_gamma: 8.0
+# 评价源组配对区间；不把Patch/窗口当独立样本。
+bootstrap_iterations: 1000
+bootstrap_seed: 17

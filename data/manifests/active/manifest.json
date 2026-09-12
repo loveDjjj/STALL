@@ -1,0 +1,105 @@
+{
+  "status": "completed",
+  "protocol_id": "target_global_local_d2_fc3_v1",
+  "files": {
+    "data/manifests/active/comgenvid/fit.csv": {
+      "sha256": "6677108ad18ed4d1763692040bc9e4c2c38cc971192e57bac9be4f1d915c8c58",
+      "rows": 200
+    },
+    "data/manifests/active/comgenvid/evaluation.csv": {
+      "sha256": "89398955518532394ca78c103b4ee4b509287e7b2936fa0e3f29eeb86a5f20f9",
+      "rows": 4298
+    },
+    "data/manifests/active/comgenvid/pairs.csv": {
+      "sha256": "f4e2142c51d75ab4f1c0cb04a03d7ae56eea417f9fe0b9cc4be41694c7dfd313",
+      "rows": 3592
+    },
+    "data/manifests/active/videofeedback/fit.csv": {
+      "sha256": "89c38be599b7dec975129670a3c31a0113d22df14ba203a4823e35406ed20f56",
+      "rows": 200
+    },
+    "data/manifests/active/videofeedback/evaluation.csv": {
+      "sha256": "36444457f6fbf2d115f55680ab57f781794d125cf8e1cfd0451f68edb618302f",
+      "rows": 3500
+    },
+    "data/manifests/active/videofeedback/pairs.csv": {
+      "sha256": "cefc04696c63096dce2be1d9289b7948a1d52a0f3f2e0413911ba905d4ef70ba",
+      "rows": 6000
+    },
+    "data/manifests/active/genvideo/fit.csv": {
+      "sha256": "a3ec01e7970080230b6724c682c7788725017894bfeb2bc0bca1ed9cd5fd5a74",
+      "rows": 200
+    },
+    "data/manifests/active/genvideo/evaluation.csv": {
+      "sha256": "8fb9c633ba42bf91b6813e9e04cb24d6b764acdd6b19cf6fc139782bcbac132d",
+      "rows": 13623
+    },
+    "data/manifests/active/genvideo/pairs.csv": {
+      "sha256": "ecccf9924a69290f7cbc69c7f6a9f2cdb93a0b4f6ce9e274681d4a3cd76523a2",
+      "rows": 11278
+    },
+    "data/manifests/active/genvidbench/fit.csv": {
+      "sha256": "5522e3564d8ec3681e82d9c0c5f2433390267d07ea6ebfe6ec85e0956fa92f16",
+      "rows": 136
+    },
+    "data/manifests/active/genvidbench/evaluation.csv": {
+      "sha256": "cef3924bf7ecd9ee9fabcfc075dddfcc451aa17cca1a8026162f5037fd7d53b0",
+      "rows": 600
+    },
+    "data/manifests/active/genvidbench/pairs.csv": {
+      "sha256": "d19f343854d4e5b27e21378f4ad055171dc04f833289bd08bc1352cc8715351e",
+      "rows": 600
+    },
+    "data/manifests/active/vifbench/fit.csv": {
+      "sha256": "a295d313ffeda6f448c549cfdc70576d2e6a184a0a1acc9c4f24a4b5981f20f1",
+      "rows": 80
+    },
+    "data/manifests/active/vifbench/evaluation.csv": {
+      "sha256": "a0c8e0a520460e5bd21b6d6c1d065c28ab513e45f0cbdef450f452c489ceedd7",
+      "rows": 1616
+    },
+    "data/manifests/active/vifbench/pairs.csv": {
+      "sha256": "e72fc15073f0a5f98f9ed0d7e1acf3692a4c1cb75b710d4a1ed3f9a2ebcbd3d8",
+      "rows": 3062
+    },
+    "data/manifests/active/vatex/cdf.csv": {
+      "sha256": "2a086e742db5d891d3e6d983139313ae303740092af0db169ca2630fa7500cb3",
+      "rows": 2000
+    },
+    "data/manifests/active/vatex/threshold.csv": {
+      "sha256": "1e44853a6fee5d2fa34b16e8f361d9a424e2cda0fb2abb89394bf219b377b42d",
+      "rows": 2000
+    },
+    "data/manifests/active/pairs.csv": {
+      "sha256": "b9295d76a3769437dbdc5341f02d3759d14b962ef0e67ecb70f5f626778b6824",
+      "rows": 24532
+    },
+    "data/catalog/excluded_from_frozen_scope.csv": {
+      "sha256": "89e2b012720bc35b4a1955dfa0e865c0f0d24e5210c4bbfd1e99122caeca9e7c",
+      "rows": 2567
+    },
+    "results/reference/baseline/window_scores.csv.gz": {
+      "sha256": "dca1f07bd97e3aa9043481512da2cb22e2bb9d7819f484a5be2ac8f30fe122b3",
+      "rows": 62662
+    }
+  },
+  "sources": {
+    "results/runs/b3_development_full_v1/score_plan.json": "441687306b4ba8c23b8514e6f2fc879c24507e9608b52932bdd8c9b3df27940d",
+    "data/manifests/development/comgenvid_evaluation.csv": "e250b5333517b8177c299e007a654560417a13168b8a7e6ee1ae41791665c301",
+    "data/manifests/development/comgenvid_calibration.csv": "2b72ec8f77225d8cb488025303092e1b8d192ea6cd62f2574195b964e9d107b2",
+    "data/manifests/development/videofeedback_evaluation.csv": "84efaa6a06eca724c7fcdbf4b8a1a6a2bcb12b2b1ec6f70e85261ddc18d9fdf9",
+    "data/manifests/development/videofeedback_calibration.csv": "25b84c11374fc796f16665eed287483d89f02db425127a93bf8476a8b3933107",
+    "data/manifests/development/genvideo_evaluation.csv": "5738ceb8d6138642c57f87aae3226040b5e89009aa0b39f432381c22628b65de",
+    "data/manifests/development/genvideo_calibration.csv": "d660f054cddde12193d3c1bf3f86d605bab90734606c78a8bcc9d2e1bb56cda3",
+    "results/runs/b3_external_validation_v1/score_plan.json": "75f22e010473fc4eba64f3cec96a90aebe5f7e6edac7474f07c69ca29650a653",
+    "data/manifests/research/b3_external_source_disjoint_v1/genvidbench_evaluation.csv": "2cb17dfb95b2a5d12e3d026154a0ccea9f8d2597e366515b66d27be78f8f0a76",
+    "data/manifests/research/b3_external_source_disjoint_v1/genvidbench_fit.csv": "2f7e31cd560115dbeb28f2afea26e20f1797d2eb58d5dc33c9e766ab142aebf8",
+    "data/manifests/research/b3_external_source_disjoint_v1/vifbench_evaluation.csv": "06b6aa987bc63ab678e282c10f3df5e7fb7c54a5185e0d9783c8dad94323bf0e",
+    "data/manifests/research/b3_external_source_disjoint_v1/vifbench_fit.csv": "46660c525fcd80d0172615695f79355b9a9472c3e206f1a7c1b81db15838eee0",
+    "data/manifests/vatex_bank/cdf.csv": "4b0239fead598ff208224a7933bafbb9f2cf50c9c9cf94c52a6067b9c0e83a39",
+    "data/manifests/vatex_bank/threshold.csv": "69f58cc4d2d01020e78f056e28f35d1c94856b58c96358c1fbfc26468ec0dc41"
+  },
+  "references_manifest_sha256": "caddfafce7e1782c1f821728206f291e13421fae34478989f0e08c368b139125",
+  "code_sha256": "a75c213ba6f53754875f0681de58c7f524fd079f5ca012d5586bbffb90008083",
+  "note": "physical videos unchanged; source prefixes are audited grouping, not complete semantic deduplication"
+}

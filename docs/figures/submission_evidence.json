@@ -1,0 +1,11 @@
+{
+  "status": "generated_from_verified_results",
+  "sources": {
+    "results/paper_complete/confidence_intervals.csv": "647dcf6385cf3ac902f25ad8ece3ed283a506baedc0b2ec115125cee252c3b22",
+    "results/runs/reference_confirmation/results/contrasts.csv": "a32440fba899e6719725a1947b0bdbca1361f6b47556626fe3cfb8aad35fbca9",
+    "results/runs/local_direction_evidence/observation/contrasts.csv": "ffdff41d0b8eb93e504bb90dfa8c5a03f4a3446aac86093b57b4206162dae5cb"
+  },
+  "data_sha256": "b295c76628c99e28c494c6faf02b547e469e0ceb9201340bfe0813e5b34c51ad",
+  "meaning": "Conditional 95% evaluation-source bootstrap intervals. New-pool estimates average metrics over five fixed pools. No formal equivalence or multiplicity correction is claimed.",
+  "units": "100 times AUC/AP-real differences; percentage points, not relative percentages"
+}

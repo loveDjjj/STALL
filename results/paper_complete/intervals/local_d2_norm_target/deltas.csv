@@ -1,0 +1,11 @@
+dataset,metric,delta,source_groups,generator_cells
+comgenvid,auc,0.1985862545324676,2487.0,2.0
+comgenvid,ap_real,0.17090840728961543,2487.0,2.0
+genvideo,auc,0.3093355829299045,8365.0,10.0
+genvideo,ap_real,0.268625410240224,8365.0,10.0
+videofeedback,auc,0.11984874228442859,3514.0,11.0
+videofeedback,ap_real,0.08298026051688688,3514.0,11.0
+Macro-3,auc,0.2092568599156002,,
+Macro-3,ap_real,0.1741713593489088,,
+Average,auc,0.2090810653692476,,
+Average,ap_real,0.17134146881161855,,

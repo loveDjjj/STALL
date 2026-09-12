@@ -1,0 +1,21 @@
+# 首次条件T1实验：总体模型，无专家、Local、选窗或融合权重搜索。
+protocol: global_t1_predictive_v1
+# 冻结VATEX2200 fit与2000 CDF及开发评价。
+source_directory: results/runs/global_experts
+# 已验收外部原版单窗特征与配对；只在16帧模型上评价。
+external_directory: results/runs/global_external
+# 独立产物目录，禁止覆盖前序实验。
+run_directory: results/runs/global_predictive
+# 保持原Global1024维，不新增PCA维数参数。
+dimension: 1024
+# 输入协方差的回归正则，以及残差/边际协方差正则，固定相同值。
+ridge: 0.00001
+# 随机只用于fit内部1760/440源留出与跨源无自配对置换，不看真假指标。
+seed: 17
+holdout_sources: 440
+# 保持4查询批量，尾批仅补计算再裁回。
+query_batch: 4
+# 三个原始模型独立重建CDF，固定源组配对bootstrap。
+bootstrap_iterations: 1000
+bootstrap_seed: 17
+analysis_workers: 4

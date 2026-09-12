@@ -1,4 +1,0 @@
-comparison,macro_auc_delta,macro_ap_delta,passes_mainline_gate
-s1_ledoit_wolf_d2_vs_s0_empirical_d2,-1.0580772776047631e-05,4.2571110261291345e-05,False
-s2_oas_d2_vs_s0_empirical_d2,-1.0623289782851764e-05,4.251149363254658e-05,False
-s2_oas_d2_vs_s1_ledoit_wolf_d2,-4.2517006804132507e-08,-5.961662874476303e-08,False

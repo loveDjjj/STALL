@@ -1,32 +1,54 @@
-\section{消融与外部边界}
-\label{sec:ablation}
+\subsection{局部性：测量与聚合的顺序}
+表~\ref{tab:component_ablation}按三个问题组织匹配控制。
+块A显示，Local单独为0.836/0.837，Global为0.865/0.872，
+二者融合达到0.874/0.877。
+局部分支的作用体现为对整体证据的补充，而不是单独替代Global。
 
-本节所有开发集消融均使用相同的 21,421 条 evaluation 视频、相同生成器配对规则和互斥真实校准协议。除特别说明外，单元格报告 AUC/real-positive AP。
+块B检验这一补充是否需要保留逐位置测量。
+先平均每帧Patch、再计算D2的pooled控制为0.855/0.857。
+为排除拟合向量数量的影响，我们将D2的拟合位置数匹配到pooled的预算：
+每片段保留$14K_{\rm fit}$个抽样位置，至多42个，测试观察不变。
+结果为0.875/0.877，相对pooled提高0.020/0.021，
+差值区间分别为$[0.015,0.025]$与$[0.015,0.026]$。
+CDF前的Local原始分数也提高0.025/0.030，两项区间均为正。
+这与式~\eqref{eq:dispersion}保留位置离散信息的动机一致；
+ComGenVid上pooled更好，则表明局部粒度的收益仍取决于数据域。
 
-\subsection{Global 与 Local D2 的互补性}
-表~\ref{tab:component_ablation} 固定 $K=3$，分别保留 Global、Local D2 或两者融合。最终模型相对 Global-only 的 Macro AUC/AP 提高 0.0218/0.0197，AUC 配对 bootstrap 95\% 区间为 [0.0191, 0.0242]。相对 Local D2-only，融合后的 Macro AP 提高约 0.0500。ComGenVid 的 Local D2 已具有较强区分能力，而 VideoFeedback 更依赖 Global，说明两条分支在不同数据域提供互补证据。
+\subsection{二阶方向与标量替代}
+块C固定目标Global、观察窗口和真实参考身份，每个候选重建自身统计与CDF。
+D2相对D1提高Average AUC/AP 0.006/0.007，两项配对区间均为正；
+23个单元中，AUC有20个、AP有22个取得正增量。
+该结果支持当前真实评分框架中的阶次选择。
 
-\input{tables/component_ablation}
+匹配Patch输入下，TTR、SPLIT统计及二维(TTR, LSMI)Gaussian控制的Average低于方向模型。
+二维控制也使用相同目标真实片段，进一步区分增加真实统计拟合与保留高维方向的作用。
+这些是同Global下的替代统计，不是SPLIT原生编码器的完整复现。
+优势并非逐生成器一致：D2相对TTR融合的AUC/AP有12/11个单元胜出；
+VideoFeedback的ModelScope单元中，TTR为0.967/0.971，高于D2的0.800/0.802。
 
-\subsection{Local D1 与 D2}
-表~\ref{tab:temporal_ablation} 在完全移除 Local Spatial 后比较 D1 与 D2。Local-only 条件下，D2 相对 D1 提高 0.0094/0.0126 Macro AUC/AP；完整模型中提高 0.0022/0.0033。完整模型 AUC 增益的 95\% 区间为 [0.0015, 0.0028]，且三个数据集方向一致。这表明有效增益来自同网格二阶轨迹，而非仅仅增加一个 patch 分支。
+\subsection{真实参考的重复验证}
+为检验增量是否依赖一次真实抽样，我们从相同真实来源另选2357个新真实视频，
+与原拟合、评价及百分位参考的已知源组互斥。
+每域建立五个200片段拟合池，同次Global与Local共享视频并分别重建CDF。
+五池之间允许重叠；表~\ref{tab:reference_stability}报告逐次计算指标后的均值。
 
-\input{tables/temporal_ablation}
+新池中Full相对Global的Average AUC提高0.010，区间为$[0.005,0.015]$；
+AP提高0.004，但区间$[-0.001,0.009]$跨零。
+D2相对D1的两项增量为0.005/0.007，区间均为正。
+因此，对Global的AUC补充与二阶相对一阶的收益得到重复支持，
+而AP增量仍受参考条件影响。
 
-\subsection{时间覆盖}
-表~\ref{tab:window_coverage_ablation} 在无 Spatial、固定 Local D2 的条件下只改变窗口数。K3 相对 K1 的 Macro AUC/AP 提高 0.0060/0.0024，AUC 增益 95\% 区间为 [0.0033, 0.0087]。收益主要来自 ComGenVid 与 GenVideo；VideoFeedback 的 AP 下降约 0.0029，因此三窗口应解释为开发集宏平均上的有效选择，而非所有数据域上的单调改进。
+\subsection{观察与重编码}
+将FC K3换为Uniform K3，完整模型的Average由0.874/0.877变为0.869/0.871。
+Uniform下加入Local的增量区间跨零，表明局部收益与观察位置有关。
+48个16帧观察视频的计时子集中，FC K3在ComGenVid、VideoFeedback和GenVideo分别为
+0.599、0.194和0.384秒，Uniform K3为0.530、0.148和0.317秒；
+这些耗时包含解码、粗扫及评分，动态观察并非无成本提升。
 
-\input{tables/window_coverage_ablation}
-
-\subsection{删除 Local Spatial}
-表~\ref{tab:spatial_ablation} 显示 Spatial-only 远弱于 D2-only。将 Spatial 以旧 0.1 权重加入 Local D2，使 Macro AUC/AP 下降 0.0075/0.0057；加入完整模型后下降 0.0015/0.0012，AUC 区间为 $[-0.0019,-0.0011]$。因此正式方法删除 Local Spatial，也不再把 region pooling 或 Patch Spatial likelihood map 作为推理组成部分。
-
-\input{tables/spatial_ablation}
-
-\subsection{GenVidBench Pair1 外部验证}
-使用 199 条独立 VRiPT real 构建新域 Local D2 参考后，最终 K3 方法在 300 条 VRiPT real 与 300 条 ModelScope fake 上达到 0.8386/0.8430 AUC/AP。相对同协议 Global-only，AUC 提高 0.0249，95\% 区间为 [0.0073, 0.0404]；AP 点增益的区间跨零。K3 与 K1 的 AUC/AP 差值仅为 $-0.0005/-0.0011$，两个区间均跨零。该实验支持 Local D2 的外部域贡献，但不支持三窗口在所有数据域普遍更优。
-
-\input{tables/u0_external_validation}
-
-\subsection{尚未继承的历史证据}
-旧 Spatial/U0 方法的 region、K5/all-window、45,185 fake 覆盖、独立 200-real split 和跨域校准结果不用于当前 D2-only 方法的正式结论。它们仅保留为研究历史；在最终方法下重跑前，不写入主结果或摘要。
+在预定1534个片段身份上，固定原FC窗口和干净参考，对真假视频同样施加H.264重编码
+（CRF23/35，4:4:4，不缩放或补帧）。
+完整模型在原始、CRF23与CRF35条件下分别为
+0.874/0.879、0.873/0.874和0.860/0.859。
+较重编码使AUC/AP下降0.014/0.020，两项区间均为负。
+Local减轻了该设置下的下降幅度，但压缩后的直接Full--Global增量区间跨零，
+因此不将其解释为普遍的压缩鲁棒性。

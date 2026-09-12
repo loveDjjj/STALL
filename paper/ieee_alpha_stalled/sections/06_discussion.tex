@@ -1,17 +1,14 @@
 \section{讨论}
 \label{sec:discussion}
 
-\subsection{主要增益来自 Local D2}
-\method 是对 \stall 全局似然的局部时序扩展，而非可学习分类器。Global 保留整体外观与一阶运动证据，Local D2 衡量固定 patch 网格上的二阶轨迹是否符合目标域真实视频。组件消融显示，Local D2 使 Global-only 的 Macro AUC/AP 提高 0.0218/0.0197；D2 相对 D1 的完整模型增益虽较小，但三个数据集方向一致且 AUC 区间完全大于零。这两项证据共同支持局部二阶统计提供了全局分支之外的补充信息。
+结果表明，局部二阶方向的价值来自表示与真实度量的共同作用，
+而非增加一个局部分支即可保证提升。
+当Global已使用目标真实统计时，Local再由源域换为目标域参考的增量区间跨零；
+完整协方差的平均优势主要来自VideoFeedback，另两域的对角控制更高。
+因此，本文不将双分支适配或完整度量表述为普适最优选择。
 
-\subsection{简化 Local 比增加分支更有效}
-Spatial factorial 改变了早期方法定义。Local Spatial 单独性能较弱，加入 D2 后降低 Local Macro 指标，加入完整模型后也造成显著 AUC 下降。因此最终 Local 只保留 D2，既减少一个白化模型和窗口 CDF，也使方法贡献更容易归因。该结果同时说明，patch token 的存在本身并不保证有效；真正获得支持的是同网格二阶轨迹，而不是单帧局部外观似然。
-
-\subsection{时间覆盖是条件性收益}
-K3 在开发集 Macro-3 上优于 K1，主要由 ComGenVid 和 GenVideo 驱动；VideoFeedback 未获得同方向收益。GenVidBench 上 K3 与 K1 也没有可检测差异。三窗口更可能减少长视频或间歇异常的单窗口遗漏，但在短视频、首窗已充分或窗口间分布变化较大的集合上，额外窗口可能稀释分数。因此 K3 是当前开发协议下的固定选择，而不是对任意数据域的普适定律。
-
-\subsection{真实校准与泛化边界}
-方法不使用生成视频拟合参数，但 Local D2 依赖目标域真实视频校准。因此更准确的定位是 training-free、generator-agnostic、target-real-calibrated detection，而不是 calibration-free domain zero-shot。GenVidBench 结果表明该结构可迁移到新数据划分，但其中 ModelScope 生成器也出现在开发集，故该实验主要检验外部域与视频身份迁移，不能单独证明未见生成器泛化。
-
-\subsection{投稿前仍需补齐的证据}
-当前主表中的 AEROBLADE、RIGID、ZED、D3 与 STALL 为公开参考数字，尚未在相同视频身份、帧预算和配对规则下全部重跑。近期 training-free 方法还包括 Over-Coherence~\cite{brokman2026overcoherence} 与 SPLIT~\cite{hyun2026split}；这些基线以及 motion-balanced/shortcut-resistant 数据集需要纳入公平比较。由于 Local D2 直接依赖运动轨迹，后续还应依据相关偏差审计~\cite{michels2026biases} 报告 motion rebalancing、单帧 blur、统一转码、帧重复/丢失及固定低 FPR 下的 fake recall。在完成这些压力测试前，本文不作普适鲁棒性或 state-of-the-art 声明。
+本方法需要目标真实拟合视频，且同网格差分未建立物体对应。
+新拟合池验证的是既有真实来源下的参考变化，不代表未知来源或生成器的完整确认。
+排序增益也不保证阈值迁移：独立VATEX阈值的名义5\%误报率，
+在VideoFeedback的8/16帧真实视频上分别达到11.600\%/21.622\%。
+这些现象界定了当前局部证据的适用范围。

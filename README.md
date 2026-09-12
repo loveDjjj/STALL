@@ -1,65 +1,57 @@
-# Alpha STALL 实验主干
+# Alpha-STALLED
 
-本仓库只维护我们的 `Alpha STALL` 方法。原文 `STALL` 基线应从官方
-代码单独运行；其结果作为外部基线导入论文汇总，绝不在这里维护兼容复现代码。
-所有日常实验均从一份基础配置启动，实验差异由 shell 脚本传入的显式参数表达，
-不再按某个主实验或历史版本复制代码。
+最新补实验已完成：独立新真实视频池、拟合位置数匹配及固定观察下的重编码测试均已验收，数据与边界已加入[论文正文](docs/MANUSCRIPT_REVISION_PLAN_zh.md)。主线参数未自动替换；新池与编码协议见[执行合同](docs/REFERENCE_CONFIRMATION_zh.md)。
 
-## 快速开始
+2026-09-11：已按用户要求停止Looped训练并切回`paper/alpha-stalled`，保留所有已有训练成果和可复用Patch缓存。下一步围绕真实参考Local D2的独立信息与稳定性补证据，详见[研究复核与实验计划](docs/REAL_REFERENCE_D2_RESEARCH_PLAN_zh.md)；新实验尚未启动。
 
-所有命令使用 Conda 环境 `stall`：
+当前论文主线：**目标域适配Global + Local归一化D2**，Feature-change K3，Global/Local等权融合。
+最新主实验及全部消融已补齐23单元，并对齐原文动态等级筛选：[完整结果](results/paper_complete/RESULTS_zh.md)、[论文正文](docs/MANUSCRIPT_REVISION_PLAN_zh.md)、[复现差异说明](docs/MANUSCRIPT_PROTOCOL_NOTES_zh.md)。当前完整协议Macro-3为**0.874472 / 0.877075**；以下旧数字是20单元回归锚点，模型未改变。
+冻结开发配对Macro AUC/AP-real为 **0.881462 / 0.882444**。这是已有结果，不代表新域保证；模型需要独立目标真实拟合集，不能称零目标域参考。
 
-```bash
-bash scripts/run_alpha_stall.sh --dry-run
-bash scripts/run_ablation.sh local_d1_refit --dry-run
-```
+前五组论文实验已完成当前代码重跑：见[完整结果](results/paper/RESULTS_zh.md)及[验收记录](results/runs/paper_completion_audit/verification.json)。包含逐生成器表、源组置信区间、独立阈值与成本测试。
 
-`--dry-run` 只验证最终配置并打印执行计划，不会创建结果目录、读取缓存或启动计算。
-正式运行一开始就会在 `results/runs/<run-name>/` 写入 `resolved_config.yaml`、
-`run_manifest.json`、`progress.json`、`command.txt` 和 `logs/run.log`；终端输出会同步到日志。
+## 安装与运行
 
-正常主实验会从严格 DINOv3 特征缓存读取完整 8 FPS 下采样序列，确定性选择 K=1/K=3
-窗口，以 calibration real 拟合参数与两级 CDF，再生成逐窗口分数、逐视频分数、pooled
-数据集指标、论文配对宏平均指标、生成器指标和 bootstrap 对比：
+从本目录运行，现有服务器使用conda环境`stall`。新环境可按`environment.yml`安装；GPU驱动、DINO源码/权重和数据另需准备，不能仅安装依赖就复现完整实验。
 
 ```bash
-bash scripts/run_cache_rebuild.sh
-bash scripts/run_alpha_stall.sh
+bash scripts/run_main.sh --help
+bash scripts/run_main.sh score --dataset comgenvid --limit 2 --dry-run
+bash scripts/run_main.sh --set 'runtime.devices=[cuda:0,cuda:1]' score \
+  --dataset comgenvid --output results/runs/new_scores
+bash scripts/run_main.sh evaluate --run-dir results/runs/new_scores \
+  --pairs data/manifests/active/comgenvid/pairs.csv
 ```
 
-缓存未建立或目标 GPU 空闲显存不足 12GiB 时，主实验会明确停止，不会复用 legacy
-缓存或抢占其他 GPU 任务。少于 16 帧的短视频按基础配置一致排除，并被记录在 run
-manifest。`--scores-csv` 只用于导入原文 STALL 官方代码等外部方法的
-既有逐视频分数：
+完整命令、fit/cache/video、CDF、导出、恢复、组件表和bootstrap见[运行手册](docs/RUNBOOK_zh.md)。旧源码和报告不再保留为运行入口。
+新run禁止覆盖；修改配置或源码后不沿用旧断点。主方法不修改DINO，不使用fake拟合Gaussian/CDF。
 
-```bash
-bash scripts/run_alpha_stall.sh \
-  --scores-csv path/to/video_scores.csv
+## 唯一活跃结构
+
+```text
+configs/paper.yaml         唯一基础配置
+scripts/run.py            统一命令入口
+scripts/run_main.sh       环境与参数透传
+src/                      特征、选择、参考、评分、调度、数据与评价
+tests/                    主线功能与数值回归
+docs/                     当前方法、数据、运行与修改规范
+data/manifests/active/    明确fit/CDF/threshold/evaluation/pairs角色
+precomputed/target_reference/     冻结五域目标参考包
+results/reference/       当前baseline与精选历史对照表
+results/runs/            后续新实验输出
+cache/                   保留的可复用特征、选窗、位置场与参数缓存
 ```
 
-逐视频分数必须具有 `video_id`、`dataset`、`subset`、`source_model` 和
-`final_score` 字段。主方法的全部流程都在同一 runner 中执行，不再新建按实验命名的
-算法工具脚本。
+论文所需原视频与可复用缓存保留，缓存已按用途统一命名；当前目录和补充数据说明见[数据职责](docs/DATA_zh.md)，精确搬移映射见data/catalog/path_migration.json。此前清理记录paper_asset_pruning.json保留迁移前身份。
+旧run、报告和重复快照已清理。历史配置、做法和逐子集数值只维护[这一份总结](docs/All_Branches_Experiments_and_Data_Summary_zh.md)，后续用新主线重跑。
 
-## 目录职责
+## 规范入口
 
-| 路径 | 职责 |
-|---|---|
-| `configs/benchmark.yaml` | 唯一基础配置；每个字段都有中文说明 |
-| `scripts/` | Conda 启动脚本和唯一 Python CLI，不放算法实现 |
-| `src/` | Alpha STALL 源码；根目录放执行与算法主链，子目录按数据、分支和评测组织 |
-| `data/manifests/` | 开发与外部数据集的校准/评测身份清单，不存放视频 |
-| `cache/patch_embeddings_k3_2s_8fps/` | 严格、可验证且 K=1/K=2/K=3 共用的 Global+patch 特征缓存 |
-| `datasets/` | 原始视频数据；仅保留当前开发和外部评测所需子集 |
-| `results/runs/` | 每次运行的可追溯结果 |
-| `release/` | 已确认实验的冻结版本 |
-| `logs/` | 监督与概略修复记录；原始运行日志仍在 `results/runs/*/logs/` |
-| `analysis/` | 已完成运行的结果解读与跨实验结论 |
+- [论文主线与实验矩阵](docs/PAPER_MAINLINE_zh.md)
+- [数据职责](docs/DATA_zh.md)
+- [仓库规范](docs/REPOSITORY_RULES_zh.md)
+- [历史实验总结](docs/All_Branches_Experiments_and_Data_Summary_zh.md)
+- [AI修改入口](AGENTS.md)
 
-## 运行命名
-
-运行名必须包含实验意图，例如 `alpha_stall`、`alpha_stall_local_d1`、
-`alpha_stall_global_k1`。结果目录不可默认覆盖；需要明确传入 `--overwrite`。
-
-`release/` 与 `results/` 不重复：前者是已经确认且冻结的版本身份，后者是每次
-候选、消融、重复和汇总运行的完整过程记录。
+旧B3、U0、Universal、软CDF等数字不能混入新主线表。AP-real与AP-fake分开，pilot与全量分开，原版STALL与同窗口Global对照分开。
+`paper/`中的历史稿尚未改为最新方法；正式稿以论文主线文档和新实验结果为依据，不从旧图直接推断当前实现。

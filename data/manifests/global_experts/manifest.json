@@ -1,0 +1,39 @@
+{
+  "status": "prepared",
+  "config": {
+    "protocol": "global_experts_end_to_end_cdf",
+    "dimension": 1024,
+    "experts": 4,
+    "neighbors": 512,
+    "shrinkage": 0.5,
+    "ridge": 1e-05,
+    "min_fit_sources": 128,
+    "seed": 17,
+    "spatial_frame_seed": 42,
+    "encoder_batch": 32,
+    "query_batch": 4,
+    "decode_workers": 4,
+    "prefetch_depth": 6,
+    "prefetch_memory_mb": 4096,
+    "cache_directory": "cache/global/stall_single_windows",
+    "manifest_directory": "data/manifests/global_experts",
+    "run_directory": "results/runs/global_experts"
+  },
+  "inputs": {
+    "/data/OneDay/STALL_project/STALL/data/catalog/vatex_source_fit200.csv": "5f64477e35becfc5be934037a23c78e80d3b81fd455dfb2f5870d031805be993",
+    "/data/OneDay/STALL_project/STALL/data/manifests/active/vatex/threshold.csv": "1e44853a6fee5d2fa34b16e8f361d9a424e2cda0fb2abb89394bf219b377b42d",
+    "/data/OneDay/STALL_project/STALL/data/manifests/active/vatex/cdf.csv": "2a086e742db5d891d3e6d983139313ae303740092af0db169ca2630fa7500cb3",
+    "/data/OneDay/STALL_project/STALL/results/paper_complete/evaluation.csv": "1f036ccd5b42b3cd9c0a1b6449d8e6e9c424f8d9b7ac6461c77c527bc8edf7f6",
+    "/data/OneDay/STALL_project/STALL/results/paper_complete/pairs.csv": "ec5522ee314a6bfae0ff2202d73b78d36ff1df8c7398f39b22631fc24e9471e8"
+  },
+  "windows": 23969,
+  "fit_videos": 2200,
+  "cdf_videos": 2000,
+  "evaluation_clip_ids": 15569,
+  "role_change": "旧threshold2000用于新fit；本实验不使用它作独立阈值",
+  "source_overlap_scope": "路径与VATEX/MSVD已知媒体ID；不声称完整跨库语义去重",
+  "files": {
+    "windows.csv": "606ff5656fc68f016bc7c4688419823ecf494bb53de1341a0416899918cb9534",
+    "pairs.csv": "ec5522ee314a6bfae0ff2202d73b78d36ff1df8c7398f39b22631fc24e9471e8"
+  }
+}

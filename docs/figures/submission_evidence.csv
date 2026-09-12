@@ -1,0 +1,13 @@
+label,source,contrast,metric,delta,ci95_low,ci95_high,color
+Local increment: original fit / FC,results/paper_complete/confidence_intervals.csv,full minus global_only,auc,0.0094423375659857,0.00345232911346,0.0156321894249681,#245B83
+Local increment: original fit / FC,results/paper_complete/confidence_intervals.csv,full minus global_only,ap_real,0.0053379251560627,0.0001241983213932,0.0108045729760485,#245B83
+Local increment: new fit pools / FC,results/runs/reference_confirmation/results/contrasts.csv,new_Full_vs_Global,auc,0.0097213869720936,0.0045406026057062,0.0149389748359873,#B26B22
+Local increment: new fit pools / FC,results/runs/reference_confirmation/results/contrasts.csv,new_Full_vs_Global,ap_real,0.0039376568534019,-0.0008853905422867,0.0088183646790931,#B26B22
+D2 vs D1: original fit / FC,results/paper_complete/confidence_intervals.csv,full minus local_d1_target,auc,0.0056856587631402,0.0044719067495289,0.0069054118882859,#245B83
+D2 vs D1: original fit / FC,results/paper_complete/confidence_intervals.csv,full minus local_d1_target,ap_real,0.0072216265395797,0.0059824309422432,0.0085981785156015,#245B83
+D2 vs D1: new fit pools / FC,results/runs/reference_confirmation/results/contrasts.csv,new_D2_vs_D1,auc,0.0053477368326239,0.0041269632436675,0.0065075396850235,#B26B22
+D2 vs D1: new fit pools / FC,results/runs/reference_confirmation/results/contrasts.csv,new_D2_vs_D1,ap_real,0.0065276820880776,0.0054228613013521,0.0077199077680356,#B26B22
+D2 vs pooled: matched fit positions,results/runs/reference_confirmation/results/contrasts.csv,position_matched_vs_pooled,auc,0.0199646193436492,0.0147269968505841,0.025426526728713,#245B83
+D2 vs pooled: matched fit positions,results/runs/reference_confirmation/results/contrasts.csv,position_matched_vs_pooled,ap_real,0.0207554623912798,0.0150629196891435,0.026078712163157,#245B83
+Local increment: original fit / Uniform,results/runs/local_direction_evidence/observation/contrasts.csv,Local_increment_Uniform,auc,0.0049957666594637,-0.0012612337898111,0.0115182305829389,#606060
+Local increment: original fit / Uniform,results/runs/local_direction_evidence/observation/contrasts.csv,Local_increment_Uniform,ap_real,0.0011821973720276,-0.0042840349556429,0.0068136627103418,#606060

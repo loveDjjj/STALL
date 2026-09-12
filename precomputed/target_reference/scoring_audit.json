@@ -1,0 +1,83 @@
+{
+  "status": "completed",
+  "checks": [
+    {
+      "dataset": "comgenvid",
+      "subset": "real",
+      "video_id": "comgenvid:datasets/comgenvid/real/MSVD/SzEbtbNSg04_70_85.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "comgenvid",
+      "subset": "annotated",
+      "video_id": "comgenvid:datasets/comgenvid/fake/Sora/-ahmed-_776843120%2Fmd.mp4",
+      "effective_k": 3,
+      "final_error": 6.938893903907228e-18
+    },
+    {
+      "dataset": "videofeedback",
+      "subset": "real",
+      "video_id": "videofeedback:datasets/videofeedback/real/DiDeMo/p000098.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "videofeedback",
+      "subset": "annotated",
+      "video_id": "videofeedback:datasets/videofeedback/fake/AnimateDiff/5000026.mp4",
+      "effective_k": 1,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "genvideo",
+      "subset": "real",
+      "video_id": "genvideo:datasets/genvideo/real/MSR-VTT/video2801.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "genvideo",
+      "subset": "annotated",
+      "video_id": "genvideo:datasets/genvideo/fake/Crafter/Crafter_513.mp4",
+      "effective_k": 1,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "genvidbench",
+      "subset": "real",
+      "video_id": "genvidbench:datasets/genvidbench_pair1_ms_vript_eval/real/vript/--4M68p_Loc-Scene-008.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "genvidbench",
+      "subset": "annotated",
+      "video_id": "genvidbench:datasets/genvidbench_pair1_ms_vript_eval/fake/ms/ms-01ff5e14-5b68-537c-a41f-802c53591220.mp4",
+      "effective_k": 1,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "vifbench",
+      "subset": "real",
+      "video_id": "vifbench:datasets/vifbench_download/source_videos/Real/-0mnCHRQ-Zc_000092_000102.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    },
+    {
+      "dataset": "vifbench",
+      "subset": "annotated",
+      "video_id": "vifbench:datasets/vifbench_download/source_videos/Fake/CogVideoX1.5-5B-T/-0mnCHRQ-Zc_000092_000102.mp4",
+      "effective_k": 3,
+      "final_error": 0.0
+    }
+  ],
+  "code": {
+    "src/workflow.py": "f382451c2b350a805e1c88ae2954d01283441e04e72af34c2a796a5476a8bd44",
+    "src/reference.py": "788de367128dba4902589d1124484a7f8d63a5e10d5e065900fe8331392c838c",
+    "src/selection.py": "f9257fbd355072a9517616e769b3e9e478bfbb52ca9f15e87200bf86a43e187c",
+    "src/features.py": "f5f7fae40db0f28a050f2aaff3c38248c61c3801d91e71dad3e16c1a3dd3c1e4",
+    "src/data/video.py": "3f3fdb8fdae8ccc611f445cf55106e19efcb38185c027ffde72fd7856837a439"
+  },
+  "scope": "10 fixed videos with original manifest indices; full raw-score replay verified separately"
+}

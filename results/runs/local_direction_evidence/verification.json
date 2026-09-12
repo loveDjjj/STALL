@@ -1,0 +1,19 @@
+{
+  "status": "verified",
+  "scope": "fixed 23-cell evaluation / original-fit source bootstrap",
+  "evaluation_clips": 15569,
+  "generator_cells": 23,
+  "reference_repeats": 5,
+  "independent_new_fit_pools": false,
+  "baseline_final_max_error": 0.0,
+  "baseline_raw_max_error": 9.094947017729282e-13,
+  "source_evaluation_sha256": "076381cdca33218a0bfd203408262a2f19e5f332febf2c903231f6ab6d3d304b",
+  "source_analysis_sha256": "0aefa6c99c20051d7882975793dff0db8b6d035aabdb09643cdcbfbd84af0ff8",
+  "reporter_sha256": "a9fa6f4d7cdd2e3ed4a70bc1cbd43371e8cb8de0889f27a9a6169a1373fd2211",
+  "files": {
+    "RESULTS_zh.md": "61d7e4f9678ad3bb220ae41b1215938b59dbadb0d4735cdb23009437fd05c3d5",
+    "reference_repeats.csv": "817faf3829b17fe5cef352cfe04be6185febd3d1c026873d8a7a0025ca6b5471",
+    "reference_summary.csv": "555aac7b18f727c288b054fe35e760d70f314a49ce1c87bdcf386938595a5b17",
+    "reference_sensitivity.png": "2044b6ae16b3877562093b47a677a54de65b3baeaf4c96e73e0ad41add8a2970"
+  }
+}

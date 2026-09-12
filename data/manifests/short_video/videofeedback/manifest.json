@@ -1,0 +1,15 @@
+{
+  "status": "prepared",
+  "rule": "8fps 1sec official seed42 first draw; real/fake same frames and pool; balanced seed42",
+  "unique_videos": 1000,
+  "pair_rows": 1000,
+  "generators": [
+    "Hotshot-XL"
+  ],
+  "source_evaluation_sha256": "36444457f6fbf2d115f55680ab57f781794d125cf8e1cfd0451f68edb618302f",
+  "files": {
+    "pairs.csv": "f29d6c2160f4b252c16d6098c133345f3742c4594bfd6ca3873ec781ceaca5d8",
+    "eligible_fake_pool.csv": "47ed18f3875b94472b608580b96a5fc57cb6233bd8a2bb0900999ca5d35ee166",
+    "evaluation.csv": "03b7e45c9faeba32bd648043dbb43bd95e8958fddda1cd22ffe23899be326600"
+  }
+}

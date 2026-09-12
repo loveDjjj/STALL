@@ -1,0 +1,30 @@
+% 由 export_tables.py 生成；CSV 身份及汇总经校验。
+\begin{table}[t]
+  \centering
+  \caption{更换真实拟合视频后的五次重复。上半为逐域五次平均 AUC/AP-real，Average 为三域等权；下半为总体配对差值均值及95\%区间。逐次重拟合后计算指标，不对预测集成。}
+  \label{tab:reference_stability}
+  {\footnotesize
+  \setlength{\tabcolsep}{2.2pt}
+  \renewcommand{\arraystretch}{1.16}
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}
+    \toprule
+    同池配置 & VF & GV & CGV & Average \\
+    \midrule
+    $G$ & 0.805/\textbf{0.830} & 0.879/0.871 & 0.915/0.923 & 0.866/0.875 \\
+    $G+$D1 & 0.810/0.821 & 0.878/0.867 & 0.925/0.929 & 0.871/0.872 \\
+    $G+$D2 & \textbf{0.816}/\textbf{0.830} & \textbf{0.883}/\textbf{0.873} & \textbf{0.929}/\textbf{0.933} & \textbf{0.876}/\textbf{0.879} \\
+  \end{tabular*}
+  \par\vspace{3pt}
+  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc@{}}
+    \midrule
+    Average 增量 & $\Delta$ AUC [95\% CI] & $\Delta$ AP [95\% CI] \\
+    Full$-G$ & \shortstack{$+0.010$\\$[0.005,\,0.015]$} & \shortstack{$+0.004$\\$[-0.001,\,0.009]$} \\
+    Full$-$D1融合 & \shortstack{$+0.005$\\$[0.004,\,0.007]$} & \shortstack{$+0.007$\\$[0.005,\,0.008]$} \\
+    \bottomrule
+  \end{tabular*}
+  \par\vspace{2pt}
+  \begin{minipage}{\columnwidth}\scriptsize
+  Average 样本标准差（AUC/AP）：$G$ 0.005/0.004，$G+$D1 0.004/0.003，$G+$D2 0.004/0.004。
+  VF/GV/CGV 同表~\ref{tab:component_ablation}；Full 为 $G+$D2，粗体为上半表各列最高值。每域每池200片段，共2357个新真实视频；新池与旧拟合、评价和参考的已知源组隔离。五池可重叠，区间条件于这五个已选池。
+  \end{minipage}}
+\end{table}

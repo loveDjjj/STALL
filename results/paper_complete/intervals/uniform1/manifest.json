@@ -1,0 +1,15 @@
+{
+  "status": "completed",
+  "inputs": {
+    "scores_fc3.csv.gz": "1dcda535880f01f0f8353147b60c1c896958102d47227c6da79e53d2d98d8539",
+    "scores_uniform1.csv.gz": "a200d80961743d129a2e32ae9883fbab4b5916ccf3428c0f144ddedce719c838",
+    "evaluation.csv": "1f036ccd5b42b3cd9c0a1b6449d8e6e9c424f8d9b7ac6461c77c527bc8edf7f6",
+    "pairs.csv": "ec5522ee314a6bfae0ff2202d73b78d36ff1df8c7398f39b22631fc24e9471e8"
+  },
+  "iterations": 1000,
+  "source_groups": "原始源组保留；同一真实视频1秒/2秒共享Poisson权重",
+  "files": {
+    "deltas.csv": "6161b64cad0bc7b40b47f5b167f6f4f03e7599e37443cffd4fb27dd31c7b6f04",
+    "intervals.csv": "43ddd5baa81a7f6720fbcc5e9fac76a36f8ee8042253bec9fed3325d37b197da"
+  }
+}

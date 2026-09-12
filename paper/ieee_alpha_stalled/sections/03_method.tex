@@ -1,84 +1,104 @@
 \section{方法}
 \label{sec:method}
 
-\subsection{任务定义与总体流程}
-给定视频 $V=\{I_t\}_{t=1}^{T}$，目标是输出真实性分数 $S(V)\in[0,1]$，其中较高分数表示视频更接近真实视频参考统计。检测器不使用生成视频训练分类器，也不在推理时读取生成器来源、测试标签或测试批次组成。Local 参数与经验分布仅由和评测集互斥的真实视频估计。
+\subsection{问题设定与冻结表示}
+给定视频 $V$，输出越高越接近真实参考的分数 $S(V)$。
+每个目标域提供独立真实拟合集 $\mathcal R_d$，另一批外部真实视频 $\mathcal C$ 用于百分位映射。
+二者与评价源组分离；生成视频不参与参数拟合。
+冻结 DINOv3 ViT-L/16~\cite{simeoni2025dinov3}同时提取全局特征 $g_t\in\mathbb R^{1024}$
+和 $14\times14$ 图块特征 $p_{t,i}\in\mathbb R^{1024}$。
+全局与局部分支共享编码与窗口，分别评分后融合。
 
-图~\ref{fig:pipeline} 展示了三个阶段。第一阶段加载官方 \stall VATEX Global 参数，并从目标域真实校准视频构建 Local D2 白化参数、窗口级经验分布和按有效窗口数分组的视频级经验分布。第二阶段对待测视频均匀选择至多三个互异的 2 秒窗口，每窗在 8 FPS 下包含 16 帧；冻结 DINOv3 同时输出 Global token 与 $14\times14$ patch token。第三阶段分别聚合 Global 与 Local D2 证据，执行视频级真实分位数校准，并以固定权重融合。
-
-\begin{figure*}[!t]
+% 按作者要求暂留空；旧流程图对应不同模型，不参与本稿构建。
+\begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{alpha_stalled_pipeline_zh.png}
-  \caption{\method 的真实视频校准与推理流程。Global 分支固定加载官方 \stall VATEX 参数，并由目标域真实视频建立有效窗口数匹配的视频级参考分布；Local 分支只对同网格 patch 二阶差分建模。两条分支独立聚合与重校准后，以固定 $0.6/0.4$ 权重得到最终真实性分数。}
+  \fbox{\rule{0pt}{25mm}\rule{0.95\columnwidth}{0pt}}
+  \caption{\method 方法概览（流程图待绘制）。相同片段产生全局与局部证据，真实统计定义度量，独立参考完成百分位映射后等权融合。}
   \label{fig:pipeline}
-\end{figure*}
+\end{figure}
 
-\subsection{冻结 DINOv3 表征}
-所有分支共享冻结的 DINOv3 ViT-L/16 编码器~\cite{simeoni2025dinov3}。第 $t$ 帧得到 Global token $g_t$ 与 patch token 网格 $P_t$：
+\subsection{局部二阶方向的真实统计测量}
+对连续三帧的同一图块位置，计算
 \begin{equation}
-  g_t\in\mathbb{R}^{D},\qquad
-  P_t=\{p_{t,i}\}_{i=1}^{N}\in\mathbb{R}^{N\times D},
-  \label{eq:dino_features}
+ a_{t,i}=p_{t+2,i}-2p_{t+1,i}+p_{t,i},\qquad
+ u_{t,i}=\frac{a_{t,i}}{\max(\|a_{t,i}\|_2,\varepsilon)},
+ \label{eq:local_d2}
 \end{equation}
-其中 $D=1024$，$N=14\times14$。Global 序列用于 \stall 的空间与一阶时序证据，patch 序列只用于 Local D2。两类证据共享同一次编码器前向传播，不训练额外骨干网络。
+其中 $\varepsilon=10^{-12}$，零残差保留为零向量。
+归一化减弱幅度的直接作用，保留特征空间中二阶变化的方向。
+同网格计算不涉及物体跟踪，因此不将该残差解释为物理加速度。
 
-\subsection{白化高斯似然与经验分位数}
-对特征 $x\in\mathbb{R}^{d}$，真实参考样本给出均值 $\mu$ 与协方差 $\Sigma=U\Lambda U^\top$。保留正特征值对应子空间并构造
+真实拟合集给出局部均值 $\mu_d$ 与正则协方差 $\Sigma_d+\eta I$，
+其中 $\eta=10^{-5}$。
+令 $A_d=(\Sigma_d+\eta I)^{-1}=W_dW_d^\top$，定义白化空间的高斯型分数
 \begin{equation}
-  W=U_r\operatorname{diag}\left((\lambda_1+\epsilon)^{-1/2},\ldots,(\lambda_r+\epsilon)^{-1/2}\right).
-  \label{eq:whitening}
+ \ell_d(u)=-\tfrac12(u-\mu_d)^\top A_d(u-\mu_d)+C_d.
+ \label{eq:local_metric}
 \end{equation}
-白化特征与标准高斯对数似然为
-\begin{align}
-  z(x)&=(x-\mu)W,\\
-  \ell(x)&=-\frac{1}{2}\left[r\log(2\pi)+\lVert z(x)\rVert_2^2\right].
-  \label{eq:gaussian_ll}
-\end{align}
-设真实参考分数排序为 $\mathcal{C}_b=\{c_{b,j}\}_{j=1}^{M}$，任一统计 $q_b$ 的右闭合经验分位数为
+$C_d=-\tfrac{1024}{2}\log(2\pi)$为模型内固定常数，不改变排名。
+对窗口 $W$ 的全部时间与位置取均值：
 \begin{equation}
-  \widehat F_b(q_b)=\frac{1}{M}\sum_{j=1}^{M}\mathbb{I}[c_{b,j}\leq q_b].
-  \label{eq:percentile}
+ q_L(W)=\frac{1}{(T_W-2)N}\sum_{t=1}^{T_W-2}\sum_{i=1}^{N}\ell_d(u_{t,i}),
+ \quad N=196.
+ \label{eq:local_score}
 \end{equation}
-白化与似然使用 float64，DINOv3 特征保持 float32；经验分布使用稳定排序和右闭合并列规则。
+该度量刻画特征通道间的相关结构，而非直接建模不同图块的邻接关系。
+它依据真实参考为方向赋予不同代价。例如，取$\mu=0$、$A=\operatorname{diag}(1,9)$，
+两个等长方向$(1,0)$与$(0,1)$的能量分别为1和9。
+这一示例说明方向度量与仅测量残差长度的区别。
 
-\subsection{全局 \stall 分支}
-对第 $k$ 个窗口，Global Spatial 逐帧计算 $\ell_{\mathrm{gs}}(g_t)$ 并取最大值；Global T1 对相邻帧差分进行 L2 归一化，计算似然后取最小值：
-\begin{align}
-  q_{\mathrm{gs},k}&=\max_t\ell_{\mathrm{gs}}(g_t),\\
-  d_t&=\frac{g_{t+1}-g_t}{\lVert g_{t+1}-g_t\rVert_2},\\
-  q_{\mathrm{gt},k}&=\min_t\ell_{\mathrm{gt}}(d_t).
-\end{align}
-Global 的白化参数与窗口参考分布固定使用官方 VATEX 资产。经分位数映射后，窗口分数为
+\textbf{为何先测量、后聚合？}
+对固定度量 $E(u)=(u-\mu)^\top A(u-\mu)$，
+令 $\bar u=\sum_j\omega_j u_j$、$\sum_j\omega_j=1$，则
 \begin{equation}
-  G_k=0.5\widehat F_{\mathrm{gs}}(q_{\mathrm{gs},k})+0.5\widehat F_{\mathrm{gt}}(q_{\mathrm{gt},k}).
-  \label{eq:global_window_score}
+ \sum_j\omega_j E(u_j)
+ =E(\bar u)+\sum_j\omega_j(u_j-\bar u)^\top A(u_j-\bar u).
+ \label{eq:dispersion}
 \end{equation}
+逐位置测量保留了均值之外的方向离散项。
+这是对固定表示的代数解释；实际提前平均Patch的控制还改变归一化次序并重新拟合度量，
+其检测效果由实验检验。
 
-\subsection{同网格 Local D2}
-Local 分支不包含单帧 Spatial 项。对连续三帧同一网格位置的 patch token，计算二阶差分并沿特征维归一化：
-\begin{align}
-  a_{t,i}&=p_{t+2,i}-2p_{t+1,i}+p_{t,i},\\
-  \hat a_{t,i}&=\frac{a_{t,i}}{\lVert a_{t,i}\rVert_2},
-  \qquad t=1,\ldots,T-2.
-  \label{eq:patch_acceleration}
-\end{align}
-不使用显式 patch 匹配、区域池化或 CLS/register token。目标域真实 calibration patch 轨迹用于拟合 $\mu_{\mathrm{D2}}$、$W_{\mathrm{D2}}$ 与窗口参考分布。窗口内对全部时间与网格位置的似然取算术均值：
+\subsection{全局证据与融合}
+Global沿用STALL的评分结构。
+外观取逐帧评分最大值，时间分支对归一化一阶差分取最小值：
 \begin{equation}
-  q_{\mathrm{D2},k}=\operatorname{mean}_{t,i}\ell_{\mathrm{D2}}(\hat a_{t,i}),\qquad
-  L_k=\widehat F_{\mathrm{D2}}(q_{\mathrm{D2},k}).
-  \label{eq:local_window_score}
+ \begin{aligned}
+ q_{\rm GS}(W)&=\max_t\ell_{{\rm GS},d}(g_t),\\
+ q_{\rm GT}(W)&=\min_{t:\|\Delta g_t\|>0}
+       \ell_{{\rm GT},d}\bigl(\Delta g_t/\|\Delta g_t\|_2\bigr).
+ \end{aligned}
+ \label{eq:global_score}
 \end{equation}
+两分支均由与Local相同的目标真实片段拟合。
+全静态窗口的GT原始分数按实现取$+\infty$，映射为百分位1。
+设独立真实参考的经验分布为
+$F(q)=|\mathcal C|^{-1}\sum_{c\in\mathcal C}\mathbb I[q_c\le q]$，
+窗口Global分数为
+$G(W)=\tfrac12F_{\rm GS}(q_{\rm GS}(W))+\tfrac12F_{\rm GT}(q_{\rm GT}(W))$。
 
-\subsection{视频聚合与固定融合}
-设有效窗口数为 $K_V\leq3$。两条分支分别取窗口均值：
+对选中窗口集合 $\mathcal S(V)$，记 $K_V=|\mathcal S(V)|$，最终输出
 \begin{equation}
-  G_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kG_k,\qquad
-  L_{\mathrm{raw}}(V)=\frac{1}{K_V}\sum_kL_k.
-  \label{eq:branch_video_mean}
+ \begin{aligned}
+ G(V)&=\frac1{K_V}\sum_{W\in\mathcal S(V)}G(W),\\
+ L(V)&=F_{d,K_V}^{\rm video}\left(\frac1{K_V}\sum_{W\in\mathcal S(V)}q_L(W)\right),\\
+ S(V)&=\tfrac12G(V)+\tfrac12L(V).
+ \end{aligned}
+ \label{eq:fusion}
 \end{equation}
-随后仅使用具有相同有效窗口数的目标域真实校准视频建立视频级经验 CDF，得到 $G(V)$ 与 $L(V)$。最终分数为
-\begin{equation}
-  S(V)=0.6G(V)+0.4L(V).
-  \label{eq:final_score}
-\end{equation}
-每个校准视频在每个分支中只贡献一个视频级统计，避免长视频因窗口更多而获得更高权重。$K$ 与融合权重在三个开发数据集上确定，因此这些数据集属于开发与内部评测范围，而非未触碰的确认集。
+Local只在视频聚合后映射一次，Global不增加视频CDF。
+百分位用于尺度对齐，不解释为真实性概率。
+
+\subsection{观察与参考构建}
+输入固定为$224\times224$、名义8 FPS。
+标准窗口含16帧；1 FPS全局粗扫以相邻特征变化的窗口均值排序，
+从步长0.5秒的候选中选择至多三个窗口（FC K3）。
+短视频使用8帧单窗，不通过重复帧增加观察长度。
+Global与Local共享所选帧的编码。
+
+每域200条真实片段以均匀K3构建拟合观察，片段总权重相同。
+GS使用所采帧，GT使用非零一阶差分，Local每片段抽取256个D2位置。
+独立的2000条VATEX视频~\cite{wang2019vatex}由各域模型分别重评分：
+Global参考使用均匀首窗；Local参考使用FC窗口，并按有效窗口数从排序窗口中等距取样。
+8帧观察复用拟合Gaussian、重建同长度参考。
+协方差采用加权无偏估计，特征差分为FP32、统计评分为FP64；各域融合及观察参数固定。

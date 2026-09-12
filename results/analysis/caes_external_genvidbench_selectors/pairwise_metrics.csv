@@ -1,7 +1,0 @@
-selector,run_name,scope,dataset,auc,ap_real,n_generators,n_pairwise_real,n_pairwise_fake,pairwise_seed,pair_identity_source
-uniform,uniform,generator_pairwise_dataset_macro,genvidbench,0.8386388888888888,0.842968525139058,1,300,300,42,uniform
-random,random,generator_pairwise_dataset_macro,genvidbench,0.8417222222222223,0.8439395939213096,1,300,300,42,uniform
-feature_change,feature_change,generator_pairwise_dataset_macro,genvidbench,0.8651777777777778,0.8689550530027923,1,300,300,42,uniform
-uniform,uniform,generator_pairwise_macro3,Macro-3,0.8386388888888888,0.842968525139058,1,300,300,42,uniform
-random,random,generator_pairwise_macro3,Macro-3,0.8417222222222223,0.8439395939213096,1,300,300,42,uniform
-feature_change,feature_change,generator_pairwise_macro3,Macro-3,0.8651777777777778,0.8689550530027923,1,300,300,42,uniform

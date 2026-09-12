@@ -1,16 +1,34 @@
-\section{实验设置与主结果}
+\section{实验}
 \label{sec:experiments}
 
-\subsection{数据集与统一协议}
-本文在 ComGenVid、VideoFeedback 和 GenVideo 的固定交集上进行开发集评测。表~\ref{tab:dataset_protocol} 给出实际进入 evaluation 的唯一视频数与生成器数。每个数据集使用 200 条与 evaluation real 严格互斥的真实视频拟合 Local D2 白化参数、窗口经验分布和视频级经验分布；Global 窗口统计固定加载官方 VATEX \stall 参数。生成视频只参与最终评价。
+\subsection{设置与指标}
+评价涵盖VideoFeedback~\cite{he2024videoscore}、GenVideo~\cite{chen2024genvideo}
+和ComGenVid~\cite{benhayun2026stall}，分别包含11、10和2个生成器单元。
+采用STALL的动态等级筛选与生成器内真假平衡配对；
+Hotshot-XL和MoonValley保留1秒观察。
+共包含15,569个带时长的片段身份、14,573个不同视频文件和23,550条配对记录。
+拟合、参考及评价按已知源组隔离；同源的不同观察不作为独立源。
+原拟合池每域200片段，其中ComGenVid对应132个源，另两域各200源。
 
-\input{tables/dataset_protocol}
+报告AUC及以真实为正类的AP（AP-real），数值越高越好。
+每域先对生成器等权平均，本文的总体Average再对三个域等权平均。
+对本次匹配预测采用1,000次源组配对bootstrap估计95\%区间；
+复用真实视频在不同配对中共享抽样权重。
+方法设计在这些开发基准上完成；真实统计拟合不使用生成样本，不等于开发过程从未查看生成结果。
 
-每个生成器分别与确定性选择的等量真实视频计算 AUC 与 real-positive AP，随后在数据集内对生成器等权平均，并对三个数据集等权得到 Macro-3。正文同时报告唯一视频 pooled 指标用于审计，但不把其 prevalence-sensitive AP 与平衡配对 AP 混用。正式方法固定为三个均匀 2 秒窗口、8 FPS、Local D2-only、窗口内 mean 聚合和 $0.6/0.4$ Global/Local 融合。
-
-\subsection{参考方法比较}
-表~\ref{tab:main_results} 汇总公开 training-free/zero-shot 方法的参考结果与本文最终方法。公开基线来自其论文协议，而 \method 使用当前固定交集和配对宏平均协议，因此该表用于定位性能范围，不作为严格同视频显著性检验。正式投稿中的强排序结论仍需使用各方法官方代码在同一 manifest 和帧预算下重跑。
-
+\subsection{主要结果}
 \input{tables/main_results}
+% 预先入队，后续正文按表II的A/B/C和表III顺序引用。
+\input{tables/component_ablation}
+\input{tables/reference_stability}
+表~\ref{tab:main_results}报告三个基准上的逐生成器结果。
+已有方法的发表值来自STALL的统一比较，本次结果使用目标真实适配及固定预算多窗观察；
+视频身份、参考信息及发表Average口径不保证一致，因此两组用于方法背景比较。
+本文的归因主要依据下述同协议控制，而不由跨报告差值推断Local贡献。
 
-在当前统一开发集协议下，最终 D2-only K3 方法在 ComGenVid、VideoFeedback 和 GenVideo 上分别达到 0.9015/0.9110、0.8621/0.8687 和 0.8586/0.8391 AUC/AP，Macro-3 为 0.8741/0.8729。后续消融只使用当前标准化 run，分别检验 Global/Local 互补性、D1/D2、K1/K3 和 Local Spatial 必要性。
+\method 的Average AUC/AP-real为0.874/0.877。
+相对同目标真实片段预算的Global，增量为0.009/0.005，
+AUC差值区间为$[0.003,0.016]$，AP区间下界为正但接近零。
+两分支共享拟合视频与观察位置，因而该增量不能仅由额外获取目标真实视频解释。
+收益具有域差异：VideoFeedback的AP由0.844降至0.839，
+而GenVideo和ComGenVid的两项域平均均提高。

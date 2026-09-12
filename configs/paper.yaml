@@ -1,0 +1,77 @@
+# 论文主线唯一基础配置；历史实验仅保留数据参考和统一总结。
+protocol:
+  # 科学协议ID；改变方法定义必须新建版本，不能覆盖旧run。
+  id: target_global_local_d2_fc3_v1
+encoder:
+  # 冻结编码器代码目录，相对仓库根。
+  repo: dinov3
+  # 冻结ViT-L/16权重路径，允许换物理路径但内容hash必须相同。
+  weights: dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
+  # 已验证权重SHA256，防止误加载其他模型。
+  weights_sha256: 8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035
+  # 预处理边长，单位像素；正式协议固定224。
+  input_size: 224
+  # 前向帧批量，正式数值合同固定8。
+  batch_size: 8
+  # 尾批重复末帧后裁去补齐输出；不是增加真实观察帧。
+  pad_tail: true
+selection:
+  # 允许feature_change或uniform；必须与参考包定义匹配。
+  name: feature_change
+  # 请求窗口数；正式为3，实际不足时使用effective-K。
+  k: 3
+  # 每窗口dense帧数，正式固定16。
+  frames: 16
+  # dense采样名义FPS，正式固定8且不复制帧上采样。
+  fps: 8
+  # 粗扫在dense索引中的间隔，8对应名义1FPS。
+  coarse_stride: 8
+  # 候选起点步长，单位dense位置；4对应名义0.5秒。
+  candidate_stride: 4
+method:
+  # 是否使用Global；去Global消融为false。
+  global_enabled: true
+  # 是否使用Local；Global-only消融为false。
+  local_enabled: true
+  # Global内部GS权重，GT权重为1-此值；去GS/GT分别为0/1。
+  spatial_weight: 0.5
+  # 顶层Global权重，Local为1-此值；正式固定0.5，不按域调参。
+  global_weight: 0.5
+reference:
+  # 五域目标GS/GT/LT及CDF包目录，相对仓库根。
+  directory: precomputed/target_reference
+  # 包清单，含每包hash和来源；不把旧B3包拿来改名使用。
+  manifest: precomputed/target_reference/manifest.json
+data:
+  # 当前fit/CDF/threshold/evaluation及固定配对清单。
+  manifests: data/manifests/active
+fit:
+  # cache复用有hash的轻量资产；video从原视频提取Uniform K3和video256，不改变数学定义。
+  feature_source: cache
+runtime:
+  # 本命令使用的设备；支持cpu/cuda:0/cuda:1，正式回归以已验证CUDA为准。
+  device: cuda:0
+  # 批量score/fit的设备列表；空列表沿用device，双卡设[cuda:0,cuda:1]，每卡一进程。
+  devices: []
+  # score/CDF的两阶段CPU预取开关；false使用同步路径作回归，GPU批次和窗口不改变。
+  prefetch_enabled: true
+  # 评分浮点精度，正式固定float64；DINO特征与差分仍float32。
+  score_dtype: float64
+  # 原视频拟合的CPU解码/预处理线程数，正整数；不改变GPU前向batch。
+  decode_workers: 4
+  # 每进程在途预处理视频数上限，包含GPU当前消费的视频，正整数。
+  prefetch_depth: 4
+  # 预处理内存预留预算，单位MiB，正整数；不包含模型、FFmpeg内部及GPU分配。
+  prefetch_memory_mb: 4096
+output:
+  # 新实验输出目录，不覆盖results/reference中的冻结对照数据。
+  root: results/runs
+evaluation:
+  # 分数越高越真实，固定方向，不依据标签翻转。
+  score_direction: higher_is_real
+  # 经验ROC目标real FPR；与独立阈值迁移操作点不同。
+  real_fpr_levels: [0.001, 0.01, 0.05]
+  # 源组bootstrap种子，后续统一bootstrap子命令使用。
+  bootstrap_seed: 17
+  # 源组bootstrap次数，正式至少1000。
+  bootstrap_iterations: 1000

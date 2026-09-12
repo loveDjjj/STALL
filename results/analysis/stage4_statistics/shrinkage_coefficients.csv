@@ -1,7 +1,0 @@
-variant,dataset,shrinkage
-s1_ledoit_wolf_d2,comgenvid,0.003929722122848034
-s1_ledoit_wolf_d2,genvideo,0.0056409393437206745
-s1_ledoit_wolf_d2,videofeedback,0.005298350006341934
-s2_oas_d2,comgenvid,0.003941039554774761
-s2_oas_d2,genvideo,0.005632992833852768
-s2_oas_d2,videofeedback,0.005311338696628809

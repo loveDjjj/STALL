@@ -1,0 +1,5 @@
+{
+  "source_sha256": "1e44853a6fee5d2fa34b16e8f361d9a424e2cda0fb2abb89394bf219b377b42d",
+  "rule": "same identity, 8fps 1sec seed42 first draw",
+  "rows": 2000
+}

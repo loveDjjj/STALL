@@ -1,0 +1,54 @@
+# 独立的有监督循环关系研究；不修改旧paper或MoE结果。
+protocol: frozen_patch_looped_v1
+# 不可混入旧结果的本轮输出目录。
+run_directory: results/runs/looped_video
+# 完整逐帧Patch缓存，按FC唯一帧保存float32，不存可训练投影结果。
+cache_directory: cache/patch/looped_video
+# 只读复用源组划分、8/16帧及FC窗口身份。
+source_directory: results/runs/discriminative_moe
+# 开发留域和合并训练；合并训练只用于冻结后的外部测试。
+folds: [comgenvid, videofeedback, genvideo, pooled]
+# 初始化重复，不从测试集选择seed。
+seeds: [17, 29, 43]
+# 每fold/seed十配置共用输入；别名仅由下方结构化覆盖定义。
+variants: [looped, untied, no_refresh, spatial_only, state_only, loop1, loop2, loop8, wide512, no_time_position]
+# 一次只改循环深度或容量；1/2/8轮分别在对应深度训练和测试。
+experiment_overrides:
+  loop1: {variant: looped, loops: 1}
+  loop2: {variant: looped, loops: 2}
+  loop8: {variant: looped, loops: 8}
+  wide512: {variant: looped, width: 512, heads: 8}
+# 投影后的隐藏维度与头数；编码器输出保持1024维。
+width: 256
+heads: 4
+# 同一共享块执行4次；不做动态退出或中间答案一致性约束。
+loops: 4
+# 原始证据读取的空间组边长；2×2组内允许跨位置时间交互。
+tile: 2
+# FFN隐层扩展倍数。
+mlp_ratio: 2
+# 完整训练固定20epoch；验证只选择checkpoint，不更换超参数。
+epochs: 20
+# AdamW固定学习率、权重衰减；以下8×4定义有效global batch32。
+learning_rate: 0.0003
+weight_decay: 0.01
+batch_size: 8
+# 旧单卡为4次累积；当前DDP每卡8视频×2卡×2次累积，global batch仍32。
+accumulation: 4
+# 余弦学习率调度；前2epoch线性预热。
+warmup_epochs: 2
+# 头使用BF16混合精度；DINO提取仍严格FP32，不启用TF32；统计平均FP32。
+amp: true
+# 每卡数据加载进程及每进程预取microbatch数。
+loader_workers: 4
+loader_prefetch: 2
+# DINO batch8及补齐尾批，与已验收Global逐元素对照。
+feature_batch: 8
+# 每卡视频解码线程、预取视频数、解码内存上限GiB。
+decode_workers: 6
+prefetch_depth: 8
+prefetch_gib: 6
+# 写缓存时保留的最小磁盘空间GiB，低于此值明确停止而不删除数据。
+disk_floor_gib: 15
+# 分组bootstrap次数；配置与模型冻结以后执行。
+bootstrap_replicates: 1000

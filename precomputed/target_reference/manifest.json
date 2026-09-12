@@ -1,0 +1,50 @@
+{
+  "status": "completed",
+  "protocol_id": "target_global_local_d2_fc3_v1",
+  "references": [
+    {
+      "dataset": "comgenvid",
+      "path": "precomputed/target_reference/comgenvid.npz",
+      "sha256": "b71cc0be0505bc6af2d1bb03cf974c558bbe89877f5775c67bbb0856ff4a9cdc",
+      "videos": 4298,
+      "max_final_error": 2.220446049250313e-16,
+      "max_metric_error": 1.1102230246251565e-16
+    },
+    {
+      "dataset": "videofeedback",
+      "path": "precomputed/target_reference/videofeedback.npz",
+      "sha256": "603d4ebc84d078945f63df1254685c557ebd8ec0ff1d9bed0e33ba937bec5f7e",
+      "videos": 3500,
+      "max_final_error": 1.1102230246251565e-16,
+      "max_metric_error": 1.1102230246251565e-16
+    },
+    {
+      "dataset": "genvideo",
+      "path": "precomputed/target_reference/genvideo.npz",
+      "sha256": "f9649a2e44727361cd7139748d0beb5b905ca3d26af0bdb838dc62d7db0ffd71",
+      "videos": 13623,
+      "max_final_error": 2.220446049250313e-16,
+      "max_metric_error": 1.1102230246251565e-16
+    },
+    {
+      "dataset": "genvidbench",
+      "path": "precomputed/target_reference/genvidbench.npz",
+      "sha256": "ebecc73ac51b88d5fcba8289da5ad91ff743e96a0920126784c22d39e331ffef",
+      "videos": 600,
+      "max_final_error": 1.1102230246251565e-16,
+      "max_metric_error": 5.551115123125783e-17
+    },
+    {
+      "dataset": "vifbench",
+      "path": "precomputed/target_reference/vifbench.npz",
+      "sha256": "8f6f8b82059ddf28d7cb5037a0d921698d1a997899caf360841b1ac610b65db6",
+      "videos": 1616,
+      "max_final_error": 2.220446049250313e-16,
+      "max_metric_error": 5.551115123125783e-17
+    }
+  ],
+  "source_snapshot": "archive/experiments/snapshot_20260908T063858Z",
+  "code_sha256": "e9af4839a0c9bf3847a5e7133bdeda9fb1cba14f6be44c19453c3e74a91be35c",
+  "reference_module_sha256": "788de367128dba4902589d1124484a7f8d63a5e10d5e065900fe8331392c838c",
+  "scope": "source score replay; raw-video inference migration not yet complete"
+}

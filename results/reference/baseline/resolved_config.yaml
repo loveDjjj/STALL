@@ -1,0 +1,39 @@
+protocol:
+  id: target_global_local_d2_fc3_v1
+encoder:
+  repo: dinov3
+  weights: dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth
+  weights_sha256: 8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035
+  input_size: 224
+  batch_size: 8
+  pad_tail: true
+selection:
+  name: feature_change
+  k: 3
+  frames: 16
+  fps: 8
+  coarse_stride: 8
+  candidate_stride: 4
+method:
+  global_enabled: true
+  local_enabled: true
+  spatial_weight: 0.5
+  global_weight: 0.5
+reference:
+  directory: precomputed/paper_v1
+  manifest: precomputed/paper_v1/manifest.json
+data:
+  manifests: data/manifests/active
+runtime:
+  device: cuda:0
+  score_dtype: float64
+output:
+  root: results/paper_v1/runs
+evaluation:
+  score_direction: higher_is_real
+  real_fpr_levels:
+  - 0.001
+  - 0.01
+  - 0.05
+  bootstrap_seed: 17
+  bootstrap_iterations: 1000

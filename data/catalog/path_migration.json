@@ -1,0 +1,2909 @@
+{
+  "status": "completed",
+  "repository": {
+    "tests/paper_v1": "tests",
+    "precomputed/paper_v1": "precomputed/target_reference",
+    "cache/coarse_global_1fps": "cache/global/coarse_1fps",
+    "cache/iclr_evidence_v1": "cache/fit/target",
+    "cache/vatex_direction_fit200_v1": "cache/fit/vatex_200",
+    "cache/patch_embeddings_k3_2s_8fps": "cache/patch/benchmarks",
+    "cache/patch_embeddings_confirmation_vifbench": "cache/patch/vifbench",
+    "cache/reference_models": "cache/models",
+    "cache/score_evidence/b3_development_full_v1": "cache/scores/development",
+    "cache/score_evidence/b3_external_validation_v1": "cache/scores/external"
+  },
+  "workspace": {
+    "datasets/aegis_archives": "datasets/aegis/archives",
+    "datasets/aegis_extracted_tmp": "datasets/aegis/extracted",
+    "datasets/aegis_full": "datasets/aegis/videos",
+    "datasets/aegis_metadata": "datasets/aegis/metadata",
+    "datasets/aigvdbench_archives": "datasets/aigvdbench/archives",
+    "datasets/aigvdbench_empty_fake": "datasets/aigvdbench/views/empty_fake",
+    "datasets/aigvdbench_metadata": "datasets/aigvdbench/metadata",
+    "datasets/aigvdbench_real_calib_extra": "datasets/aigvdbench/real_reserve",
+    "datasets/aigvdbench_small": "datasets/aigvdbench/views/pools",
+    "datasets/aigvdbench_small_calib_real_val200": "datasets/aigvdbench/views/validation_real_200",
+    "datasets/aigvdbench_small_resplit_cogvideox15": "datasets/aigvdbench/views/resplit_cogvideox15",
+    "datasets/aigvdbench_small_resplit_vidu": "datasets/aigvdbench/views/resplit_vidu",
+    "datasets/aigvdbench_small_test_open_sora": "datasets/aigvdbench/views/test_open_sora",
+    "datasets/aigvdbench_small_test_open_sora_prefixed": "datasets/aigvdbench/views/test_open_sora_prefixed",
+    "datasets/aigvdbench_small_test_pika": "datasets/aigvdbench/views/test_pika",
+    "datasets/aigvdbench_small_val_open_sora": "datasets/aigvdbench/views/val_open_sora",
+    "datasets/aigvdbench_small_val_open_sora_prefixed": "datasets/aigvdbench/views/val_open_sora_prefixed",
+    "cache/d3_frames": "cache/frames/d3",
+    "cache/embeddings": "cache/global",
+    "cache/indexes": "cache/manifests",
+    "cache/patch_embeddings": "cache/patch",
+    "cache/patch_params": "cache/models"
+  },
+  "semantics": "只迁移位置。legacy_path、video_id、协议ID、NPZ与Patch内容不变。",
+  "updated_fit_manifests": [
+    "data/manifests/active/comgenvid/fit.csv",
+    "data/manifests/active/genvidbench/fit.csv",
+    "data/manifests/active/videofeedback/fit.csv",
+    "data/manifests/active/genvideo/fit.csv",
+    "data/manifests/active/vifbench/fit.csv"
+  ],
+  "repository_followup": {
+    "cache/models/from_results/b3_development_evidence_v1": "cache/models/development",
+    "cache/models/from_results/b3_external_validation_v1": "cache/models/external",
+    "cache/models/from_results/b3_sample_efficiency_v1": "cache/models/sample_efficiency",
+    "cache/models/from_results/local_gaussian_source_attribution_v1": "cache/models/reference_source"
+  },
+  "workspace_followup": {
+    "cache/models/aegis_full": "cache/models/aegis/full",
+    "cache/models/aigvdbench_resplit_real300": "cache/models/aigvdbench/real_300",
+    "cache/models/aigvdbench_resplit_real300_variants": "cache/models/aigvdbench/real_300_controls",
+    "cache/models/aigvdbench_resplit_real300_vidu_region3_mean": "cache/models/aigvdbench/vidu_real_300_region_3_mean",
+    "cache/models/aigvdbench_resplit_real600_vidu_region3_mean": "cache/models/aigvdbench/vidu_real_600_region_3_mean",
+    "cache/models/original_real_calib_size": "cache/models/calibration_budget"
+  },
+  "duplicate_deletions": [
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/107.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/107.mp4",
+      "bytes": 361641
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/66.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/66.mp4",
+      "bytes": 363630
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/94.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/94.mp4",
+      "bytes": 362397
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/87.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/87.mp4",
+      "bytes": 363907
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/11.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/11.mp4",
+      "bytes": 354165
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/108.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/108.mp4",
+      "bytes": 361863
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/98.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/98.mp4",
+      "bytes": 361865
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/2.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/2.mp4",
+      "bytes": 364676
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/84.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/84.mp4",
+      "bytes": 357290
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/101.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/101.mp4",
+      "bytes": 363105
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video4.mp4",
+      "bytes": 865858
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/9.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/9.mp4",
+      "bytes": 359014
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/20.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/20.mp4",
+      "bytes": 360363
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/61.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/61.mp4",
+      "bytes": 363740
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/27.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/27.mp4",
+      "bytes": 361811
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/19.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/19.mp4",
+      "bytes": 358016
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/7.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/7.mp4",
+      "bytes": 357453
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/62.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/62.mp4",
+      "bytes": 361214
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video7.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video7.mp4",
+      "bytes": 858418
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/76.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/76.mp4",
+      "bytes": 352392
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/80.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/80.mp4",
+      "bytes": 362694
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/64.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/64.mp4",
+      "bytes": 361810
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video8.mp4",
+      "bytes": 833490
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/33.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/33.mp4",
+      "bytes": 350712
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video2.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video2.mp4",
+      "bytes": 864085
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/25.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/25.mp4",
+      "bytes": 365066
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/17.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/17.mp4",
+      "bytes": 359056
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/3.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/3.mp4",
+      "bytes": 364201
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/102.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/102.mp4",
+      "bytes": 362202
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/69.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/69.mp4",
+      "bytes": 360626
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/104.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/104.mp4",
+      "bytes": 361048
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/106.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/106.mp4",
+      "bytes": 366379
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/39.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/39.mp4",
+      "bytes": 360780
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/77.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/77.mp4",
+      "bytes": 364131
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/95.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/95.mp4",
+      "bytes": 361961
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/103.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/103.mp4",
+      "bytes": 360272
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/13.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/13.mp4",
+      "bytes": 352850
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/8.mp4",
+      "bytes": 364635
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/63.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/63.mp4",
+      "bytes": 357881
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video5.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video5.mp4",
+      "bytes": 866505
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/109.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/109.mp4",
+      "bytes": 360363
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/97.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/97.mp4",
+      "bytes": 363197
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/34.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/34.mp4",
+      "bytes": 362546
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/89.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/89.mp4",
+      "bytes": 363303
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/35.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/35.mp4",
+      "bytes": 364625
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/78.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/78.mp4",
+      "bytes": 352667
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/79.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/79.mp4",
+      "bytes": 358519
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/74.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/74.mp4",
+      "bytes": 362486
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/31.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/31.mp4",
+      "bytes": 363746
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/96.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/96.mp4",
+      "bytes": 360902
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/30.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/30.mp4",
+      "bytes": 355305
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/36.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/36.mp4",
+      "bytes": 358818
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/75.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/75.mp4",
+      "bytes": 362367
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/26.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/26.mp4",
+      "bytes": 362527
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/83.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/83.mp4",
+      "bytes": 355024
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/86.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/86.mp4",
+      "bytes": 366275
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/110.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/110.mp4",
+      "bytes": 363357
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/67.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/67.mp4",
+      "bytes": 352258
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/12.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/12.mp4",
+      "bytes": 358867
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/23.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/23.mp4",
+      "bytes": 363362
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_i2v_2.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_i2v_2.mp4",
+      "bytes": 844250
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/93.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/93.mp4",
+      "bytes": 359055
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/115.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/115.mp4",
+      "bytes": 361361
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video6.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video6.mp4",
+      "bytes": 860193
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/99.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/99.mp4",
+      "bytes": 361080
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video10.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video10.mp4",
+      "bytes": 1600796
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video3.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video3.mp4",
+      "bytes": 861062
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/4.mp4",
+      "bytes": 366738
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/15.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/15.mp4",
+      "bytes": 351803
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/72.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/72.mp4",
+      "bytes": 355913
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/38.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/38.mp4",
+      "bytes": 354560
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_i2v_1.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_i2v_1.mp4",
+      "bytes": 872218
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/24.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/24.mp4",
+      "bytes": 365239
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video11.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video11.mp4",
+      "bytes": 821705
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/81.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/81.mp4",
+      "bytes": 368983
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/14.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/14.mp4",
+      "bytes": 364675
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/91.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/91.mp4",
+      "bytes": 365946
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/21.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/21.mp4",
+      "bytes": 357273
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/18.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/18.mp4",
+      "bytes": 358134
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/105.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/105.mp4",
+      "bytes": 360854
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_i2v_4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_i2v_4.mp4",
+      "bytes": 845537
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/113.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/113.mp4",
+      "bytes": 361462
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/111.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/111.mp4",
+      "bytes": 363044
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/88.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/88.mp4",
+      "bytes": 365276
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/28.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/28.mp4",
+      "bytes": 352444
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/22.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/22.mp4",
+      "bytes": 362571
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/85.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/85.mp4",
+      "bytes": 363666
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/5.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/5.mp4",
+      "bytes": 359357
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/6.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/6.mp4",
+      "bytes": 363647
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/100.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/100.mp4",
+      "bytes": 358840
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/90.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/90.mp4",
+      "bytes": 351804
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_i2v_3.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_i2v_3.mp4",
+      "bytes": 850365
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/40.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/40.mp4",
+      "bytes": 361295
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/92.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/92.mp4",
+      "bytes": 351580
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/112.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/112.mp4",
+      "bytes": 363898
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/68.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/68.mp4",
+      "bytes": 359588
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/32.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/32.mp4",
+      "bytes": 363236
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/65.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/65.mp4",
+      "bytes": 361365
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video9.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video9.mp4",
+      "bytes": 1620460
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/10.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/10.mp4",
+      "bytes": 365263
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/Sora_video1.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/Sora_video1.mp4",
+      "bytes": 1621699
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/70.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/70.mp4",
+      "bytes": 352287
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/1.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/1.mp4",
+      "bytes": 360708
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/37.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/37.mp4",
+      "bytes": 360439
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/16.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/16.mp4",
+      "bytes": 363749
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/73.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/73.mp4",
+      "bytes": 359236
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/sora/29.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/sora/29.mp4",
+      "bytes": 364952
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/062.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/062.mp4",
+      "bytes": 4231925
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/047.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/047.mp4",
+      "bytes": 3500592
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/030.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/030.mp4",
+      "bytes": 3602798
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/017.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/017.mp4",
+      "bytes": 3106376
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/096.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/096.mp4",
+      "bytes": 3339751
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/049.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/049.mp4",
+      "bytes": 2298034
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/014.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/014.mp4",
+      "bytes": 4723443
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/024.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/024.mp4",
+      "bytes": 3397191
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/107.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/107.mp4",
+      "bytes": 2787132
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/070.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/070.mp4",
+      "bytes": 2468988
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/001.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/001.mp4",
+      "bytes": 3786073
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/035.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/035.mp4",
+      "bytes": 3292030
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/090.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/090.mp4",
+      "bytes": 1571446
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/108.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/108.mp4",
+      "bytes": 2258900
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/076.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/076.mp4",
+      "bytes": 1921867
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/086.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/086.mp4",
+      "bytes": 3104021
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/004.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/004.mp4",
+      "bytes": 3293625
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/009.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/009.mp4",
+      "bytes": 2703291
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/019.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/019.mp4",
+      "bytes": 3180042
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/053.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/053.mp4",
+      "bytes": 2371240
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/095.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/095.mp4",
+      "bytes": 1974147
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/084.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/084.mp4",
+      "bytes": 8035691
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/098.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/098.mp4",
+      "bytes": 3907316
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/026.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/026.mp4",
+      "bytes": 1564695
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/068.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/068.mp4",
+      "bytes": 1652603
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/088.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/088.mp4",
+      "bytes": 3492344
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/054.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/054.mp4",
+      "bytes": 2136207
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/074.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/074.mp4",
+      "bytes": 3069432
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/099.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/099.mp4",
+      "bytes": 5252594
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/067.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/067.mp4",
+      "bytes": 1917014
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/069.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/069.mp4",
+      "bytes": 3330243
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/059.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/059.mp4",
+      "bytes": 2443989
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/011.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/011.mp4",
+      "bytes": 2028076
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/114.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/114.mp4",
+      "bytes": 1924629
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/044.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/044.mp4",
+      "bytes": 3258637
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/046.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/046.mp4",
+      "bytes": 2819604
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/018.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/018.mp4",
+      "bytes": 2230838
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/041.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/041.mp4",
+      "bytes": 3453179
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/010.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/010.mp4",
+      "bytes": 1657152
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/050.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/050.mp4",
+      "bytes": 3836714
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/081.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/081.mp4",
+      "bytes": 7350665
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/089.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/089.mp4",
+      "bytes": 5751511
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/104.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/104.mp4",
+      "bytes": 4548965
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/106.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/106.mp4",
+      "bytes": 2539742
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/055.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/055.mp4",
+      "bytes": 1399182
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/012.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/012.mp4",
+      "bytes": 1528903
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/006.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/006.mp4",
+      "bytes": 4800691
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/045.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/045.mp4",
+      "bytes": 2847266
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/091.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/091.mp4",
+      "bytes": 1032900
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/109.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/109.mp4",
+      "bytes": 2998833
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/092.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/092.mp4",
+      "bytes": 4798964
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/008.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/008.mp4",
+      "bytes": 2648789
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/051.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/051.mp4",
+      "bytes": 2578383
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/083.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/083.mp4",
+      "bytes": 5115128
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/085.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/085.mp4",
+      "bytes": 4787767
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/094.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/094.mp4",
+      "bytes": 1696439
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/052.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/052.mp4",
+      "bytes": 3307399
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/039.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/039.mp4",
+      "bytes": 2769785
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/033.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/033.mp4",
+      "bytes": 2775161
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/097.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/097.mp4",
+      "bytes": 5771443
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/060.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/060.mp4",
+      "bytes": 4185149
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/075.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/075.mp4",
+      "bytes": 2841211
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/110.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/110.mp4",
+      "bytes": 1330488
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/066.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/066.mp4",
+      "bytes": 2582807
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/056.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/056.mp4",
+      "bytes": 1890415
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/058.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/058.mp4",
+      "bytes": 4071210
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/015.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/015.mp4",
+      "bytes": 2156563
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/038.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/038.mp4",
+      "bytes": 5201931
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/064.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/064.mp4",
+      "bytes": 1433863
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/013.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/013.mp4",
+      "bytes": 2855745
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/116.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/116.mp4",
+      "bytes": 2705042
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/002.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/002.mp4",
+      "bytes": 3235770
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/115.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/115.mp4",
+      "bytes": 2549739
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/016.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/016.mp4",
+      "bytes": 1563254
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/037.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/037.mp4",
+      "bytes": 2530404
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/071.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/071.mp4",
+      "bytes": 3669931
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/048.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/048.mp4",
+      "bytes": 2868297
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/036.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/036.mp4",
+      "bytes": 3803075
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/082.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/082.mp4",
+      "bytes": 2426429
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/078.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/078.mp4",
+      "bytes": 5229132
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/057.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/057.mp4",
+      "bytes": 2652147
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/031.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/031.mp4",
+      "bytes": 2908909
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/072.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/072.mp4",
+      "bytes": 1382497
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/105.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/105.mp4",
+      "bytes": 2015452
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/077.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/077.mp4",
+      "bytes": 3866863
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/113.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/113.mp4",
+      "bytes": 2890734
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/111.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/111.mp4",
+      "bytes": 2422373
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/042.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/042.mp4",
+      "bytes": 1168101
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/087.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/087.mp4",
+      "bytes": 6104938
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/040.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/040.mp4",
+      "bytes": 2619553
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/034.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/034.mp4",
+      "bytes": 1398015
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/080.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/080.mp4",
+      "bytes": 1682268
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/003.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/003.mp4",
+      "bytes": 2394743
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/027.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/027.mp4",
+      "bytes": 2072881
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/020.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/020.mp4",
+      "bytes": 1738046
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/100.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/100.mp4",
+      "bytes": 4645063
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/043.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/043.mp4",
+      "bytes": 3419445
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/022.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/022.mp4",
+      "bytes": 2273613
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/023.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/023.mp4",
+      "bytes": 3995269
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/065.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/065.mp4",
+      "bytes": 2644642
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/028.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/028.mp4",
+      "bytes": 1484807
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/007.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/007.mp4",
+      "bytes": 2669733
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/005.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/005.mp4",
+      "bytes": 3063834
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/073.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/073.mp4",
+      "bytes": 2714494
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/079.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/079.mp4",
+      "bytes": 3714472
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/112.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/112.mp4",
+      "bytes": 1303407
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/025.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/025.mp4",
+      "bytes": 4659667
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/029.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/029.mp4",
+      "bytes": 1979047
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/061.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/061.mp4",
+      "bytes": 5764486
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/021.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/021.mp4",
+      "bytes": 1401746
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/kling/032.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/fake/kling/032.mp4",
+      "bytes": 2121684
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/uhYLfK8GSr0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/uhYLfK8GSr0.mp4",
+      "bytes": 8267075
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/PR9wl4Qve5E.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/PR9wl4Qve5E.mp4",
+      "bytes": 1043288
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/S5nPGBtrzzc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/S5nPGBtrzzc.mp4",
+      "bytes": 1545641
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/yonzfexr6V4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/yonzfexr6V4.mp4",
+      "bytes": 669572
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/7D6rd0RoCjU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/7D6rd0RoCjU.mp4",
+      "bytes": 5064497
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/AFwQNIOP6mc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/AFwQNIOP6mc.mp4",
+      "bytes": 79932
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/_bVZeOt7bCw.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/_bVZeOt7bCw.mp4",
+      "bytes": 16250495
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Lion king vs buffalo watches attacks #petpalsshowcase #lion #rurallife #buffalo #jungle #lioness [x8jiLo4-MHg].mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Lion king vs buffalo watches attacks #petpalsshowcase #lion #rurallife #buffalo #jungle #lioness [x8jiLo4-MHg].mp4",
+      "bytes": 972780
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/lgk74cLnQ6k.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/lgk74cLnQ6k.mp4",
+      "bytes": 3206635
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/OQofUjcv2g8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/OQofUjcv2g8.mp4",
+      "bytes": 569580
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/8zsPv93U4EA.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/8zsPv93U4EA.mp4",
+      "bytes": 642856
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/XIEPnzQIh20.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/XIEPnzQIh20.mp4",
+      "bytes": 529094
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/0cCC9gQUX9Y.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/0cCC9gQUX9Y.mp4",
+      "bytes": 2090994
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Y4ufUshGKlk.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Y4ufUshGKlk.mp4",
+      "bytes": 4206183
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/G6Ee6udLwVE.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/G6Ee6udLwVE.mp4",
+      "bytes": 2053579
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Cc5PKVpXmdc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Cc5PKVpXmdc.mp4",
+      "bytes": 5479345
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/-h6U123dHGo.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/-h6U123dHGo.mp4",
+      "bytes": 606503
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/0ZEGhsB3EXI.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/0ZEGhsB3EXI.mp4",
+      "bytes": 1062935
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/rxUm-2x-2dM.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/rxUm-2x-2dM.mp4",
+      "bytes": 296144
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/elQ4PV7Y3_U.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/elQ4PV7Y3_U.mp4",
+      "bytes": 2075282
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/wF3ARb46Pvk.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/wF3ARb46Pvk.mp4",
+      "bytes": 541756
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/ez_bfPAZ28Y.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/ez_bfPAZ28Y.mp4",
+      "bytes": 772530
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/QBG8SDB1lF8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/QBG8SDB1lF8.mp4",
+      "bytes": 468143
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/TyKlJbe1frc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/TyKlJbe1frc.mp4",
+      "bytes": 109673
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/af2PMhKYBz0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/af2PMhKYBz0.mp4",
+      "bytes": 264969
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/I_gwdOGFen4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/I_gwdOGFen4.mp4",
+      "bytes": 2236113
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/ONONq6ItXjs.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/ONONq6ItXjs.mp4",
+      "bytes": 1086089
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/3NNQFdgvO-Y.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/3NNQFdgvO-Y.mp4",
+      "bytes": 19723954
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/83pD04DvnIU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/83pD04DvnIU.mp4",
+      "bytes": 606523
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/kvTBnS_qwXU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/kvTBnS_qwXU.mp4",
+      "bytes": 981328
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/P2g5oIntvBE.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/P2g5oIntvBE.mp4",
+      "bytes": 280042
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/9CW_FXGpios.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/9CW_FXGpios.mp4",
+      "bytes": 1724701
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/mK1dha3h46o.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/mK1dha3h46o.mp4",
+      "bytes": 475725
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/XOdNX2hdow0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/XOdNX2hdow0.mp4",
+      "bytes": 3145090
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/6qLpz93pNy8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/6qLpz93pNy8.mp4",
+      "bytes": 406148
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/VKi8e8MBC0M.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/VKi8e8MBC0M.mp4",
+      "bytes": 4532875
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/EBt98ur6bN8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/EBt98ur6bN8.mp4",
+      "bytes": 2917949
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/ivl1juO0l7c.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/ivl1juO0l7c.mp4",
+      "bytes": 709371
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/sevZM2HLB_g.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/sevZM2HLB_g.mp4",
+      "bytes": 2060948
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/52771yKS3As.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/52771yKS3As.mp4",
+      "bytes": 203120
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/tuz7Gw4dpHY.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/tuz7Gw4dpHY.mp4",
+      "bytes": 2398573
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/WBc4PnQiDvc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/WBc4PnQiDvc.mp4",
+      "bytes": 235366
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/dSsu7DZLqcY.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/dSsu7DZLqcY.mp4",
+      "bytes": 347031
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/j_bx25ZSQtM.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/j_bx25ZSQtM.mp4",
+      "bytes": 5698544
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/kfrn0gm4Ip0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/kfrn0gm4Ip0.mp4",
+      "bytes": 340471
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/_a5ClJfGaS0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/_a5ClJfGaS0.mp4",
+      "bytes": 752389
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/61_v0IEN-r8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/61_v0IEN-r8.mp4",
+      "bytes": 568606
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/ovsvZzgx_sI.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/ovsvZzgx_sI.mp4",
+      "bytes": 341209
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/FnTUshbygyA.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/FnTUshbygyA.mp4",
+      "bytes": 507909
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/gFlXVX2af_Y.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/gFlXVX2af_Y.mp4",
+      "bytes": 1509074
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/h6XCQUuZQU4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/h6XCQUuZQU4.mp4",
+      "bytes": 4180013
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/uYWNkTP9L9A.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/uYWNkTP9L9A.mp4",
+      "bytes": 308647
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/dmi_5b2XvaE.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/dmi_5b2XvaE.mp4",
+      "bytes": 272891
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Tjss7uFrYmg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Tjss7uFrYmg.mp4",
+      "bytes": 2380888
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/9hYmLUK1I4Q.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/9hYmLUK1I4Q.mp4",
+      "bytes": 31043641
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/zXdfGk9Q7T4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/zXdfGk9Q7T4.mp4",
+      "bytes": 333611
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/q9K3HidQejs.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/q9K3HidQejs.mp4",
+      "bytes": 3307164
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/d_kkmjsdl90.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/d_kkmjsdl90.mp4",
+      "bytes": 290305
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/UNdI8dtBicY.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/UNdI8dtBicY.mp4",
+      "bytes": 381984
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/YCbvRk4utj4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/YCbvRk4utj4.mp4",
+      "bytes": 670233
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/o3bhQwY0KCY.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/o3bhQwY0KCY.mp4",
+      "bytes": 1181643
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/2LxnPgejetI.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/2LxnPgejetI.mp4",
+      "bytes": 5809254
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/qDFrvC8oBW4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/qDFrvC8oBW4.mp4",
+      "bytes": 988912
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/x8jiLo4-MHg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/x8jiLo4-MHg.mp4",
+      "bytes": 944460
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/zx1v27G95Wg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/zx1v27G95Wg.mp4",
+      "bytes": 426800
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/x_i8BilSzNw.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/x_i8BilSzNw.mp4",
+      "bytes": 604834
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/-EPgZN3cUlA.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/-EPgZN3cUlA.mp4",
+      "bytes": 453540
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/0E7MYnAXg6A.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/0E7MYnAXg6A.mp4",
+      "bytes": 1657643
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/DPsmNCXiFZQ.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/DPsmNCXiFZQ.mp4",
+      "bytes": 2260035
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/DEpIlZd9yIo.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/DEpIlZd9yIo.mp4",
+      "bytes": 552024
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/WcMPj-4DK7w.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/WcMPj-4DK7w.mp4",
+      "bytes": 211224
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/eqYjeF7qZ_w.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/eqYjeF7qZ_w.mp4",
+      "bytes": 4968432
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/cATIGTyufsM.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/cATIGTyufsM.mp4",
+      "bytes": 780831
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Ps5GVSP7p7w.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Ps5GVSP7p7w.mp4",
+      "bytes": 1198100
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/TN5zxaMFnac.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/TN5zxaMFnac.mp4",
+      "bytes": 283286
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/aOREat2NjVw.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/aOREat2NjVw.mp4",
+      "bytes": 1336968
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/aSoy7K9-EzE.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/aSoy7K9-EzE.mp4",
+      "bytes": 647208
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/NeVtALv17Go.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/NeVtALv17Go.mp4",
+      "bytes": 8316420
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/CNZufch7_Vg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/CNZufch7_Vg.mp4",
+      "bytes": 5330836
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/RW4YOZeIl5s.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/RW4YOZeIl5s.mp4",
+      "bytes": 340993
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/EDgQBkQ_Sc0.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/EDgQBkQ_Sc0.mp4",
+      "bytes": 4653207
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/CkKmWhtzYHU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/CkKmWhtzYHU.mp4",
+      "bytes": 261539
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/B9W4p51F_88.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/B9W4p51F_88.mp4",
+      "bytes": 1149233
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/8V7czbc0kxg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/8V7czbc0kxg.mp4",
+      "bytes": 5833414
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/TFUaBw2Bl54.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/TFUaBw2Bl54.mp4",
+      "bytes": 4857499
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/5RjMFG3Uw_4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/5RjMFG3Uw_4.mp4",
+      "bytes": 2191358
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/_pOx6ucUJYc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/_pOx6ucUJYc.mp4",
+      "bytes": 244442
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/w4Bk94tAlBg.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/w4Bk94tAlBg.mp4",
+      "bytes": 606865
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/D9tP9fI2zbE.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/D9tP9fI2zbE.mp4",
+      "bytes": 139296
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/U4lT21qwbKI.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/U4lT21qwbKI.mp4",
+      "bytes": 1466921
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/aGqXZx_4J24.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/aGqXZx_4J24.mp4",
+      "bytes": 129137
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/65a8p9rSw7U.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/65a8p9rSw7U.mp4",
+      "bytes": 406995
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/sCjvICzPciU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/sCjvICzPciU.mp4",
+      "bytes": 308351
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/4A1zBkb3ySA.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/4A1zBkb3ySA.mp4",
+      "bytes": 4136890
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/5jmqHoXMfcc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/5jmqHoXMfcc.mp4",
+      "bytes": 607017
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/WE7aWwiNDFM.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/WE7aWwiNDFM.mp4",
+      "bytes": 329055
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/5FMB-wjX6yk.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/5FMB-wjX6yk.mp4",
+      "bytes": 480624
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/9vN_htf-05w.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/9vN_htf-05w.mp4",
+      "bytes": 1421230
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/KXK1at-udX8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/KXK1at-udX8.mp4",
+      "bytes": 91525
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/cP6-ENTSUlI.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/cP6-ENTSUlI.mp4",
+      "bytes": 16425557
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/r7oJ8F0Wolk.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/r7oJ8F0Wolk.mp4",
+      "bytes": 342830
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Gaq7qSnKpFA.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Gaq7qSnKpFA.mp4",
+      "bytes": 332008
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/j3pYVEFrPQQ.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/j3pYVEFrPQQ.mp4",
+      "bytes": 4701153
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/AHGveHs0HPM.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/AHGveHs0HPM.mp4",
+      "bytes": 802878
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/aWD4MUk4J6Q.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/aWD4MUk4J6Q.mp4",
+      "bytes": 264996
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/gFlXVX2af_Y_001.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/gFlXVX2af_Y_001.mp4",
+      "bytes": 8967862
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/qimiH1WxoUc.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/qimiH1WxoUc.mp4",
+      "bytes": 4508333
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/Tt9QwcafZvU.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/Tt9QwcafZvU.mp4",
+      "bytes": 274688
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/youtube/gFlXVX2af_Y_002.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/youtube/gFlXVX2af_Y_002.mp4",
+      "bytes": 3539067
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_62.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_62.mp4",
+      "bytes": 6315898
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_56.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_56.mp4",
+      "bytes": 6494733
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_42.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_42.mp4",
+      "bytes": 18510164
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/6_16.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/6_16.mp4",
+      "bytes": 10426233
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_1.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_1.mp4",
+      "bytes": 12201022
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_86.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_86.mp4",
+      "bytes": 12605163
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_69.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_69.mp4",
+      "bytes": 8198443
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_370.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_370.mp4",
+      "bytes": 13262106
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_388.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_388.mp4",
+      "bytes": 8093276
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_21.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_21.mp4",
+      "bytes": 7302428
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_314.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_314.mp4",
+      "bytes": 12512571
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_2.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_2.mp4",
+      "bytes": 2480018
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_5.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_5.mp4",
+      "bytes": 8316345
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_63.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_63.mp4",
+      "bytes": 11510766
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_256.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_256.mp4",
+      "bytes": 9456524
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_344.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_344.mp4",
+      "bytes": 22778744
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_132.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_132.mp4",
+      "bytes": 17433501
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/6_13.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/6_13.mp4",
+      "bytes": 10596264
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_164.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_164.mp4",
+      "bytes": 12162434
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_41.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_41.mp4",
+      "bytes": 1510102
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_6.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_6.mp4",
+      "bytes": 14412860
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_527.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_527.mp4",
+      "bytes": 11415635
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_51.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_51.mp4",
+      "bytes": 3477515
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_77.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_77.mp4",
+      "bytes": 17260440
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_50.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_50.mp4",
+      "bytes": 9240695
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_539.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_539.mp4",
+      "bytes": 9288085
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_549.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_549.mp4",
+      "bytes": 12906384
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_180.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_180.mp4",
+      "bytes": 15385262
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_121.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_121.mp4",
+      "bytes": 15756447
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_534.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_534.mp4",
+      "bytes": 9103770
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_243.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_243.mp4",
+      "bytes": 7314097
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_472.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_472.mp4",
+      "bytes": 13478076
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_250.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_250.mp4",
+      "bytes": 16572531
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_316.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_316.mp4",
+      "bytes": 18051620
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_26.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_26.mp4",
+      "bytes": 8527263
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_8.mp4",
+      "bytes": 9449452
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_453.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_453.mp4",
+      "bytes": 12212990
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_441.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_441.mp4",
+      "bytes": 12475369
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_40.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_40.mp4",
+      "bytes": 4170880
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_30.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_30.mp4",
+      "bytes": 15747605
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_13.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_13.mp4",
+      "bytes": 12223036
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_129.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_129.mp4",
+      "bytes": 18175555
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_11.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_11.mp4",
+      "bytes": 16290049
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_135.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_135.mp4",
+      "bytes": 16460436
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_126.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_126.mp4",
+      "bytes": 16497296
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_5.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_5.mp4",
+      "bytes": 13049262
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_182.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_182.mp4",
+      "bytes": 16435106
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_85.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_85.mp4",
+      "bytes": 12663418
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_88.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_88.mp4",
+      "bytes": 4612053
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_1.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_1.mp4",
+      "bytes": 14955516
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_334.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_334.mp4",
+      "bytes": 18155079
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_26.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_26.mp4",
+      "bytes": 13741945
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_94.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_94.mp4",
+      "bytes": 14546372
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_62.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_62.mp4",
+      "bytes": 6833149
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_20.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_20.mp4",
+      "bytes": 14844645
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_54.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_54.mp4",
+      "bytes": 10019867
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_346.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_346.mp4",
+      "bytes": 11022436
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_78.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_78.mp4",
+      "bytes": 11349863
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_45.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_45.mp4",
+      "bytes": 10786889
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_199.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_199.mp4",
+      "bytes": 14705389
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_55.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_55.mp4",
+      "bytes": 6188184
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_42.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_42.mp4",
+      "bytes": 3656011
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_21.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_21.mp4",
+      "bytes": 13847954
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_4.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_4.mp4",
+      "bytes": 3519610
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_363.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_363.mp4",
+      "bytes": 13499076
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_400.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_400.mp4",
+      "bytes": 8795569
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_392.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_392.mp4",
+      "bytes": 9408031
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_63.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_63.mp4",
+      "bytes": 3177289
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_524.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_524.mp4",
+      "bytes": 8185651
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/2_45.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/2_45.mp4",
+      "bytes": 2814618
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_234.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_234.mp4",
+      "bytes": 20456836
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_51.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_51.mp4",
+      "bytes": 11488403
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/6_2.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/6_2.mp4",
+      "bytes": 7904422
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_8.mp4",
+      "bytes": 4154488
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_25.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_25.mp4",
+      "bytes": 11852201
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_54.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_54.mp4",
+      "bytes": 11454721
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_423.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_423.mp4",
+      "bytes": 8492436
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_40.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_40.mp4",
+      "bytes": 9985426
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_478.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_478.mp4",
+      "bytes": 19794778
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_381.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_381.mp4",
+      "bytes": 8868340
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_12.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_12.mp4",
+      "bytes": 5181283
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_20.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_20.mp4",
+      "bytes": 12843019
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_74.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_74.mp4",
+      "bytes": 7330298
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_34.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_34.mp4",
+      "bytes": 16495489
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_77.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_77.mp4",
+      "bytes": 11999175
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_396.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_396.mp4",
+      "bytes": 8195512
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_450.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_450.mp4",
+      "bytes": 12191872
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_18.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_18.mp4",
+      "bytes": 17759189
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_46.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_46.mp4",
+      "bytes": 3302713
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_541.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_541.mp4",
+      "bytes": 7140140
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_284.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_284.mp4",
+      "bytes": 12794308
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_86.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_86.mp4",
+      "bytes": 17273271
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_528.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_528.mp4",
+      "bytes": 11992847
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_280.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_280.mp4",
+      "bytes": 13534551
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_44.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_44.mp4",
+      "bytes": 13018097
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_310.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_310.mp4",
+      "bytes": 13318434
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_52.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_52.mp4",
+      "bytes": 11671717
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_92.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_92.mp4",
+      "bytes": 13080009
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_407.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_407.mp4",
+      "bytes": 11763757
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/1_8.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/1_8.mp4",
+      "bytes": 11802442
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_120.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_120.mp4",
+      "bytes": 15224324
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/6_9.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/6_9.mp4",
+      "bytes": 6315404
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_224.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_224.mp4",
+      "bytes": 22919164
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_118.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_118.mp4",
+      "bytes": 13293328
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_38.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_38.mp4",
+      "bytes": 8882187
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/4_52.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/4_52.mp4",
+      "bytes": 13621369
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/3_68.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/3_68.mp4",
+      "bytes": 11504615
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/7_313.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/7_313.mp4",
+      "bytes": 10712771
+    },
+    {
+      "path": "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/5_88.mp4",
+      "same_content": "/data/OneDay/STALL_project/datasets/aegis/videos/real/dvf/5_88.mp4",
+      "bytes": 10871849
+    }
+  ],
+  "remaining_extracted_unique_files": [
+    "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/KLingPrompt.txt",
+    "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/ai_gen/SoraPrompt.txt",
+    "/data/OneDay/STALL_project/datasets/aegis/extracted/test_data/real/dvf/failed_videos.zip"
+  ],
+  "workspace_video_inventory": [
+    {
+      "dataset": "aegis",
+      "directory": "datasets/aegis/videos/fake/kling",
+      "videos": 111,
+      "logical_bytes": 336275169,
+      "hardlinked_files": 0
+    },
+    {
+      "dataset": "aegis",
+      "directory": "datasets/aegis/videos/fake/sora",
+      "videos": 107,
+      "logical_bytes": 48263322,
+      "hardlinked_files": 0
+    },
+    {
+      "dataset": "aegis",
+      "directory": "datasets/aegis/videos/real/dvf",
+      "videos": 109,
+      "logical_bytes": 1249358250,
+      "hardlinked_files": 0
+    },
+    {
+      "dataset": "aegis",
+      "directory": "datasets/aegis/videos/real/youtube",
+      "videos": 109,
+      "logical_bytes": 263595419,
+      "hardlinked_files": 0
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/real_reserve/real/aigvd_real",
+      "videos": 300,
+      "logical_bytes": 1367426722,
+      "hardlinked_files": 0
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_fake_pool/cogvideox15_test300",
+      "videos": 300,
+      "logical_bytes": 44142634,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_fake_pool/open_sora_test300",
+      "videos": 300,
+      "logical_bytes": 16607959,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_fake_pool/open_sora_val200",
+      "videos": 200,
+      "logical_bytes": 11404718,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_fake_pool/pika_test300",
+      "videos": 300,
+      "logical_bytes": 186897488,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_fake_pool/vidu_test300",
+      "videos": 300,
+      "logical_bytes": 361983187,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_real_pool/test300",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/pools/_real_pool/val200",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/resplit_cogvideox15/fake/cogvideox15",
+      "videos": 300,
+      "logical_bytes": 44142634,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/resplit_vidu/fake/vidu",
+      "videos": 300,
+      "logical_bytes": 361983187,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_open_sora/fake/open_sora",
+      "videos": 300,
+      "logical_bytes": 16607959,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_open_sora/real",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_open_sora/real/aigvd_real",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_open_sora_prefixed/fake/open_sora",
+      "videos": 300,
+      "logical_bytes": 16607959,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_open_sora_prefixed/real/aigvd_real",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_pika/fake/pika",
+      "videos": 300,
+      "logical_bytes": 186897488,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_pika/real",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/test_pika/real/aigvd_real",
+      "videos": 300,
+      "logical_bytes": 1411000948,
+      "hardlinked_files": 300
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/val_open_sora/fake/open_sora",
+      "videos": 200,
+      "logical_bytes": 11404718,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/val_open_sora/real",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/val_open_sora/real/aigvd_real",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/val_open_sora_prefixed/fake/open_sora",
+      "videos": 200,
+      "logical_bytes": 11404718,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/val_open_sora_prefixed/real/aigvd_real",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/validation_real_200/real",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    },
+    {
+      "dataset": "aigvdbench",
+      "directory": "datasets/aigvdbench/views/validation_real_200/real/aigvd_real",
+      "videos": 200,
+      "logical_bytes": 1108379118,
+      "hardlinked_files": 200
+    }
+  ],
+  "workspace_metadata": {
+    "datasets/aegis/extracted/test_data/ai_gen/KLingPrompt.txt": "datasets/aegis/metadata/KLingPrompt.txt",
+    "datasets/aegis/extracted/test_data/ai_gen/SoraPrompt.txt": "datasets/aegis/metadata/SoraPrompt.txt",
+    "datasets/aegis/extracted/test_data/real/dvf/failed_videos.zip": "datasets/aegis/archives/failed_videos.zip"
+  },
+  "current_models": [
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_d1.npz",
+      "bytes": 8087213,
+      "sha256": "6f61fd04f7ea55cfb64f8c5d6f31a337b1470f363fe193c2b8aee9268cd7bef5"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_d2_diagonal.npz",
+      "bytes": 28593,
+      "sha256": "53cbfeb3e60b0a82469b9c085dce3e5145fe7ff5764ca77b5a73f107d5f20e52"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_global_d2.npz",
+      "bytes": 8105981,
+      "sha256": "040cfb1bfe42fa8ab561820ba226a7abafe848448acc8266e7cf78f80edde969"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_gs.npz",
+      "bytes": 8047146,
+      "sha256": "1b38527e5ef1c674fe669be79c4a3a3979e67dcc65b6675469109d27a5988b80"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_gt.npz",
+      "bytes": 8102223,
+      "sha256": "240ac6758758114268ec5ba9869d22ead3f323b69c62a6c7629124974a609e66"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_log_radius.npz",
+      "bytes": 924,
+      "sha256": "689bdcdd3d3a1cb7a925b8d3a7c5b8d4f9e7eceab6654dd7b11bac799d049ae2"
+    },
+    {
+      "path": "cache/models/development/parameters/comgenvid_target_raw_d2.npz",
+      "bytes": 8041082,
+      "sha256": "a691cfee844de83e04dc9f6fbf06b111dd45600563aae6a17b9724a47958c87e"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_d1.npz",
+      "bytes": 8084795,
+      "sha256": "7bd58d9f3a3488d0a5dcadbf086811ca3ce47eaf9fcec913ecf3f08f8ca19100"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_d2_diagonal.npz",
+      "bytes": 28567,
+      "sha256": "0078d42acfdf9c73262c7afc83d5a52728875b4bc259ab95a439bf57fa1e15b2"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_global_d2.npz",
+      "bytes": 8100767,
+      "sha256": "3bbbcc923a0e1b21cf760e7a6cf8419c0cdf84f94491b35bb4a01e8ddf596f6c"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_gs.npz",
+      "bytes": 8046282,
+      "sha256": "fbca3f8a23e1781fcdb73258c43503147595ac36036b9540b86aa6f810fa38e3"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_gt.npz",
+      "bytes": 8096661,
+      "sha256": "09f59ec9337983de2ce4ee91409ce9349c841c155e620e0e98acb91db2ed64ab"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_log_radius.npz",
+      "bytes": 924,
+      "sha256": "f95411c4228530da91ba846617ee73bc57167a0d4744b5f96ec1cb67e9e57879"
+    },
+    {
+      "path": "cache/models/development/parameters/genvideo_target_raw_d2.npz",
+      "bytes": 8041492,
+      "sha256": "fc92a9f9db398048610658fca0758694333576ba5502ab257b2fe62359debdbc"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_d1.npz",
+      "bytes": 8084752,
+      "sha256": "e5130c2e846e529f877bae9b0046f03126adf0fbb895299291a852e6f4bbbc8f"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_d2_diagonal.npz",
+      "bytes": 28602,
+      "sha256": "b9fbb0773c9dff30ad0b999f07b18158c4719f7eb4d9bfe39d207580b9ef1868"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_global_d2.npz",
+      "bytes": 8113373,
+      "sha256": "cb0b57aa0ea3dc84132019160ff84d60c847562e8610626d0645b3eb12358f5f"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_gs.npz",
+      "bytes": 8049652,
+      "sha256": "7c4e5f0f6d46a6079b9a401f8fd628744aa5936a185714cbd154e4c80ec917f4"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_gt.npz",
+      "bytes": 8105879,
+      "sha256": "45a310b11c6a56d33c626cac13ff729906d459b75492216d874e62df8b850b95"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_log_radius.npz",
+      "bytes": 924,
+      "sha256": "e264a1f3f84c038aec1a29a9091ec6cedcfeeadc23c533c9cbf82859620e2229"
+    },
+    {
+      "path": "cache/models/development/parameters/videofeedback_target_raw_d2.npz",
+      "bytes": 8041556,
+      "sha256": "8c9dd070218f649bb1bc26a1d5aaa357b136dd8988c5d4e03d854e24b5c4d28d"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_source_d2.npz",
+      "bytes": 8088538,
+      "sha256": "f2b0dd3e1bcff4454f1b2813f412eab12b23f177376f46931a7a4b6b09c17e62"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_d1.npz",
+      "bytes": 8085532,
+      "sha256": "88b0febb4e99f53414f51dec11d711bc74c1ff98a8f4c22ade6ce94a54e39513"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_d2.npz",
+      "bytes": 8085536,
+      "sha256": "91ad8e893e4cbcab451ecf67c056951bf9a87ee199a13e0403f6e1a4a2319e35"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_d2_diagonal.npz",
+      "bytes": 29118,
+      "sha256": "3ebbbbb6d1806320f56e070d554acc50ffb8825c2db482f5c9b78c640a75804a"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_global_d2.npz",
+      "bytes": 8108935,
+      "sha256": "ca2aa8f3d022dca740812353a3a47d2a3274da373739b515e779382d92356b29"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_gs.npz",
+      "bytes": 8050517,
+      "sha256": "0aaaec5633528d8deffa4cbf1ca8d9a923dbaaea5410feb83af427e2f9fdfba9"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_gt.npz",
+      "bytes": 8102697,
+      "sha256": "71be5a2d16e9bf8e59f6da05582ac990b94a7f91d7d74f623bd840c37a794bab"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_log_radius.npz",
+      "bytes": 1620,
+      "sha256": "8ee072bb21e855f79f201b6823155e1ce52ee72ec0fc8c9d8cee53c439b1e4bf"
+    },
+    {
+      "path": "cache/models/external/parameters/genvidbench_target_raw_d2.npz",
+      "bytes": 8042518,
+      "sha256": "972725590f063c79ea371d2a4ecdad3fe2d702f27e4c1833a5bc9df962e1ffce"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_source_d2.npz",
+      "bytes": 8090109,
+      "sha256": "13fc1b380cacc38718711a0fad2373840c326cb4058bfb009c19293b455109a4"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_d1.npz",
+      "bytes": 8088734,
+      "sha256": "9ccc6e9e311040a58f02b48f54d3deadee9812a115191266c2934f552991ebae"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_d2.npz",
+      "bytes": 8088784,
+      "sha256": "6c9ac405036c5c8f206cde85d3db5da0485d49213fa927cbc8b74579ca1a31a5"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_d2_diagonal.npz",
+      "bytes": 29048,
+      "sha256": "e59d659ea78bcf619e77dbe18670efa84b376894a72ad14c277d4029d0320c4b"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_global_d2.npz",
+      "bytes": 8125965,
+      "sha256": "24371965a207bc4dfb3cf68d2019fbfb07990d6cc5fed0db96e60cdc417908d8"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_gs.npz",
+      "bytes": 8057341,
+      "sha256": "07f86cc4ae17418092d5def7c947c4b86b02c42b9a68c09dac1562f0535d209e"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_gt.npz",
+      "bytes": 8119020,
+      "sha256": "7c4ae8dac33d895eacd77e9db112c7cf820ee84ace260776963df4f4e8c2405c"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_log_radius.npz",
+      "bytes": 1616,
+      "sha256": "b290a307cf3e4e93ba740b11851ca8e40a03c209ed0b84a8e5427b785013f0ba"
+    },
+    {
+      "path": "cache/models/external/parameters/vifbench_target_raw_d2.npz",
+      "bytes": 8042714,
+      "sha256": "35d176c5757aaa660d84f8b74df2bd26a665ba88b0e1176f1073f10709035809"
+    },
+    {
+      "path": "cache/models/reference_source/balanced_comgenvid.npz",
+      "bytes": 8087752,
+      "sha256": "4726c8cfb514aaf7bed3b652105577ea54e2814c36f504550260c20ab52197f2"
+    },
+    {
+      "path": "cache/models/reference_source/balanced_genvideo.npz",
+      "bytes": 8084878,
+      "sha256": "75380471e4c6deedf6bb3960a931a735b7225b93f9d20d40b431c3f07545b205"
+    },
+    {
+      "path": "cache/models/reference_source/balanced_vatex.npz",
+      "bytes": 8087299,
+      "sha256": "29a00da73ec4a1a3f7e3921c3970101e10e5de024d144c6d025f46a997f3dc99"
+    },
+    {
+      "path": "cache/models/reference_source/balanced_videofeedback.npz",
+      "bytes": 8084944,
+      "sha256": "9110786983d67fabf97a0d780a62090317d5ebbb24aa9f25324a68dfbce8cca9"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n100_seed17.npz",
+      "bytes": 8092696,
+      "sha256": "b7d3400198cc2e9b4ad64c538b5a5d9dad1b12fe2fd10304b0d022a91effc943"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n100_seed29.npz",
+      "bytes": 8092717,
+      "sha256": "5c3d84c485fa2c6b8841ec59202360d61acbd443166f58f0512d11918c600101"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n100_seed43.npz",
+      "bytes": 8092454,
+      "sha256": "eaf5836982bc9a8c2d0096864c3ab9916c59e6d32c277dec13febc3f5b66a7b7"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n100_seed59.npz",
+      "bytes": 8091611,
+      "sha256": "956f49456fc2935b06dd3d22bd6f12f110a4c30a4ae2eba67827637af4b33438"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n100_seed71.npz",
+      "bytes": 8091634,
+      "sha256": "3c9b4ac06e5e237d5e9a70bd75e33dd60ab0dc5225b39bd90fba526c70551001"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n25_seed17.npz",
+      "bytes": 8103926,
+      "sha256": "f620974f6c376137890a1df41f7f8a747025245c85db4d84912c668255ba671a"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n25_seed29.npz",
+      "bytes": 8103459,
+      "sha256": "33249522b006ea38e7866450a848ebb49e1c0bb93fe5e4e63365b7c5bd06c503"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n25_seed43.npz",
+      "bytes": 8102800,
+      "sha256": "2b574dbde36760fdf922529b6783ffd19781fdd13509b55e2b13dcaed00a71bf"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n25_seed59.npz",
+      "bytes": 8102529,
+      "sha256": "a524591d008473bf3111abaec04fc710abd4a51eb8c4e06d609f7d03318338e2"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n25_seed71.npz",
+      "bytes": 8101875,
+      "sha256": "b5a22251b50c6d14394705af885373843ed2ecacfd39508df7c0d561e2d26d92"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n50_seed17.npz",
+      "bytes": 8096782,
+      "sha256": "0caf35796a7a4af710bb28cf56fa395d971a3c2b994810de032605fed6873ff0"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n50_seed29.npz",
+      "bytes": 8095026,
+      "sha256": "4866b4a5a5cce57b2201f98dad991cdb6835c3a3a6e970296493ae339fd8f715"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n50_seed43.npz",
+      "bytes": 8096376,
+      "sha256": "6075a7c1d543aeb79615b9d6cfb820da53ad8d2177c378fdf857772d069671d1"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n50_seed59.npz",
+      "bytes": 8094445,
+      "sha256": "21b02f01545289b881c78952adc04b8d9d5a1db04941a45a0bd9fc2b3154ca59"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/comgenvid_n50_seed71.npz",
+      "bytes": 8095181,
+      "sha256": "6d8704bad7e1382de083fe9428cd4bdb9bf1dd8e144e061500ad1ac3466ed4a6"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n100_seed17.npz",
+      "bytes": 8087530,
+      "sha256": "cec3e3c2751591873908eb9dfcc0168e4de37466eaa6dd280f05f7e38d11094d"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n100_seed29.npz",
+      "bytes": 8087000,
+      "sha256": "ef0c6f04546b2e65afe1e417ee33b601a8dd3925a69c1db3abeae82b2f552ff4"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n100_seed43.npz",
+      "bytes": 8087809,
+      "sha256": "bc26c45d31b06ec3277885148533b06b846b1b3bea24c6a9a54996f969d44820"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n100_seed59.npz",
+      "bytes": 8087997,
+      "sha256": "8a686eb83fe44635af089c1f2dbaac5b2edc72a849483f845f781d37d8e4a33e"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n100_seed71.npz",
+      "bytes": 8088041,
+      "sha256": "72dd059d528a4d6361ad3f0075203b4b942aa48c693594da910969eeb85cdb8f"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n25_seed17.npz",
+      "bytes": 8098578,
+      "sha256": "eeacb3732f20e32de8e19c4c995de3747b5fa0dcbc30071721e2254b482807ff"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n25_seed29.npz",
+      "bytes": 8098238,
+      "sha256": "f6cb738ead3239e1c121f1b8a02c039df6453fa5a67eeef20c110551a987fad0"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n25_seed43.npz",
+      "bytes": 8099868,
+      "sha256": "f464020149c1466cc0841e19c130fe097e97c3727637debfc54440fa7ff77c75"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n25_seed59.npz",
+      "bytes": 8098528,
+      "sha256": "199b5234027701f74195eb9bdcba7e0b5f9791a1941724f5154f83ae73faaf5c"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n25_seed71.npz",
+      "bytes": 8099674,
+      "sha256": "91250d8545cec124a86b7f9c46b640438eacc7e371a6150a320957fe85bfa68e"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n50_seed17.npz",
+      "bytes": 8091020,
+      "sha256": "96344905a387a45a3cffa78e2676ceb793f041f25a9cad0ac068935ee968d64b"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n50_seed29.npz",
+      "bytes": 8091481,
+      "sha256": "4eb88cd5628b442636b7b044f56ff7d9d6a1114eb7b564d072e3e61d83a795ab"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n50_seed43.npz",
+      "bytes": 8092020,
+      "sha256": "01cd807026b1b16209a8245380becb7b5b3433d05428e518cac5e19994623909"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n50_seed59.npz",
+      "bytes": 8091827,
+      "sha256": "1eea4155c72a5589eab8842be2a2ff98e13f41bb1d98e6f6ce38ac9c91db2e56"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/genvideo_n50_seed71.npz",
+      "bytes": 8091635,
+      "sha256": "01dceb0b3ca931442107ff89ad394ee6289b8e19a5382ce6380801110ad11273"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n100_seed17.npz",
+      "bytes": 8089159,
+      "sha256": "a445c4b52baa5f629656a8ead2532a4d676a80b1b68d6bb694a522c92dff1213"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n100_seed29.npz",
+      "bytes": 8089079,
+      "sha256": "865cf7143d382c1c2acb4348577a493edbf325336a8c62a8c72371abc2b731dd"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n100_seed43.npz",
+      "bytes": 8088750,
+      "sha256": "163a5b90bcec7a0d8b20326158c9c79e599281fecbf269d219006badc0adaac8"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n100_seed59.npz",
+      "bytes": 8088677,
+      "sha256": "0ea59eb1ee78a196bf329383f8fd3a6a5e9fd070e9559b5dfd5a15a70062a6d8"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n100_seed71.npz",
+      "bytes": 8088746,
+      "sha256": "bf420949ca838bc04589d103705d7a0f3327367475b6457bc3c9ff5b02cdee77"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n25_seed17.npz",
+      "bytes": 8102856,
+      "sha256": "34534bb7bbb2315e18449f4f1b353cbc5ea68595af01f502e272f2c02012c85f"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n25_seed29.npz",
+      "bytes": 8101151,
+      "sha256": "3cf3416945e9861345fc2b49751b3a3ae416271a4ce8a05d7b18908368a4cf99"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n25_seed43.npz",
+      "bytes": 8102291,
+      "sha256": "24330e029b91bc33fd93e29f2b624d38273b140ba88abdc6c81c36b3f7d6178a"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n25_seed59.npz",
+      "bytes": 8101361,
+      "sha256": "88e087af56476b006a70528cc1ddfa7aff6964aec67771b04d7a9762ab77c946"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n25_seed71.npz",
+      "bytes": 8102320,
+      "sha256": "776dd4def7407acbfa8b4cccc7f75ed76694dfcb3db7409401b0efcef1dd2c3f"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n50_seed17.npz",
+      "bytes": 8093601,
+      "sha256": "6e7828d7d0abedf0f1b7495ae6d8af899896d4b00d687362ef3459a399d04012"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n50_seed29.npz",
+      "bytes": 8092891,
+      "sha256": "c59d638810137689fe7f8607e110325d68619af20dd2b5c70cfa861e30572112"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n50_seed43.npz",
+      "bytes": 8093344,
+      "sha256": "212e3af226b25a5b251ba8ab13ea08ebfa5f8ecab1470474949dca7df763553a"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n50_seed59.npz",
+      "bytes": 8092894,
+      "sha256": "e66b0d499883c57fa711fc0cb82bd4e7c7f51c73820a5572d90c19ed53b6589c"
+    },
+    {
+      "path": "cache/models/sample_efficiency/parameters/videofeedback_n50_seed71.npz",
+      "bytes": 8093601,
+      "sha256": "2b32abf2d520884634551521dd9941d0df949eb2202e284a2f5a72c0e1b87de8"
+    }
+  ],
+  "verification": {
+    "active_manifest_files": 20,
+    "fit_assets": 816,
+    "target_reference_packages": 5,
+    "patch_index_unchanged": true,
+    "model_files": 88,
+    "workspace_manifest_rows": 6997,
+    "workspace_missing_paths": []
+  }
+}

@@ -1,0 +1,1662 @@
+{
+  "status": "compacted",
+  "summary_sha256": "059848783cc597c6eaae8521563a80989654de1c85a7bf094f854287788a1cd0",
+  "table_sources": [
+    {
+      "path": "results/runs/alpha_stall/resolved_config.yaml",
+      "sha256": "cc342c06fd7a326bc8a66b1b9e6accd173682c8ebefe8ebabf4355dc91b59bd0"
+    },
+    {
+      "path": "results/runs/alpha_stall/dataset_metrics.csv",
+      "sha256": "36bf1ef191ed3e9d1f75cc8cf2a70b5d494ace4a3e080f2ad3cb9751d25ab710",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall/generator_metrics.csv",
+      "sha256": "008158ef499f8c7273314fe1a5473a16452f831872deb556c979d41c3677bf77",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall/pairwise_metrics.csv",
+      "sha256": "57627e74b646ed5a007b7d49095cf783e61d2c651f6e1c2836818c2f9d19bd9b",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench/resolved_config.yaml",
+      "sha256": "5e30f0ceb5410a65f171e1d9b5bb8f0268cac6e80f35ba3b811cf15ee9e08a90"
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench/dataset_metrics.csv",
+      "sha256": "90e0fd83f0d0c6dbb6ac9589ad2b4f3431a51cbd7f51409d15b9f47dc35b1934",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench/generator_metrics.csv",
+      "sha256": "2f1ceae7eaef2eb5a2d44f4ea32d256ee3b59b7cf562b5305a503a18dc46a8d3",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench/pairwise_metrics.csv",
+      "sha256": "91f283d4c9ee0c3fa614799463eacb0fc1a83e7ed9f13cd5bd683c35b4c0caa5",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_global_k3/resolved_config.yaml",
+      "sha256": "e4c350d3c0c7ae1740122a1cbca7c9465e6e6b472e6c2feefd97ecbeb94d8dea"
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_global_k3/dataset_metrics.csv",
+      "sha256": "ea4612bb5baee422be305b646ed17180378c9925ebb40aa288cc12fb05e3cf39",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_global_k3/generator_metrics.csv",
+      "sha256": "5bff13d5028d0e0a22fa7569cf0b3fb038954a3f31d87f2ef825778f66256668",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_global_k3/pairwise_metrics.csv",
+      "sha256": "c7787c85e68f3e4166993208ddfa50216a66aeaf29682018701d2220ac0c8771",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_k1/resolved_config.yaml",
+      "sha256": "30f24166fdb834fbcbb70a0a9f761b7d45dda1094711526e2b4e15f0f13a5b58"
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_k1/dataset_metrics.csv",
+      "sha256": "2ba14414d963b8660d7c498119c422d89db4b978175d813fe39ce841e8f1ad43",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_k1/generator_metrics.csv",
+      "sha256": "73a04d1badf1d73a0b7f07ca741e8db99bd4cbc53cbf071aebe73a6d282ddc0b",
+      "rows": 1
+    },
+    {
+      "path": "results/runs/alpha_stall_external_genvidbench_k1/pairwise_metrics.csv",
+      "sha256": "3edd176389ecc48ed3f829623bd87b48a4389e783d3acd6739e7b875f2deaf04",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_k3_no_spatial_refit/resolved_config.yaml",
+      "sha256": "be0b3d0b303c66b7b981c2fbf2ac01cea33d46140d053702f16d06d892f62fe7"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_k3_no_spatial_refit/dataset_metrics.csv",
+      "sha256": "3bbd0fca69925ec28c17962d02101d86375563f7f2818152bdae7fca9a73cf40",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_k3_no_spatial_refit/generator_metrics.csv",
+      "sha256": "dfef2a80c939be942fb3179c48be3ab372513a8ce35f5d1365b5e25a747b7027",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_k3_no_spatial_refit/pairwise_metrics.csv",
+      "sha256": "055ea725bb00032934e07942c5b0da7d4b4951f8e77a08c475830b15c7d161e9",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_refit/resolved_config.yaml",
+      "sha256": "4e3097acbaf55b6c821707b9fd07f09e1cf53d5429a0dc77062f950dd2bf4810"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_refit/dataset_metrics.csv",
+      "sha256": "500bf7e9b4e1bcbab7a898833813f56628e0c965d97f60d6cd47889062667a15",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_refit/generator_metrics.csv",
+      "sha256": "99ddf430672d466ac61a8889bcc26befc42f811397bb65f6daea80eb4ec3fb36",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d1_refit/pairwise_metrics.csv",
+      "sha256": "540dc03f6618806cbfab4c0dba2fef3936ebae8114082e25bdb37d94a15e2022",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k1_no_spatial_refit/resolved_config.yaml",
+      "sha256": "3820e538e10fc7da4c1055679ad1f648793cbf6b332810edce68769593b9766c"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k1_no_spatial_refit/dataset_metrics.csv",
+      "sha256": "7d8be2e987057aa941caa2b842baa78a91a9b8a3bd75b07b9e82b6af014f1995",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k1_no_spatial_refit/generator_metrics.csv",
+      "sha256": "ec0f38f1fc209a0ee1bf99070aed568f40dfd3e2bddd596dbe4e477000bd920d",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k1_no_spatial_refit/pairwise_metrics.csv",
+      "sha256": "224fda3534ed779471d367201f0529323b2ea38250c4bc1f6bc288806d42854a",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_no_spatial_refit/resolved_config.yaml",
+      "sha256": "0caacbf74b20322f040db7d3694447e860e731e16ca3ba66f61469a1ec35a07e"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_no_spatial_refit/dataset_metrics.csv",
+      "sha256": "86407e0b7e5a7916302f4eca239b0dbc2d4e2c0c7b4cb2361c6c2483b00a86c0",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_no_spatial_refit/generator_metrics.csv",
+      "sha256": "610e2a37b380ab58e9e46e584db235584db092254b9d36c20e2f5c31c02a7e14",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_no_spatial_refit/pairwise_metrics.csv",
+      "sha256": "4ecf5aaca5b5057e37217fd9e005113c9d953c17730655f2098069059b0df3fa",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_refit/resolved_config.yaml",
+      "sha256": "3a91cae276272b29aac231806d791e707a937df4125e64d4a28a3e1484ba8eb6"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_refit/dataset_metrics.csv",
+      "sha256": "6997490364dbbb2434c7fd67647ac91ee00cad1dac99df08e66e39ce736108a6",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_refit/generator_metrics.csv",
+      "sha256": "850120bf6e6a918296067840c5a4cb5c824f7648b62b0265eb3fa982f8f8275c",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_d2_k3_refit/pairwise_metrics.csv",
+      "sha256": "9d07da497e3746545424d32f3012888023cfcd3fb9cd323ea3eb9d4664218388",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_full_k1_refit/resolved_config.yaml",
+      "sha256": "babb24fd5810d130f0784915f4749939af8bdecec624b9106142b46abd770c58"
+    },
+    {
+      "path": "results/runs/alpha_stall_full_k1_refit/dataset_metrics.csv",
+      "sha256": "d4e3ce2e63ecea85c571af55ec44c5e3a28ddcfed6f1fc416072da2883277b2c",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_full_k1_refit/generator_metrics.csv",
+      "sha256": "1d9dd561f277c20115ec76412a8cd9ccf6bbfbb8c08b494dfd7f5aaeccaf9d9f",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_full_k1_refit/pairwise_metrics.csv",
+      "sha256": "eab74b1c02c5014a4fbeca85b8b4fb2c8da1b82d7b8cd80bc4509846f2a90b9d",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only/resolved_config.yaml",
+      "sha256": "4dc8eba33bd7022227fc61e29bc20dcab0f70d6c7165a74715f21333305cdbd5"
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only/dataset_metrics.csv",
+      "sha256": "ca4a9955ebd2b1247f7366c5c48d0c5c92f985cd208853886993cd9c46b987c0",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only/generator_metrics.csv",
+      "sha256": "20767a33a6c4406ac54ccdf1f39a6a6bd0c4837cf9094c3a63fc39f840e33dd9",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only/pairwise_metrics.csv",
+      "sha256": "be9b5598114f8a5439b6e376b65a317310158af664b86aa02fab7e1c88b5a500",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only_k3_refit/resolved_config.yaml",
+      "sha256": "7a884cc3dfc7e86b573bd24bbe3284134bd3a7d54e31aec2e0d798f0421ab3a5"
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only_k3_refit/dataset_metrics.csv",
+      "sha256": "ecf41b2b5287f5e2ca8eeb2018b965339528479fcb76e0656366490288ae5183",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only_k3_refit/generator_metrics.csv",
+      "sha256": "b51ebcde8f4a2a2d4d4939fba82844591825b5519a1b7f82d0dacbe234d3faeb",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_global_only_k3_refit/pairwise_metrics.csv",
+      "sha256": "40aa948995ae42c99cafc95e8918b8bdcffda0a303d90684578cba3fdd7c9f6f",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d1_refit/resolved_config.yaml",
+      "sha256": "5f352eed454a5226ef2f488f0d9a566dc363c0c994541b0a58dc8f1930418d06"
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d1_refit/dataset_metrics.csv",
+      "sha256": "68ff28e34e0230d6d54f35b062b132aca7a365c92474b7d47405d6fb6f0d48b0",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d1_refit/generator_metrics.csv",
+      "sha256": "152e7da01e56f487bfc21b73164789f460c63084d2915e112a89fcf69b5d1ba5",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d1_refit/pairwise_metrics.csv",
+      "sha256": "bae728e3e1466e7f29941099deceaf46b67a90ca72e37fda0faab12c1b3f905b",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_locked/resolved_config.yaml",
+      "sha256": "bbdf8c63e0308450ebba6ce8ac01d9d9ebcf14d94dbec405cfc2bded0be16b8e"
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_locked/dataset_metrics.csv",
+      "sha256": "8be73a5321d9d4db8b9d4a9539288eb6ab8f0e1257274083561cc1f7cdf8e397",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_locked/generator_metrics.csv",
+      "sha256": "76e9ab5ca8cd28882d83c63c7b7b5b41a08bc9b0dd2f9081cfa55f3fe2c2c962",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_locked/pairwise_metrics.csv",
+      "sha256": "cc394a83b642c66c007ee4ea306240dd36efb01b4e7c1b66498ae45813008079",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_refit/resolved_config.yaml",
+      "sha256": "627a9b6bb21bc946885ebc707cbb86404411c29af9f891f05bb35ffbc51310d7"
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_refit/dataset_metrics.csv",
+      "sha256": "6e027067911ce6ecb46dcbf4904e8e0a45d6a765518ea66fb22992176e94daf9",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_refit/generator_metrics.csv",
+      "sha256": "aa6ba59138a24cc067d180758b214bb53b3777f8c929ec27937c7287c907caaa",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_local_d2_refit/pairwise_metrics.csv",
+      "sha256": "371050ef7ae4da2c061f2e78e3235fbebcd3d8b37305c75d2e50e0872d105e49",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_d2_refit/resolved_config.yaml",
+      "sha256": "4e865745c591224386d5ce06aecd7bef0f1e4eb96c13aad29529793bbadbae18"
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_d2_refit/dataset_metrics.csv",
+      "sha256": "43d098592c52ca661eae44bc16081959ebcd3eba24b8c3a64212850d31121b03",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_d2_refit/generator_metrics.csv",
+      "sha256": "ab4cfca91d3a42bb76c16083108224ad743ae5e48a0f294e252e1df40478b4e2",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_d2_refit/pairwise_metrics.csv",
+      "sha256": "f4864a11b668ca1b8e0d30a6a6d5915d9425e22a0591fb1a5b4f3d2142c4ec2f",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_only_refit/resolved_config.yaml",
+      "sha256": "11976489a8f747e6f18b46dd40c8f6bd0f1ff7a14fbe7c3ea3effb68330d7984"
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_only_refit/dataset_metrics.csv",
+      "sha256": "ea657c324cab93492aaa8218e9f37fd1b307436882e4d12cb5f34c56be5170da",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_only_refit/generator_metrics.csv",
+      "sha256": "d025b974d58321d3bbf3d4288d3038d467552cbc3f9fcf2fedc54da57b8e9c2f",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_local_spatial_only_refit/pairwise_metrics.csv",
+      "sha256": "b2396734993cbe39987a9a6686ac7afd9dfaad4d80b7e2af082d3f4b87b81d5b",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/alpha_stall_locked_u0/resolved_config.yaml",
+      "sha256": "853630279ddd0b8c25c99c980fcddc8be663407fb19efc704c23f9c82ed54b91"
+    },
+    {
+      "path": "results/runs/alpha_stall_locked_u0/dataset_metrics.csv",
+      "sha256": "efd2e2ea6268c5f178f6b301787fe9db7a1ba2d93a87d9826a38a7bd38de444c",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/alpha_stall_locked_u0/generator_metrics.csv",
+      "sha256": "4b0954ddf3c1df8ba7c0605013b19c57aeb0de7886e055b823cb820d5abbef4a",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/alpha_stall_locked_u0/pairwise_metrics.csv",
+      "sha256": "02ad7a013540591b169a1b45f12ec492efe388ca1274cbea884e01474230fdb1",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/branch_metrics.csv",
+      "sha256": "db48bbf45c0813a149b30051bf7954cf6b154c21c9ae14027abf9fed507166d8",
+      "rows": 420
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/comparison_bootstrap.csv",
+      "sha256": "23c67b52df4e9f4f5c708750b21f1810e9bef468a571c608d96607746be8dddf",
+      "rows": 112
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/comparison_deltas.csv",
+      "sha256": "1fb5830be98d5fe34fb932f822687509afbe920c857cbe5b1b2c73db26966e5e",
+      "rows": 112
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/dataset_metrics.csv",
+      "sha256": "f42b11ad7cacd82bdde0c7376d766d7cce1b9be693167f74cf8e23cbfbef0638",
+      "rows": 42
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/generator_metrics.csv",
+      "sha256": "a824bc55909f1a82fc52f3625a6e7265e5881400ad59bf0e7ff77f9a47e46845",
+      "rows": 280
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/macro_metrics.csv",
+      "sha256": "a4dca9784f766b7ab2b3935b52e394489b2bae1ffaa9be41f193023443ec00c6",
+      "rows": 14
+    },
+    {
+      "path": "results/runs/b3_development_evidence_v1/operating_points.csv",
+      "sha256": "a2937646cb036c86978e3464795aeff3d8dc9cb28de9bacd70451e7290378629",
+      "rows": 126
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/branch_metrics.csv",
+      "sha256": "3e81aed80c6d2316c91e90a7c4e5ff26d3d6ea77de57cc9d5bc5120bface39a6",
+      "rows": 420
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/comparison_bootstrap.csv",
+      "sha256": "437b89f6734e7dfeda2cc66664325883c76fddb6c6097857f0a88623f02457da",
+      "rows": 112
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/comparison_deltas.csv",
+      "sha256": "b660bb85921ac9956f65143de44e29115323007e2eab283cdfe160a5601a3156",
+      "rows": 112
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/dataset_metrics.csv",
+      "sha256": "a19a653068827d1995c941b2245d54bbe56b5217a05275db5960eb55c8ae7cc8",
+      "rows": 42
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/full_population_generator_metrics.csv",
+      "sha256": "dfadc4dd1607a88e9b2e4def3cef06b4021eb627ce6928c619ff4d196516bdb7",
+      "rows": 280
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/full_population_metrics.csv",
+      "sha256": "56d2d1822b5f23770601e59a45b1030b1e62c6344076b9a3361c11b215d9c69c",
+      "rows": 42
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/generator_metrics.csv",
+      "sha256": "7ef1cb560a223a66d080a4fd952fd4236f690b5c876cfbb6dd2eda95f12ffb49",
+      "rows": 280
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/macro_metrics.csv",
+      "sha256": "c1b105bacebeba37b9f36d97d31d4d82476744782a455fe53a9c1f7eaacac822",
+      "rows": 14
+    },
+    {
+      "path": "results/runs/b3_development_full_v1/operating_points.csv",
+      "sha256": "78564cbdbaa28716b75b6dded6e3ec75643ecce0c2e59229e0e8bca3c575122a",
+      "rows": 126
+    },
+    {
+      "path": "results/runs/b3_direction_structure_v1/rank_structure.csv",
+      "sha256": "da79912e7c68f4e3b7f974bbf090b0172e6079adf1e33e703f6cecc50acc8de1",
+      "rows": 32
+    },
+    {
+      "path": "results/runs/b3_external_validation_v1/comparison_bootstrap.csv",
+      "sha256": "5582c20ceba3afea1202d6a63b451004a5866582bc225ed6f31729c2e9c90fe9",
+      "rows": 56
+    },
+    {
+      "path": "results/runs/b3_external_validation_v1/comparison_deltas.csv",
+      "sha256": "08ab31e8a9cecafd20a6ba22317e8e0452472634e5c2386d23998128a30c8e73",
+      "rows": 56
+    },
+    {
+      "path": "results/runs/b3_external_validation_v1/dataset_metrics.csv",
+      "sha256": "3945d4e5ae6f290632e8dcbdb7ba1191ebfb7b50d0b4e7d0112dd4a31f30d9a1",
+      "rows": 28
+    },
+    {
+      "path": "results/runs/b3_external_validation_v1/generator_metrics.csv",
+      "sha256": "35b1222dc956547dd6078e7a1e927425368e5f5abd625d5ff48a72a99c26e5f1",
+      "rows": 280
+    },
+    {
+      "path": "results/runs/b3_external_validation_v1/operating_points.csv",
+      "sha256": "fdca5246b7870c729ee325cdb4a0c24dd38533defb7748bad0dd143e9ab83d30",
+      "rows": 84
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/branch_metrics.csv",
+      "sha256": "4ecefec915470cb5140645f59c5c2520331d8209ed56d64260b832395b013220",
+      "rows": 180
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/comparison_bootstrap.csv",
+      "sha256": "785ab259a5a37fd56d445f8951ae9dcfff07899d160d4729f784cd5d9850dbce",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/comparison_deltas.csv",
+      "sha256": "7576db5caaba31de351366ca6dca05545d5d9a09d55027aaa9c6dad7e2b1f4c2",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/dataset_metrics.csv",
+      "sha256": "8461218de41a215e05b2463d44f79fec9389b54a0951c0e13c3bd3bd9fa8289b",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/generator_metrics.csv",
+      "sha256": "b7a38364ce1b32e29edef837e27c88f9e0138be62dc204574c570d28bfd2920f",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/macro_metrics.csv",
+      "sha256": "7c7d8bde564190e6e37565adbd50b52ac9125e1c4848857cf5537ac42fb8ca4f",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/b3_full_coverage_pilot_v2/operating_points.csv",
+      "sha256": "33f3bcc4a5941c56fa998e503471b3ac1870bbb9768d8d5a854213b94e90d160",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/branch_metrics.csv",
+      "sha256": "d2f0aca48df7086a2d3fb57ec69c1fa570406ebc4fd546b7a5bc1e58cd0fe047",
+      "rows": 240
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/comparison_bootstrap.csv",
+      "sha256": "b97ce6c718b1bcffd49a19e6d0ae6f794e1eece7a4466b79fe43b4bcf2268823",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/comparison_deltas.csv",
+      "sha256": "c8efad0ba9b9ed1cc9b519a005fc57f80c5a7f2428e69181567953b3ae523703",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/dataset_metrics.csv",
+      "sha256": "3a43752036988b9f62e992d1a93aa8f7c105f7d7315785c0227fa3ee7ff3ae4a",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/generator_metrics.csv",
+      "sha256": "4a968cb4ead4dfa432fe9e16c78f7e994cbdcd45d1cf497f868cfeeeeef2cb1a",
+      "rows": 80
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/macro_metrics.csv",
+      "sha256": "54a80801f01e912e452df28ec8c5144f335abd9ae6dc4e2659b922f5e0ebc233",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/b3_mean_whitening_swap_pilot_v1/operating_points.csv",
+      "sha256": "86241d45cac06b1b327a030703f22ff69f02dbe3368cc17098a0a1011c9b51be",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/b3_prototype_diagnostic_v1/center_diagnostics.csv",
+      "sha256": "0a1313afcd74109605041fbb3025cbdc56aed01fadde82bd8bec73f68a4e05af",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/branch_metrics.csv",
+      "sha256": "797aefebaa72c914f52945aff8c3c8b50af07e6c16b5c8bab91a886ee1633d0a",
+      "rows": 300
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/comparison_bootstrap.csv",
+      "sha256": "6a936399dae0263fcb0b122bd5a053c14d5ecffdfc30f45857edbeba1bf3f2a5",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/comparison_deltas.csv",
+      "sha256": "fe5861552a25c16fa8f84a76a74287514214d66cc1f963dccc1123a36eff87c3",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/dataset_metrics.csv",
+      "sha256": "581cb2ac8a2dffce6507d6ebc5f16c8e23a72f29d7668999f1e0201e84935689",
+      "rows": 15
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/generator_metrics.csv",
+      "sha256": "ba4112c964ceb11637832a1328419674ccd1d8b40c662e36ccad0715ccd2701d",
+      "rows": 100
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/macro_metrics.csv",
+      "sha256": "15e2760e973a45e040cb6d0f0dd411dfdfc4f86889ff081c3761dd13a562bd11",
+      "rows": 5
+    },
+    {
+      "path": "results/runs/b3_prototype_pilot_v1/operating_points.csv",
+      "sha256": "abbd7daa8209d999bba44cec1c4207368b2a06abf3e880733bb0e4c03ef64e70",
+      "rows": 30
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/branch_metrics.csv",
+      "sha256": "a2fa144aa27e4d9a68b26ba13d98ba44da1db394bf59f82ed2ed297e8d9aea8f",
+      "rows": 2880
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/comparison_bootstrap.csv",
+      "sha256": "dd389c1438417d5db5f82161f772f2aed365439efde0120208e41765d2eb7f5f",
+      "rows": 360
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/comparison_deltas.csv",
+      "sha256": "fb58511c7febfb837d1e9c7902bf523d848b911865f9231f6f8aad5dc6099ff6",
+      "rows": 360
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/dataset_metrics.csv",
+      "sha256": "bee6b7d0ebeed9b0b069d9b5c995b4c225f2d93c668bcd2752010be6124b465c",
+      "rows": 144
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/generator_metrics.csv",
+      "sha256": "e1cd0b2de7096452b07ba914ea3eebe382d8e5f7eb9a4cdbf9c1d434d4101c6e",
+      "rows": 960
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/macro_metrics.csv",
+      "sha256": "a54832d2f86eae3cc83ddfaf9559f10514219027271e458fab15b7e3c7c902b7",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/b3_sample_efficiency_pilot_v1/operating_points.csv",
+      "sha256": "b305011b9da989414632ac53b1552a937f70e9495e40604612000c870c13c32f",
+      "rows": 288
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/branch_metrics.csv",
+      "sha256": "909621dd6b8da971ffe82c7a0b5cddc3ff473d238b63b46689011d54e69f5c3f",
+      "rows": 240
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/comparison_bootstrap.csv",
+      "sha256": "de98e2a2348140ab0d9ae3c29a772deee16bc72d1cbab0ead56c2345a7d985a2",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/comparison_deltas.csv",
+      "sha256": "146272821152bb8f19e4eba441e1e37589356d93470e2410ff8c44efffe00bce",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/dataset_metrics.csv",
+      "sha256": "ebbd70263326992b5cdf019eecf71372d0cd84666963df75bf017e5c363b6803",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/generator_metrics.csv",
+      "sha256": "fdb4cf28e4d42711770f64d4d13a370ab97c982b477e82ae6312ea03f121340b",
+      "rows": 80
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/macro_metrics.csv",
+      "sha256": "156acc048bcac0af21811e91f6fedd5433ef399ade2bda93cc1dbc45976b5507",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/b3_soft_context_cdf_v1/operating_points.csv",
+      "sha256": "099560876093fdf0893aeb64225033dd85719fe1895551596b8e091d7223fea1",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench/resolved_config.yaml",
+      "sha256": "59e7072b8414dc093e3cbddbae96243d6a4a5772e6bf67466390dcef9f4abc7f"
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench/dataset_metrics.csv",
+      "sha256": "08685f0dc342c1adfefc6817ff6e7fdf9a13c22fd7f3b10ae14ec58d2935eda9",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench/generator_metrics.csv",
+      "sha256": "2dbcb0811d355f033b1f01fcdc449940d442ee872b79db3f2fb9244f8797dd67",
+      "rows": 38
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench/pairwise_metrics.csv",
+      "sha256": "fe518b901abf1f5a1dc0700a73eb5838e0142dd3e74c70a42924f06bc3941cc3",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_random/resolved_config.yaml",
+      "sha256": "59e7072b8414dc093e3cbddbae96243d6a4a5772e6bf67466390dcef9f4abc7f"
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_random/dataset_metrics.csv",
+      "sha256": "737a1d57c5c0341ea4e55676a2deb842b5f99b7b07d0eeeb2db5a4926d1267a9",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_random/generator_metrics.csv",
+      "sha256": "9c552e074d74c3dc9b5f2fdaa2b0bad408823ecb8f17dbf70e1cd3c787f460a2",
+      "rows": 38
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_random/pairwise_metrics.csv",
+      "sha256": "9cad5929c443b50f52194a8e2fc58b80e169a55017dbf6e784fb38b18faef907",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_smoke/resolved_config.yaml",
+      "sha256": "59e7072b8414dc093e3cbddbae96243d6a4a5772e6bf67466390dcef9f4abc7f"
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_smoke/dataset_metrics.csv",
+      "sha256": "cd124101b4b81b18668070518f6170d9ff9d7331e64e57e57e71cd9f821cab3e",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_smoke/generator_metrics.csv",
+      "sha256": "5b9784bd05a0183022ca5bbd4c6346bc9c338d81c047bb9470635310d2c40cf0",
+      "rows": 38
+    },
+    {
+      "path": "results/runs/caes_confirmation_vifbench_smoke/pairwise_metrics.csv",
+      "sha256": "43d7494e0863e8e37f6ebfff6541ee9642270429be7bfa413675b9b45ede7d2b",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_feature_change/resolved_config.yaml",
+      "sha256": "b529f1c93c86ff3e01637c9e62125fc7350ce086ec2730bf8d1f0440f84aef2f"
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_feature_change/dataset_metrics.csv",
+      "sha256": "4a59ebb11f156294236c4f9ab2427b83ce669b3155372031285e1470fcf45608",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_feature_change/generator_metrics.csv",
+      "sha256": "57707c839a1088a8d0c7c12360854a4f04ceebd647ec9402560dbb223c85a367",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_feature_change/pairwise_metrics.csv",
+      "sha256": "2bf7134c0a253d87942f960d36d80cb410dc5048eb43ec21a42a8b8e8d6b8efe",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_random/resolved_config.yaml",
+      "sha256": "b529f1c93c86ff3e01637c9e62125fc7350ce086ec2730bf8d1f0440f84aef2f"
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_random/dataset_metrics.csv",
+      "sha256": "4b2f807f44aac990356a1c9fe0966a0a8f8216ae5e65f87ee8a61d8974c84894",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_random/generator_metrics.csv",
+      "sha256": "589a8741dbd096325ff4fdaf744679c0eca397fb536b04e3397ab895ad88bee5",
+      "rows": 2
+    },
+    {
+      "path": "results/runs/caes_external_genvidbench_random/pairwise_metrics.csv",
+      "sha256": "b989137b7911f0c82db7e5268275852f66272a9c0cae27bba5da3729867046c2",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/caes_stage_fs/resolved_config.yaml",
+      "sha256": "62bc40af65a965234c76b655a793eabf2ae139415a21bb3fc7f2e034d0c807a5"
+    },
+    {
+      "path": "results/runs/caes_stage_fs/dataset_metrics.csv",
+      "sha256": "9dd42af62ff6d2fc1aed085818816d091b5adc91b6d8b9a10fa94f654ca43399",
+      "rows": 18
+    },
+    {
+      "path": "results/runs/caes_stage_fs/generator_metrics.csv",
+      "sha256": "077d6c507218a4e8732ec15943b9ba8c2d8e8b62fef6b80bafc54ea7268437b4",
+      "rows": 120
+    },
+    {
+      "path": "results/runs/caes_stage_fs/pairwise_metrics.csv",
+      "sha256": "353aeab40068eb0933cdd33d9fa4461ce969698aba883adc7283fdb428ace66d",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/caes_stage_fs_smoke_comgenvid/resolved_config.yaml",
+      "sha256": "62bc40af65a965234c76b655a793eabf2ae139415a21bb3fc7f2e034d0c807a5"
+    },
+    {
+      "path": "results/runs/caes_stage_fs_smoke_comgenvid/dataset_metrics.csv",
+      "sha256": "78a2dcf39cba155b6fa1815d5ca35b0c090f66a4a457766e889c740e68757ed3",
+      "rows": 6
+    },
+    {
+      "path": "results/runs/caes_stage_fs_smoke_comgenvid/generator_metrics.csv",
+      "sha256": "373506c349d76c7f3149c1867ecc177c1b58016fd6ffd47db684f57151657f59",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/caes_stage_fs_smoke_comgenvid/pairwise_metrics.csv",
+      "sha256": "c4641f4b4f583b2acea2d4ac46994412e01d90e97629941663f8ff48454fa4a7",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/caes_tail_matrix/dataset_metrics.csv",
+      "sha256": "120826c1fe7ccc5baa6cc3a71be02364305836ea7601d6033c2ceba3b4e2bef5",
+      "rows": 72
+    },
+    {
+      "path": "results/runs/caes_tail_matrix/generator_metrics.csv",
+      "sha256": "ad90b773d21119ce673c5ac161f21b1ef047b2a3886631118420e0371ce362d4",
+      "rows": 480
+    },
+    {
+      "path": "results/runs/caes_tail_matrix/pairwise_metrics.csv",
+      "sha256": "4039a111701564fbed85549244488a7a3e65ce99e4a7bca35a814c2693c8d2c2",
+      "rows": 96
+    },
+    {
+      "path": "results/runs/caes_tail_smoke/dataset_metrics.csv",
+      "sha256": "d9f6e98bc1bdf2e8e987cce0ac58bce3de879543bc91b8c9ab869e179e94d94a",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/caes_tail_smoke/generator_metrics.csv",
+      "sha256": "d64ecfbdc35743233078caf945f0d356c69d736f8d9a5b4ca897263a2ffc508e",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/caes_tail_smoke/pairwise_metrics.csv",
+      "sha256": "c52b82678785b39dc347a4e974f41da5f65dc229d812c720815b26ec51f45319",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/cdf_factorial/resolved_config.yaml",
+      "sha256": "a92abf9b94a1e3c780505e97f5a46238946f7c92b7d7664dcbde14cbd9df912c"
+    },
+    {
+      "path": "results/runs/cdf_factorial/dataset_metrics.csv",
+      "sha256": "1b4677cef8dae06e78f3aebaf13983375d9048cc11b11b772605031b6f7a70df",
+      "rows": 72
+    },
+    {
+      "path": "results/runs/cdf_factorial/generator_metrics.csv",
+      "sha256": "fecd53c2dcf570b5660f1b045e1780489b5744e92d2eb83f43a58f7ae1a24cf1",
+      "rows": 480
+    },
+    {
+      "path": "results/runs/cdf_factorial/operating_points.csv",
+      "sha256": "daf94c8fbfde385fc9e9e484fd442a6f9bbd30b2097faac2812ad8d7445a4caf",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/context_calibration_k1024/comparison_bootstrap.csv",
+      "sha256": "ebf41472152782cfd09bea985f455704775ef31a92595ce7d70495bf918694ec",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_k1024/comparison_deltas.csv",
+      "sha256": "0cba1501b52242d5f1e8ccc1e9730eb1d6343607b97d33705c1a868b9e9e38a9",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_k1024/dataset_metrics.csv",
+      "sha256": "21a796f40249d4acae10b64d697eee6c57605ef2017838051dfd39d760c1704d",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/context_calibration_k1024/generator_metrics.csv",
+      "sha256": "06c30dc26fa3eac1de68ed6c4bd8aee83a789f02e04ae3fcee560efcfa5dbaac",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/context_calibration_k1024/operating_points.csv",
+      "sha256": "f14393837c9e23ecccc91ad467482a73e5c32a07279fc49f6507c2e3589a9f4e",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/context_calibration_k512/comparison_bootstrap.csv",
+      "sha256": "b28b664339383d11ea1dd51188d9143172cb6392ce5da0578329600989811d45",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_k512/comparison_deltas.csv",
+      "sha256": "21fa86a25f87c9a34b44a2adc411dbd9f1196fddd91100509d93b8ecfdf79b91",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_k512/dataset_metrics.csv",
+      "sha256": "8c8b533a4717123241236011b7322373221a604bed3bd866f6c3887e5ecb971c",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/context_calibration_k512/generator_metrics.csv",
+      "sha256": "3a02487fac5804675f464d9f646e72a3d1ef580a41fdb4342ea901128785f5ee",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/context_calibration_k512/operating_points.csv",
+      "sha256": "641b52bb9c8699c39f7e04eb1da5af92b24f37adca5f04f8b1726f7f6fc81eab",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/context_calibration_v1/comparison_bootstrap.csv",
+      "sha256": "306911faefd636ae9c85b8e79b6622416522a7ad193a2fc5bc76d999eb33909f",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_v1/comparison_deltas.csv",
+      "sha256": "d13242ef4bb53059157a1a53f48c1ed6c9d34f8c75848486ccf91110279f8023",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/context_calibration_v1/dataset_metrics.csv",
+      "sha256": "435ec18c63fd716e7c3882365983e1d02d7521a712640024fabcfad2024f29ae",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/context_calibration_v1/generator_metrics.csv",
+      "sha256": "2624d53a02e91c2095db9afef13a237259a2585a8ab87b9fb4b17921a33d2db8",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/context_calibration_v1/operating_points.csv",
+      "sha256": "283626a1fc098171139038a82555902f775cfaac4349fdd65954930432e04510",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/cross_domain_feature_k3_equal_fusion/generator_metrics.csv",
+      "sha256": "da55ee31005902a12be336ec8ef6afba906db8711804ecd1857ae72e923176bf",
+      "rows": 126
+    },
+    {
+      "path": "results/runs/cross_domain_feature_k3_equal_fusion/operating_points.csv",
+      "sha256": "0daf1145c39e0cd633bd083bcd3a9695f62826dde2b047c76a38134019301c4c",
+      "rows": 72
+    },
+    {
+      "path": "results/runs/cross_domain_feature_k3_equal_fusion_smoke/generator_metrics.csv",
+      "sha256": "f809d6a88e82be98f4b6e3c925807a5d209e7a06253addfe174b81fd884cba24",
+      "rows": 126
+    },
+    {
+      "path": "results/runs/cross_domain_feature_k3_equal_fusion_smoke/operating_points.csv",
+      "sha256": "fcae59b3d0b29482eb9e862f02ec0e54008bfe870fd15508f7d4f127dd48b98f",
+      "rows": 72
+    },
+    {
+      "path": "results/runs/feature_change_top1_raw_v1/comparison_bootstrap.csv",
+      "sha256": "2560a05f6a08a4f171181680334de15816062d4007ac77a07d0ca088a52bea1b",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/feature_change_top1_raw_v1/comparison_deltas.csv",
+      "sha256": "e4dc61b9fb68ae41c116f433567973b7443583af88b96d13be86f4bf72727137",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/feature_change_top1_raw_v1/dataset_metrics.csv",
+      "sha256": "16219f44ea7bea4e46f23949063e08f4759367af122fdbcd642d160109331a57",
+      "rows": 21
+    },
+    {
+      "path": "results/runs/feature_change_top1_raw_v1/generator_metrics.csv",
+      "sha256": "63ca67d8e820d63d2d54dcb1b4cb73aa1bc7c15bb20e8fe1b2e9ce78ecfb10d8",
+      "rows": 140
+    },
+    {
+      "path": "results/runs/feature_change_top1_raw_v1/operating_points.csv",
+      "sha256": "b89612ca9291eb76f797018b0dba6d30b62637e0ed335d4fe42b0b59a5fbdfd5",
+      "rows": 63
+    },
+    {
+      "path": "results/runs/global_context_ablation_v1/comparison_bootstrap.csv",
+      "sha256": "e936058171f498a6f1b1da3e02bfdaec32d8ce76807a15bb26a5cd52380d9991",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/global_context_ablation_v1/comparison_deltas.csv",
+      "sha256": "6d832ff61b1a667a45b22d345a1bb955a9667ebc0b6c4f001c74752982850598",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/global_context_ablation_v1/dataset_metrics.csv",
+      "sha256": "f9dc27b02b0eedf7f171a6cf0b0345640700e7ad9e2161f149c28a81c8e0f7ff",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/global_context_ablation_v1/generator_metrics.csv",
+      "sha256": "6f0c742f640fc90a83557c2c538eeba7c301a0c4646690e911cc9c8c41584387",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/global_context_ablation_v1/operating_points.csv",
+      "sha256": "cd972198a301cc3ede408d5ffff15533bb88b09bd9d9ad917d31de706a729393",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/branch_metrics.csv",
+      "sha256": "65dc3b2c2d151a850548ef02d6a175081b5631142551038c99f4413d5e06e068",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/comparison_bootstrap.csv",
+      "sha256": "06fa06c6d9230e21155f4081af579d1b5a37af14a4f6252cd6ff7968dc68132f",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/comparison_deltas.csv",
+      "sha256": "7fe80c0235cd3caae8b543d21f1130fcc1d3ceadf106293e95d494d368a15d73",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/dataset_metrics.csv",
+      "sha256": "5603251efe039167b5f7c0cb51d66a2595adf9e66a747f3dbb4ec1ee6c35596d",
+      "rows": 9
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/generator_metrics.csv",
+      "sha256": "76157bda85d0b9584886b2a8afc669865f334a06042702a04e16b427678f3fd2",
+      "rows": 60
+    },
+    {
+      "path": "results/runs/local_cdf_source_attribution_v1/operating_points.csv",
+      "sha256": "ba466a0fe9ebc657e09b13613054bbb9241507a78120d8b8c5fe82bfe259a123",
+      "rows": 27
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/branch_metrics.csv",
+      "sha256": "77b79f3705e988c74affcc9915d573169588245fc8eac6889dfff41823e5ce6e",
+      "rows": 54
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/comparison_bootstrap.csv",
+      "sha256": "ffdbc38242d5203453df70e00c1268bd2e886e650d9f6d29493fc08ca9871d82",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/comparison_deltas.csv",
+      "sha256": "2f5fbe802b2be7c9088a5aff1833620552cd129fb6048736e689eae4cc2ba8cd",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/dataset_metrics.csv",
+      "sha256": "60908c7bc872005cec8f87cfaea1962bfda86e0afe351cca506508891f528046",
+      "rows": 18
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/generator_metrics.csv",
+      "sha256": "e5f235492f953e9912a85341b9cd8f64648e26e77d60b1fee5c31c0d1842bbbf",
+      "rows": 120
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/macro_metrics.csv",
+      "sha256": "f55479ad694aa993a4f4bca07148281407ab90822715f3102bafbe9d60869040",
+      "rows": 6
+    },
+    {
+      "path": "results/runs/local_gaussian_source_attribution_v1/operating_points.csv",
+      "sha256": "3eb0fa6247d43576052e801cf8fc44a69bc74b0de366deff1523a4af800027af",
+      "rows": 54
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/branch_metrics.csv",
+      "sha256": "5aae1dba92ee68ad4dd9d27f828e17f1cb5f7e65ffda72a2eaca7bca7c59fad7",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/comparison_bootstrap.csv",
+      "sha256": "dfdd89a2286526eab2677718cddee4a1915f37595645676772e9abe21991fa86",
+      "rows": 16
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/comparison_deltas.csv",
+      "sha256": "d291e6abe13660135a5b730c1265023901f24942e18432e78e2477265da841cd",
+      "rows": 16
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/dataset_metrics.csv",
+      "sha256": "80e790768ebce5fcfe0830abd061382d38e130b2e3f28131c91bcc420d88fabc",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/generator_metrics.csv",
+      "sha256": "3ae027e992d9044af1da436fdd1b42e1e21fc3cbb6bd16c3113df5738228366d",
+      "rows": 80
+    },
+    {
+      "path": "results/runs/local_resolution_448_pilot/operating_points.csv",
+      "sha256": "dd3f7a61bbe2822621bdc60780cb077b40d1f9936e4d817ba870ce8c508b79da",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/local_window_cdf_ablation/resolved_config.yaml",
+      "sha256": "a92abf9b94a1e3c780505e97f5a46238946f7c92b7d7664dcbde14cbd9df912c"
+    },
+    {
+      "path": "results/runs/local_window_cdf_ablation/dataset_metrics.csv",
+      "sha256": "eb249f3bc0035f0141be68be7172f63b537584eb6d6bf055c6e9360d7df82319",
+      "rows": 24
+    },
+    {
+      "path": "results/runs/local_window_cdf_ablation/generator_metrics.csv",
+      "sha256": "8ee29f80fb126d964a36f17738f03dfca4bdd899ccb3a6c39953257f50acaabb",
+      "rows": 160
+    },
+    {
+      "path": "results/runs/local_window_cdf_ablation/operating_points.csv",
+      "sha256": "60e497c1ee3b5e4dea5d169497fd8138884e6afe25f2910a04498c3b76fd9117",
+      "rows": 30
+    },
+    {
+      "path": "results/runs/native_xclip_baselines_v1/comparison_bootstrap.csv",
+      "sha256": "69de6049fb1f74d86a1c23019daec93398d8059e42f279c3402f9f53db736f18",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/native_xclip_baselines_v1/comparison_deltas.csv",
+      "sha256": "14369c859fde03d2363ac7cf2ef039c62c16f0226b91bce40c70307dec0dcba7",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/native_xclip_baselines_v1/dataset_metrics.csv",
+      "sha256": "fd3030983bde3b58a020d70b83b67404352f955b979ff7fdb73dd63cacb6911d",
+      "rows": 25
+    },
+    {
+      "path": "results/runs/native_xclip_baselines_v1/generator_metrics.csv",
+      "sha256": "c68737ad30522037c3d88553b1ef80318e24a58ca00de20b08bb2c642cdfb7bd",
+      "rows": 200
+    },
+    {
+      "path": "results/runs/native_xclip_baselines_v1/operating_points.csv",
+      "sha256": "c68241aa96d46a52541e7e877fe18c5679b298659cfd295fdc31bcf4135aa7fd",
+      "rows": 45
+    },
+    {
+      "path": "results/runs/native_xclip_full_v1/comparison_bootstrap.csv",
+      "sha256": "90730f513ec55e8121d524ed926e3239ed6b7d7ccd6a9e46422f42b2f3a07fce",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/native_xclip_full_v1/comparison_deltas.csv",
+      "sha256": "71cea1fd1c83a5396af7cf51bf26576b9d73c0851c8653ccee9710befbeeb0f5",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/native_xclip_full_v1/dataset_metrics.csv",
+      "sha256": "701c00b0069941cc71d87c9baec3ec11dfb593a5cb183948bb5e15beae5f49af",
+      "rows": 25
+    },
+    {
+      "path": "results/runs/native_xclip_full_v1/generator_metrics.csv",
+      "sha256": "f6f2ffa247128ac0c2c52fbb626d88cbf60774ae6632907e2a5ce5ce41063a69",
+      "rows": 200
+    },
+    {
+      "path": "results/runs/native_xclip_full_v1/operating_points.csv",
+      "sha256": "7227549f34226e9c564db06b4595ec65f1c45c8835d507bb5ad6e823657fe6c5",
+      "rows": 45
+    },
+    {
+      "path": "results/runs/stage1_c1_hard_local_d2_k3/resolved_config.yaml",
+      "sha256": "695259fe9bc9bd3feb14dcfeed4ad0d2a0773f1f8ca5d5aff4ac2ed0f108a827"
+    },
+    {
+      "path": "results/runs/stage1_c1_hard_local_d2_k3/dataset_metrics.csv",
+      "sha256": "db9e16f7ea9f8db6c3d3e09e033ee55964f8cec9b1389c3d6283a2022c92276f",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/stage1_c1_hard_local_d2_k3/generator_metrics.csv",
+      "sha256": "45bc9ac093dbdccdb214802b144766873a90374d36b34f78f93c18b489e023f8",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/stage1_c1_hard_local_d2_k3/pairwise_metrics.csv",
+      "sha256": "1343a4dea2ff20cac542031c9b2201f7976d3cdfadcb27f72742a8b62f0f7f19",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/stage1_c2_soft_local_d2_k3/resolved_config.yaml",
+      "sha256": "770467aa50f377fe9cc8f4a8c281429eb782c1e8312ddd11e6365b5e3589a874"
+    },
+    {
+      "path": "results/runs/stage1_c2_soft_local_d2_k3/dataset_metrics.csv",
+      "sha256": "e200084e44b57f07c0d0a14e3928c154e426e3c3aa46994ea92d952b867ffea6",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/stage1_c2_soft_local_d2_k3/generator_metrics.csv",
+      "sha256": "4e1f0ae386889d56b3578a3f10893f543c81e57a80aef7b436e682294207139d",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/stage1_c2_soft_local_d2_k3/pairwise_metrics.csv",
+      "sha256": "31bf187de86e8bdf8972d2b8253d4f54c667d81010d347b1ea290c3048e75a36",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/stage1_c3_soft_local_d2_k3/resolved_config.yaml",
+      "sha256": "95f1a14934eadde7576a08cd864851e4f0c309252d96be5c87270e2c107667d3"
+    },
+    {
+      "path": "results/runs/stage1_c3_soft_local_d2_k3/dataset_metrics.csv",
+      "sha256": "c74382718604b2f8b624b9280f429d0032dd730478c3c65b831b069436470175",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/stage1_c3_soft_local_d2_k3/generator_metrics.csv",
+      "sha256": "bb4877fcb588f0d32e8a9bacb4b1aac1b2464384cadd4df7b592a6b678844eb2",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/stage1_c3_soft_local_d2_k3/pairwise_metrics.csv",
+      "sha256": "2834cac4b7d7cccec10c0b49e73a6165cfde1300067ec2202059771a1cfac8fa",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/stage2_t1_curvature_k3/resolved_config.yaml",
+      "sha256": "48b1bdc2648fd86bb4913bc446fd2132834df766b3ad1a334ab6829beab32e0e"
+    },
+    {
+      "path": "results/runs/stage2_trajectory_matrix/resolved_config.yaml",
+      "sha256": "3576e8773385eee69758de524b939341d35dd58ed922618548f7fc65f6cd4b6b"
+    },
+    {
+      "path": "results/runs/stage2_trajectory_matrix/dataset_metrics.csv",
+      "sha256": "3b1a61e9aa5ce14be2cde18f2d9fa41b22c6f2d8169802653aca46a2855afeec",
+      "rows": 15
+    },
+    {
+      "path": "results/runs/stage2_trajectory_matrix/generator_metrics.csv",
+      "sha256": "8e9301b8dadd7b9fe618bd2eba72bb41f4fd5e13026cdd48ffb374f450267292",
+      "rows": 100
+    },
+    {
+      "path": "results/runs/stage2_trajectory_matrix/pairwise_metrics.csv",
+      "sha256": "277d337c5e3f0c98aec4fd1e2b46666ed62121125a3de47a9fa5dad6da94d24d",
+      "rows": 20
+    },
+    {
+      "path": "results/runs/stage3_conditional_matrix/resolved_config.yaml",
+      "sha256": "a8fe9eccf7c3e4f8fc066e4971112274c966f86601d7e3e735388dc557855f75"
+    },
+    {
+      "path": "results/runs/stage3_conditional_matrix/dataset_metrics.csv",
+      "sha256": "183ba7c66dfd1e5465e13af141018abe1179a6253e2cbc6ea85720982a08d930",
+      "rows": 6
+    },
+    {
+      "path": "results/runs/stage3_conditional_matrix/generator_metrics.csv",
+      "sha256": "a6ffa6cb15023570b5382bcf908cbf8f364d4c35acc7798a668a36d5479f13da",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/stage3_conditional_matrix/pairwise_metrics.csv",
+      "sha256": "d20f4b67f0c3d1b4fa223d4a0a67340e050ea156dd6d7b64bac97155ef5dfd13",
+      "rows": 8
+    },
+    {
+      "path": "results/runs/stage4_statistics_matrix/resolved_config.yaml",
+      "sha256": "f70b52de2bf094674ec04b46fcbc62f543bc509459ea72ad459b286d8c652b29"
+    },
+    {
+      "path": "results/runs/stage4_statistics_matrix/dataset_metrics.csv",
+      "sha256": "6d6ef5ad05babc82e9eca3320c77beb6cbee2bec9fe36030a90206411d786468",
+      "rows": 6
+    },
+    {
+      "path": "results/runs/stage4_statistics_matrix/generator_metrics.csv",
+      "sha256": "f9e6b08be1f98afa88ed3f863a5d059bd2ec77ceafd08456fabaf201f88d0327",
+      "rows": 40
+    },
+    {
+      "path": "results/runs/stage4_statistics_matrix/pairwise_metrics.csv",
+      "sha256": "e2351e21e0b8bc6b1453ed63c8f0c03eae1a6407ad5aa2de84055069911fd821",
+      "rows": 8
+    },
+    {
+      "path": "results/runs/universal4_to_vifbench_feature_k3/generator_metrics.csv",
+      "sha256": "bff10a006c3e95ec8efc65d9df11b735ccbfe4fe34b806e83abd0d8c4093036e",
+      "rows": 19
+    },
+    {
+      "path": "results/runs/universal4_to_vifbench_feature_k3/operating_points.csv",
+      "sha256": "ba737c610bbc1ba3969037cbb59e53a672a6e25fd1ab361ab19ead0666484c8e",
+      "rows": 3
+    },
+    {
+      "path": "results/runs/universal_lodo_v1/comparison_bootstrap.csv",
+      "sha256": "4fdbaa35f4e2a7ab491bec5e18ee7df790291ae240febf702489f1417e6e9a08",
+      "rows": 8
+    },
+    {
+      "path": "results/runs/universal_lodo_v1/comparison_deltas.csv",
+      "sha256": "7099c7ce04f1aa61f64728a993645db1d2ef6852f69f74fa2c7d157d48760f0a",
+      "rows": 8
+    },
+    {
+      "path": "results/runs/universal_lodo_v1/dataset_metrics.csv",
+      "sha256": "78fe13bda5a700299ca8ac76d31777862d09f62b5a6a28fe3589d249d375277b",
+      "rows": 4
+    },
+    {
+      "path": "results/runs/universal_lodo_v1/generator_metrics.csv",
+      "sha256": "936fc87fc7a9ef0695dc7053ca041aaee1176efaf78ac97a6c0ce156aafae4d2",
+      "rows": 21
+    },
+    {
+      "path": "results/runs/universal_lodo_v1/operating_points.csv",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "rows": 0
+    },
+    {
+      "path": "results/runs/universal_stratified_v1/comparison_bootstrap.csv",
+      "sha256": "a62bdc0cdd03cf84a15cf9850231198e803850acd064bbd8791eecdb26979e7d",
+      "rows": 30
+    },
+    {
+      "path": "results/runs/universal_stratified_v1/comparison_deltas.csv",
+      "sha256": "83af363a94193051c6fbb783f37c06555a4265d62edebfac0d593a4df352e34b",
+      "rows": 30
+    },
+    {
+      "path": "results/runs/universal_stratified_v1/dataset_metrics.csv",
+      "sha256": "392884ef05ff2c1fd6d9c24918c817874f975eea66eef72c688567c8ad18788b",
+      "rows": 12
+    },
+    {
+      "path": "results/runs/universal_stratified_v1/generator_metrics.csv",
+      "sha256": "e2841868dc72f90b85a0cd91a99352d0c52a89cb0f5c5b49c8dec4ba62df14f5",
+      "rows": 63
+    },
+    {
+      "path": "results/runs/universal_stratified_v1/operating_points.csv",
+      "sha256": "3f078a28647451aa107dcd25043633767d8411f5aaabb16e7a7738ed73428c5f",
+      "rows": 36
+    },
+    {
+      "path": "results/runs/universal_vatex_tail_v2/comparison_bootstrap.csv",
+      "sha256": "5b3f857a72336b220cc2142d71713db82daf80850d7b4d19e809e64e7ee27293",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/universal_vatex_tail_v2/comparison_deltas.csv",
+      "sha256": "05119c78bb2e3d235c845923e553159ccf381ff1e58fe675290142670dd46a88",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/universal_vatex_tail_v2/dataset_metrics.csv",
+      "sha256": "46149651c09d87ab198e68a0877761c34a93900e2768e38c9f1fc502f2ef9095",
+      "rows": 18
+    },
+    {
+      "path": "results/runs/universal_vatex_tail_v2/generator_metrics.csv",
+      "sha256": "e41f4a7431a2f772153038cb17c68ef237d31c01a91d385e4f0b364e8d7dfe21",
+      "rows": 120
+    },
+    {
+      "path": "results/runs/universal_vatex_tail_v2/operating_points.csv",
+      "sha256": "02186eec23588bb0508e69666fcbca56bf2c50292d2a37997492172a53accb6a",
+      "rows": 54
+    },
+    {
+      "path": "results/runs/universal_vatex_v1/comparison_bootstrap.csv",
+      "sha256": "048c7c547d28b81f579340651984677f638ab26027bb6edd9978287974393daa",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/universal_vatex_v1/comparison_deltas.csv",
+      "sha256": "a27bd14269254bf0f17dd126f1a193173c26c7912691fa4764f5b34575c670bb",
+      "rows": 48
+    },
+    {
+      "path": "results/runs/universal_vatex_v1/dataset_metrics.csv",
+      "sha256": "723c4a2508502907184b155872923b633f08aee10ebb605a90a5fee96b5b5c61",
+      "rows": 18
+    },
+    {
+      "path": "results/runs/universal_vatex_v1/generator_metrics.csv",
+      "sha256": "54bbe9e80c720b91dd654d5c73b57261efe3585cd88d6afc8e1af257447bc6ed",
+      "rows": 120
+    },
+    {
+      "path": "results/runs/universal_vatex_v1/operating_points.csv",
+      "sha256": "cc2dad00f482b91eca9721619d1c63eeb8846927f5c7bacb997be20a3bd3e52c",
+      "rows": 54
+    },
+    {
+      "path": "results/analysis/caes_duration/pairwise_metrics.csv",
+      "sha256": "c6ffcdafc09b0e266eea0b1b67f1154b125ec54f6faaa68df901ae80f1bbfcb0",
+      "rows": 27
+    },
+    {
+      "path": "results/analysis/caes_external_genvidbench_selectors/pairwise_metrics.csv",
+      "sha256": "7ade731df07c2d33fef91288428b19508b10a7f61c6d4b4e1568cebbe4f631ff",
+      "rows": 6
+    },
+    {
+      "path": "results/analysis/caes_tail/comparison_deltas.csv",
+      "sha256": "a9d412fa30b81893e617d6ff5d5323e8eb5468c6203e18474200c926c525b423",
+      "rows": 20
+    },
+    {
+      "path": "results/analysis/caes_tail_smoke/comparison_deltas.csv",
+      "sha256": "fe302b27a4bfc2b4ae6a9be926154eb367e1324abda31c6e63618f0018b237a5",
+      "rows": 10
+    },
+    {
+      "path": "results/analysis/stage1_correspondence/generator_metrics.csv",
+      "sha256": "6b7e4dead7970f1d53a8dd025d16074ecc07ac4ac70d5aed6474035399f8e8cf",
+      "rows": 80
+    },
+    {
+      "path": "results/analysis/stage1_correspondence/pairwise_metrics.csv",
+      "sha256": "7e3471d125176dae79bae4558444aa4387f5f9535698d7ed08152b5a149d1606",
+      "rows": 16
+    },
+    {
+      "path": "results/analysis/stage2_trajectory/generator_metrics.csv",
+      "sha256": "8457caf2c527b8a4673658a5abf1090d8e4e9ab20f15ce0ad2ce1de699d5f6db",
+      "rows": 120
+    },
+    {
+      "path": "results/analysis/stage2_trajectory/pairwise_metrics.csv",
+      "sha256": "901074873b40ea04fe9a11b39f94a66c33aed6fdd3f6774b6122672f90c29a72",
+      "rows": 24
+    },
+    {
+      "path": "results/analysis/stage3_conditional/generator_metrics.csv",
+      "sha256": "9d8d4647a37e911155c55b309add551eeff3053223d49e01ba2bfd0200da5fa2",
+      "rows": 80
+    },
+    {
+      "path": "results/analysis/stage3_conditional/pairwise_metrics.csv",
+      "sha256": "2b363feff5e6d3eb70858877640779c2bd5f8e1e1bcc12c87139543a122e5484",
+      "rows": 16
+    },
+    {
+      "path": "results/analysis/stage4_statistics/generator_metrics.csv",
+      "sha256": "b9fa15d0b41dfdcccf62e9ad27efb326da123d526dfbdf62d49b9a91a285544d",
+      "rows": 60
+    },
+    {
+      "path": "results/analysis/stage4_statistics/pairwise_metrics.csv",
+      "sha256": "59a0aefbd672712cdd00c43594abf2eb02a771899290332de8dc8b6e80f3db54",
+      "rows": 12
+    },
+    {
+      "path": "results/analysis/universal4_to_vifbench/pairwise_metrics.csv",
+      "sha256": "3148d1592671be23abe4fc55f7887e3d60b6dce44fbb237ad16183fb082119f4",
+      "rows": 4
+    },
+    {
+      "path": "results/analysis/vifbench_confirmation/branch_metrics.csv",
+      "sha256": "becada1858eabeab8258542a5b8a6eec9ffbcf9f7165ae71eb983346a624a881",
+      "rows": 7
+    },
+    {
+      "path": "results/paper_v1/runs/cli_score_fit_refactor_v1/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/cli_score_smoke_v1/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/components_without_gt_bootstrap_v1/resolved_config.yaml",
+      "sha256": "f2100557e1be6523fff88e241b20ccac11bc18516297ddea772b36343b13f109"
+    },
+    {
+      "path": "results/paper_v1/runs/components_without_gt_bootstrap_v1/comparison_bootstrap.csv",
+      "sha256": "036b41faf35762358db45b22492e8df488736c7309071695ba1339a77ce4fb8f",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/components_without_gt_bootstrap_v1/comparison_deltas.csv",
+      "sha256": "3659d2cb9bc9de968cc3692f5b0b56c38cd1e434160cf7ee5411b3ef4c6280c8",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/fit_comgenvid_migration_v1/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/global_only_replay_v2/resolved_config.yaml",
+      "sha256": "ba8235a5dea5e08e1bcf2440c1d0fa57454c94d3c02e52fc796a42654b2f1196"
+    },
+    {
+      "path": "results/paper_v1/runs/global_only_replay_v3/resolved_config.yaml",
+      "sha256": "ba8235a5dea5e08e1bcf2440c1d0fa57454c94d3c02e52fc796a42654b2f1196"
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v1/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v1/comparison_bootstrap.csv",
+      "sha256": "213cd505de739f09d6e46834950519ebae7a94a6841fef8bf0852ccbd713240b",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v1/comparison_deltas.csv",
+      "sha256": "b0cf00bc95fd00ed285b31c624c396b27112fa7cdc4c0b4dd560b415aafb04e3",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v3/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v3/comparison_bootstrap.csv",
+      "sha256": "6fee74120f2c8e76e613d94bff738e0e3b757df061f8fc3fa74d319a5586077c",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/local_increment_bootstrap_v3/comparison_deltas.csv",
+      "sha256": "bf165ca5b27708220b7e10b711d5998238161b2061df10b4c36087d71684ab67",
+      "rows": 12
+    },
+    {
+      "path": "results/paper_v1/runs/main_components_v1/resolved_config.yaml",
+      "sha256": "f2100557e1be6523fff88e241b20ccac11bc18516297ddea772b36343b13f109"
+    },
+    {
+      "path": "results/paper_v1/runs/main_components_v1/dataset_metrics.csv",
+      "sha256": "4f9abe1cdeaf4a418d597cd2ef1957010e454ec3dce924badaae2e86a8ab3ee2",
+      "rows": 25
+    },
+    {
+      "path": "results/paper_v1/runs/main_components_v1/full_population_metrics.csv",
+      "sha256": "dea96389d8252366a7f08774e9315c0565ee42fb9008ef0610c0fc32c84b2d98",
+      "rows": 25
+    },
+    {
+      "path": "results/paper_v1/runs/main_components_v1/generator_metrics.csv",
+      "sha256": "71af38ed93a3365b47109fc0f42b10cc536fe187765c539f7a9ff853646dc7d4",
+      "rows": 200
+    },
+    {
+      "path": "results/paper_v1/runs/main_components_v1/macro_metrics.csv",
+      "sha256": "8cbceca740b4c2b80a0e147232952ac61ffa9b8b24ce2b4ac084cf9257b45809",
+      "rows": 5
+    },
+    {
+      "path": "results/paper_v1/runs/main_replay_v2/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/main_replay_v3/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/migration_replay_v1/resolved_config.yaml",
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    {
+      "path": "results/paper_v1/runs/migration_replay_v1/dataset_metrics.csv",
+      "sha256": "72cefc46530035d12177bf0a3394f71fe05c276a064e0688e450d7aba7cbbb67",
+      "rows": 5
+    },
+    {
+      "path": "results/paper_v1/runs/migration_replay_v1/full_population_metrics.csv",
+      "sha256": "1f32a0a3a0d9078aef5c45eaf24f629c4b9ef4ea32ad41a92ca59212cd43c565",
+      "rows": 5
+    },
+    {
+      "path": "results/paper_v1/runs/migration_replay_v1/generator_metrics.csv",
+      "sha256": "ad5039469ba37c5f42fdf7bd9551bf9c75c52db6abc90982ce5778e701ce05ab",
+      "rows": 40
+    },
+    {
+      "path": "results/paper_v1/runs/migration_replay_v1/macro_metrics.csv",
+      "sha256": "07c3169556dfa813d4b3676b62f342b34b5bf74b59c157903fd807e22724d6ee",
+      "rows": 1
+    }
+  ],
+  "coverage": {
+    "results/runs/alpha_stall": 27,
+    "results/runs/alpha_stall_external_genvidbench": 4,
+    "results/runs/alpha_stall_external_genvidbench_global_k3": 4,
+    "results/runs/alpha_stall_external_genvidbench_k1": 4,
+    "results/runs/alpha_stall_full_d1_k3_no_spatial_refit": 27,
+    "results/runs/alpha_stall_full_d1_refit": 27,
+    "results/runs/alpha_stall_full_d2_k1_no_spatial_refit": 27,
+    "results/runs/alpha_stall_full_d2_k3_no_spatial_refit": 27,
+    "results/runs/alpha_stall_full_d2_k3_refit": 27,
+    "results/runs/alpha_stall_full_k1_refit": 27,
+    "results/runs/alpha_stall_global_only": 27,
+    "results/runs/alpha_stall_global_only_k3_refit": 27,
+    "results/runs/alpha_stall_local_d1_refit": 27,
+    "results/runs/alpha_stall_local_d2_locked": 27,
+    "results/runs/alpha_stall_local_d2_refit": 27,
+    "results/runs/alpha_stall_local_spatial_d2_refit": 27,
+    "results/runs/alpha_stall_local_spatial_only_refit": 27,
+    "results/runs/alpha_stall_locked_u0": 27,
+    "results/runs/b3_development_evidence_v1": 1106,
+    "results/runs/b3_development_full_v1": 1428,
+    "results/runs/b3_direction_structure_v1": 32,
+    "results/runs/b3_external_validation_v1": 504,
+    "results/runs/b3_full_coverage_pilot_v2": 327,
+    "results/runs/b3_mean_whitening_swap_pilot_v1": 452,
+    "results/runs/b3_prototype_diagnostic_v1": 12,
+    "results/runs/b3_prototype_pilot_v1": 546,
+    "results/runs/b3_sample_efficiency_pilot_v1": 5040,
+    "results/runs/b3_soft_context_cdf_v1": 452,
+    "results/runs/caes_confirmation_vifbench": 44,
+    "results/runs/caes_confirmation_vifbench_random": 44,
+    "results/runs/caes_confirmation_vifbench_smoke": 44,
+    "results/runs/caes_external_genvidbench_feature_change": 8,
+    "results/runs/caes_external_genvidbench_random": 8,
+    "results/runs/caes_stage_fs": 162,
+    "results/runs/caes_stage_fs_smoke_comgenvid": 30,
+    "results/runs/caes_tail_matrix": 648,
+    "results/runs/caes_tail_smoke": 120,
+    "results/runs/cdf_factorial": 612,
+    "results/runs/context_calibration_k1024": 144,
+    "results/runs/context_calibration_k512": 144,
+    "results/runs/context_calibration_v1": 144,
+    "results/runs/cross_domain_feature_k3_equal_fusion": 198,
+    "results/runs/cross_domain_feature_k3_equal_fusion_smoke": 198,
+    "results/runs/feature_change_top1_raw_v1": 272,
+    "results/runs/global_context_ablation_v1": 144,
+    "results/runs/local_cdf_source_attribution_v1": 171,
+    "results/runs/local_gaussian_source_attribution_v1": 348,
+    "results/runs/local_resolution_448_pilot": 196,
+    "results/runs/local_window_cdf_ablation": 214,
+    "results/runs/native_xclip_baselines_v1": 342,
+    "results/runs/native_xclip_full_v1": 342,
+    "results/runs/stage1_c1_hard_local_d2_k3": 27,
+    "results/runs/stage1_c2_soft_local_d2_k3": 27,
+    "results/runs/stage1_c3_soft_local_d2_k3": 27,
+    "results/runs/stage2_t1_curvature_k3": 0,
+    "results/runs/stage2_trajectory_matrix": 135,
+    "results/runs/stage3_conditional_matrix": 54,
+    "results/runs/stage4_statistics_matrix": 54,
+    "results/runs/universal4_to_vifbench_feature_k3": 22,
+    "results/runs/universal_lodo_v1": 41,
+    "results/runs/universal_stratified_v1": 171,
+    "results/runs/universal_vatex_tail_v2": 288,
+    "results/runs/universal_vatex_v1": 288,
+    "results/analysis/caes_duration": 27,
+    "results/analysis/caes_external_genvidbench_selectors": 6,
+    "results/analysis/caes_tail": 20,
+    "results/analysis/caes_tail_smoke": 10,
+    "results/analysis/stage1_correspondence": 96,
+    "results/analysis/stage2_trajectory": 144,
+    "results/analysis/stage3_conditional": 96,
+    "results/analysis/stage4_statistics": 72,
+    "results/analysis/universal4_to_vifbench": 4,
+    "results/analysis/vifbench_confirmation": 7,
+    "results/paper_v1/runs/cli_score_fit_refactor_v1": 0,
+    "results/paper_v1/runs/cli_score_smoke_v1": 0,
+    "results/paper_v1/runs/components_without_gt_bootstrap_v1": 24,
+    "results/paper_v1/runs/fit_comgenvid_migration_v1": 0,
+    "results/paper_v1/runs/global_only_replay_v2": 0,
+    "results/paper_v1/runs/global_only_replay_v3": 0,
+    "results/paper_v1/runs/local_increment_bootstrap_v1": 24,
+    "results/paper_v1/runs/local_increment_bootstrap_v3": 24,
+    "results/paper_v1/runs/main_components_v1": 255,
+    "results/paper_v1/runs/main_replay_v2": 0,
+    "results/paper_v1/runs/main_replay_v3": 0,
+    "results/paper_v1/runs/migration_replay_v1": 51
+  },
+  "retained": {
+    "results/reference/comparison_tables.csv.gz": {
+      "sha256": "ab85dd0f0693d1892631b8c828457b21baec6af950d361735cb8b0d5ad5e1300"
+    },
+    "results/reference/baseline/generator_metrics.csv": {
+      "sha256": "a47c15acf69039f34bb8ec610396680da65915783fc5a8f45340bc930a5f4d7b"
+    },
+    "results/reference/baseline/resolved_config.yaml": {
+      "sha256": "7c452e88c4638fb71ea2496f46e310abda0cb01ec5acbb33b5419c0aa61de1b5"
+    },
+    "results/reference/baseline/window_scores.csv.gz": {
+      "sha256": "dca1f07bd97e3aa9043481512da2cb22e2bb9d7819f484a5be2ac8f30fe122b3"
+    },
+    "results/reference/baseline/macro_metrics.csv": {
+      "sha256": "c3ba39ac3caaeb80080af7b0240073bdc8c3cbd25179f68d34cba7c729d91888"
+    },
+    "results/reference/baseline/run_manifest.json": {
+      "sha256": "46dcdcb52dd1029957649812020e982dd79970acbbca0d7ebd95d1f20bf1b160"
+    },
+    "results/reference/baseline/dataset_metrics.csv": {
+      "sha256": "023b4a621a86bd2937b06e3cba2988ff9ba60e960620a5293ec1f92e80eba47c"
+    },
+    "results/reference/baseline/artifact_manifest.json": {
+      "sha256": "34700d9c4cab4d31a03c034aa8d9995ae2d4d7e2b0f242b618afcf6f2146bcf1"
+    },
+    "results/reference/baseline/video_scores.csv": {
+      "sha256": "e7928eb265841814add1f8fb7c0333c8f81a526896daef726f4aee789a0be8a7"
+    }
+  },
+  "cache_policy": "existing caches unchanged; temporal evidence/reference arrays preserved; no original videos removed"
+}

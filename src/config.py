@@ -10,6 +10,94 @@ from typing import Any
 import yaml
 
 
+# 新主线单独校验，旧入口在迁移结束前仍调用原validate_config。
+PAPER_FIELDS = {
+    'protocol.id': str, 'encoder.repo': str, 'encoder.weights': str, 'encoder.weights_sha256': str,
+    'encoder.input_size': int, 'encoder.batch_size': int, 'encoder.pad_tail': bool,
+    'selection.name': str, 'selection.k': int, 'selection.frames': int, 'selection.fps': int,
+    'selection.coarse_stride': int, 'selection.candidate_stride': int,
+    'method.global_enabled': bool, 'method.local_enabled': bool,
+    'method.spatial_weight': (int, float), 'method.global_weight': (int, float),
+    'reference.directory': str, 'reference.manifest': str, 'data.manifests': str,
+    'runtime.device': str, 'runtime.score_dtype': str, 'output.root': str,
+    'evaluation.score_direction': str, 'evaluation.real_fpr_levels': list,
+    'evaluation.bootstrap_seed': int, 'evaluation.bootstrap_iterations': int,
+    'fit.feature_source': str, 'runtime.decode_workers': int,
+    'runtime.prefetch_depth': int, 'runtime.prefetch_memory_mb': int,
+    'runtime.devices': list,
+    'runtime.prefetch_enabled': bool,
+}
+PAPER_OPTIONAL = {'fit.feature_source','runtime.decode_workers','runtime.prefetch_depth','runtime.prefetch_memory_mb','runtime.devices','runtime.prefetch_enabled'}
+
+
+def _paper_leaves(value, prefix=''):
+    if not isinstance(value, dict):raise ValueError('配置必须为映射')
+    result = {}
+    for key, item in value.items():
+        if not isinstance(key, str):raise ValueError('配置键必须为字符串')
+        name = f'{prefix}.{key}' if prefix else key
+        if isinstance(item, dict):
+            if not any(field.startswith(name+'.') for field in PAPER_FIELDS):raise ValueError(f'未知配置段：{name}')
+            result.update(_paper_leaves(item, name))
+        else:result[name] = item
+    return result
+
+
+def validate_paper_config(config):
+    import math
+    import re
+    leaves = _paper_leaves(config)
+    missing=set(PAPER_FIELDS)-PAPER_OPTIONAL-set(leaves)
+    unknown=set(leaves)-set(PAPER_FIELDS)
+    if missing or unknown:
+        raise ValueError(f'新主线配置字段不符，缺少{sorted(missing)}，未知{sorted(unknown)}')
+    for name, value in leaves.items():
+        types = PAPER_FIELDS[name]
+        types = types if isinstance(types, tuple) else (types,)
+        if type(value) not in types:raise ValueError(f'配置类型错误：{name}')
+        if isinstance(value, str) and not value:raise ValueError(f'配置不能为空：{name}')
+    fixed = {'encoder.input_size':224, 'encoder.batch_size':8, 'encoder.pad_tail':True,
+             'selection.frames':16, 'selection.fps':8, 'selection.coarse_stride':8,
+             'selection.candidate_stride':4, 'runtime.score_dtype':'float64',
+             'evaluation.score_direction':'higher_is_real'}
+    for name, value in fixed.items():
+        if leaves[name] != value:raise ValueError(f'冻结数值合同不允许改变{name}')
+    if not re.fullmatch(r'[0-9a-f]{64}',leaves['encoder.weights_sha256']):raise ValueError('权重hash无效')
+    if not re.fullmatch(r'[a-z0-9][a-z0-9_-]{0,100}',leaves['protocol.id']):raise ValueError('协议ID包含非法路径字符')
+    if leaves['selection.name'] not in ('uniform','feature_change') or leaves['selection.k'] not in (1,2,3):
+        raise ValueError('选择器或窗口预算无效')
+    if leaves['runtime.device'] not in ('cpu','cuda:0','cuda:1'):raise ValueError('设备无效')
+    devices=leaves.get('runtime.devices',[])
+    if any(type(d) is not str or d not in ('cpu','cuda:0','cuda:1') for d in devices) or len(set(devices))!=len(devices):
+        raise ValueError('设备列表无效或重复')
+    if len(devices)>1 and 'cpu' in devices:raise ValueError('多设备执行只支持独立CUDA卡，不混用CPU数值路径')
+    if not leaves['method.global_enabled'] and not leaves['method.local_enabled']:raise ValueError('至少保留一个分支')
+    for name in ('method.spatial_weight','method.global_weight'):
+        if not math.isfinite(leaves[name]) or not 0<=leaves[name]<=1:raise ValueError('权重必须在[0,1]')
+    levels=leaves['evaluation.real_fpr_levels']
+    if not levels or any(type(x) not in (int,float) or not math.isfinite(x) or not 0<x<1 for x in levels):
+        raise ValueError('FPR列表无效')
+    if leaves['evaluation.bootstrap_iterations']<1000:raise ValueError('正式bootstrap至少1000次')
+    if leaves['evaluation.bootstrap_seed']<0:raise ValueError('seed必须非负')
+    if leaves.get('fit.feature_source','cache') not in ('cache','video'):raise ValueError('拟合特征源只能为cache/video')
+    for name in ('runtime.decode_workers','runtime.prefetch_depth','runtime.prefetch_memory_mb'):
+        if name in leaves and leaves[name]<1:raise ValueError('预取线程、深度和内存预算必须为正')
+
+
+def load_paper_config(path, overrides=()):
+    config = load_config(Path(path))
+    validate_paper_config(config)
+    result=copy.deepcopy(config)
+    for value in overrides:
+        name,item=parse_override(value)
+        if name not in PAPER_FIELDS:raise ValueError(f'未知覆盖字段：{name}')
+        target=result;parts=name.split('.')
+        for part in parts[:-1]:target=target.setdefault(part,{})
+        target[parts[-1]]=item
+    validate_paper_config(result)
+    return result
+
+
 def load_config(path: Path) -> dict[str, Any]:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -26,201 +114,11 @@ def parse_override(value: str) -> tuple[str, Any]:
     return key, yaml.safe_load(raw_value)
 
 
-def apply_overrides(config: dict[str, Any], overrides: list[str]) -> dict[str, Any]:
-    """返回应用点分路径覆盖后的深拷贝配置，绝不修改基础 YAML 文件。"""
-
-    resolved = copy.deepcopy(config)
-    for item in overrides:
-        key, value = parse_override(item)
-        target: dict[str, Any] = resolved
-        parts = key.split(".")
-        for part in parts[:-1]:
-            current = target.get(part)
-            if current is None:
-                target[part] = {}
-                current = target[part]
-            if not isinstance(current, dict):
-                raise ValueError(f"不能在标量配置下继续覆盖嵌套键：{key!r}")
-            target = current
-        target[parts[-1]] = value
-    validate_config(resolved)
-    return resolved
-
-
 def config_digest(config: dict[str, Any]) -> str:
     import hashlib
 
     canonical = json.dumps(config, ensure_ascii=True, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-
-
-def validate_config(config: dict[str, Any]) -> None:
-    required = {"method", "sampling", "calibration", "data", "runtime", "metrics"}
-    missing = required.difference(config)
-    if missing:
-        raise ValueError(f"实验配置缺少必要段：{sorted(missing)}")
-    method = config["method"]
-    if method.get("name") != "alpha_stall":
-        raise ValueError("method.name 只能是 alpha_stall")
-    windows = config["sampling"].get("num_windows")
-    if not isinstance(windows, int) or windows < 1:
-        raise ValueError("sampling.num_windows 必须是正整数")
-    locked_sampling = {
-        "window_seconds": 2,
-        "fps": 8,
-        "frames_per_window": 16,
-        "strategy": "uniform",
-    }
-    for key, expected in locked_sampling.items():
-        if config["sampling"].get(key) != expected:
-            raise ValueError(
-                f"当前严格缓存只支持 sampling.{key}={expected!r}"
-            )
-    selection = config.get("temporal_selection")
-    if selection is not None:
-        if not isinstance(selection, dict):
-            raise ValueError("temporal_selection 必须是映射")
-        allowed_selectors = {
-            "uniform", "random", "feature_change", "real_anomaly",
-            "real_anomaly_nms", "stratified_real_anomaly",
-        }
-        if selection.get("name") not in allowed_selectors:
-            raise ValueError("temporal_selection.name 不受支持")
-        locked_selection = {
-            "coarse_fps": 1,
-            "candidate_stride_seconds": 0.5,
-            "k": 3,
-            "window_seconds": 2.0,
-            "dense_fps": 8,
-            "frames_per_window": 16,
-            "nms_iou_threshold": 0.5,
-            "reference_mode": "target_real",
-        }
-        for key, expected in locked_selection.items():
-            if selection.get(key) != expected:
-                raise ValueError(
-                    f"CAES第一轮固定 temporal_selection.{key}={expected!r}"
-                )
-        if selection.get("calibration_mode") not in {"matched", "crossfit5"}:
-            raise ValueError(
-                "temporal_selection.calibration_mode 只能是 matched 或 crossfit5"
-            )
-        if selection.get("crossfit_folds") != 5:
-            raise ValueError("CAES cross-fitting 固定为 5 folds")
-        if not isinstance(selection.get("seed"), int):
-            raise ValueError("temporal_selection.seed 必须是整数")
-    local = method.get("local", {})
-    global_branch = method.get("global", {})
-    if not global_branch.get("enabled", False) and not local.get("enabled", False):
-        raise ValueError("至少必须启用 Global 或 Local 证据分支")
-    if local.get("enabled", False) and local.get("temporal_enabled", False):
-        if local.get("temporal_order") not in {1, 2}:
-            raise ValueError("method.local.temporal_order 只能是 1 或 2")
-        dynamics = local.get("dynamics", "finite_difference")
-        if dynamics not in {
-            "finite_difference",
-            "curvature",
-            "speed_ratio",
-            "path_chord",
-            "d2_curvature",
-            "geometry",
-        }:
-            raise ValueError(
-                "method.local.dynamics 必须是 finite_difference、curvature、"
-                "speed_ratio、path_chord、d2_curvature 或 geometry"
-            )
-        if dynamics == "d2_curvature" and local.get("temporal_order") != 2:
-            raise ValueError("d2_curvature 要求 method.local.temporal_order=2")
-        correspondence = local.get("correspondence", {})
-        correspondence_type = correspondence.get("type", "same_grid")
-        if correspondence_type not in {"same_grid", "hard_local", "soft_local"}:
-            raise ValueError(
-                "method.local.correspondence.type 只能是 same_grid、hard_local 或 soft_local"
-            )
-        if correspondence.get("radius", 1) not in {1, 2}:
-            raise ValueError("method.local.correspondence.radius 只能是 1 或 2")
-        temperature = correspondence.get("temperature", 0.07)
-        if not isinstance(temperature, (int, float)) or temperature <= 0:
-            raise ValueError("method.local.correspondence.temperature 必须为正数")
-        spatial_penalty = correspondence.get("spatial_penalty", 0.05)
-        if not isinstance(spatial_penalty, (int, float)) or spatial_penalty < 0:
-            raise ValueError("method.local.correspondence.spatial_penalty 不能为负数")
-        confidence = correspondence.get("confidence", "none")
-        if confidence not in {"none", "aggregation"}:
-            raise ValueError(
-                "method.local.correspondence.confidence 只能是 none 或 aggregation"
-            )
-        if confidence == "aggregation" and correspondence_type != "soft_local":
-            raise ValueError("aggregation confidence 只允许与 soft_local 一起使用")
-        conditional = local.get("conditional", {"enabled": False})
-        if not isinstance(conditional, dict):
-            raise ValueError("method.local.conditional 必须是映射")
-        if conditional.get("enabled", False):
-            if conditional.get("state") != "current_speed":
-                raise ValueError("条件动力学当前只支持 current_speed")
-            if conditional.get("bins") != 3:
-                raise ValueError("条件动力学当前固定使用 3 个 real-quantile bins")
-            if conditional.get("binning") != "real_quantile":
-                raise ValueError("条件动力学当前只支持 real_quantile")
-    if local.get("covariance_estimator") not in {"empirical", "ledoit_wolf", "oas"}:
-        raise ValueError(
-            "method.local.covariance_estimator 只能是 empirical、ledoit_wolf 或 oas"
-        )
-    if local.get("parameter_source") not in {"locked_u0", "fit_real_only"}:
-        raise ValueError("method.local.parameter_source 只能是 locked_u0 或 fit_real_only")
-    if local.get("parameter_source") == "locked_u0":
-        for key in ("locked_parameters_dir", "locked_frame_indices"):
-            if not isinstance(local.get(key), str) or not local[key]:
-                raise ValueError(f"method.local.{key} 必须是非空路径")
-        if local.get("correspondence", {}).get("type", "same_grid") != "same_grid":
-            raise ValueError("locked_u0 参数只兼容 same_grid correspondence")
-        if local.get("conditional", {}).get("enabled", False):
-            raise ValueError("locked_u0 参数不包含条件动力学统计")
-    if global_branch.get("enabled", False):
-        if global_branch.get("parameter_source") != "official_vatex":
-            raise ValueError("method.global.parameter_source 必须是 official_vatex")
-        if not isinstance(global_branch.get("parameters"), str) or not global_branch["parameters"]:
-            raise ValueError("method.global.parameters 必须是官方 VATEX 参数文件路径")
-        digest = global_branch.get("parameters_sha256")
-        if not isinstance(digest, str) or len(digest) != 64:
-            raise ValueError("method.global.parameters_sha256 必须是 64 位 SHA256")
-    if config["calibration"].get("real_videos_per_dataset", 0) < 1:
-        raise ValueError("calibration.real_videos_per_dataset 必须为正数")
-    if config["data"].get("short_video_policy") not in {"error", "exclude"}:
-        raise ValueError("data.short_video_policy 只能是 error 或 exclude")
-    if not isinstance(config["metrics"].get("pairwise_seed"), int):
-        raise ValueError("metrics.pairwise_seed 必须是整数")
-    runtime = config["runtime"]
-    if not isinstance(runtime.get("cache_dir"), str) or not runtime["cache_dir"]:
-        raise ValueError("runtime.cache_dir 必须是非空路径")
-    coarse_cache = runtime.get("coarse_global_cache_dir")
-    if coarse_cache is not None and (
-        not isinstance(coarse_cache, str) or not coarse_cache
-    ):
-        raise ValueError("runtime.coarse_global_cache_dir 必须是非空路径")
-    if coarse_cache == runtime.get("cache_dir"):
-        raise ValueError("coarse Global cache 不得与 Patch cache 使用同一根目录")
-    if runtime.get("cache_policy") != "strict":
-        raise ValueError("主实验只能使用 runtime.cache_policy=strict")
-    if not isinstance(runtime.get("max_features_for_fit"), int) or runtime["max_features_for_fit"] < 2:
-        raise ValueError("runtime.max_features_for_fit 必须至少为 2")
-    if not isinstance(runtime.get("minimum_free_gib"), (int, float)) or runtime["minimum_free_gib"] <= 0:
-        raise ValueError("runtime.minimum_free_gib 必须为正数")
-    for key in ("score_batch_size", "cache_io_workers"):
-        if not isinstance(runtime.get(key), int) or runtime[key] < 1:
-            raise ValueError(f"runtime.{key} 必须是正整数")
-    reuse_global_run = runtime.get("reuse_global_run")
-    if reuse_global_run is not None and (
-        not isinstance(reuse_global_run, str) or not reuse_global_run
-    ):
-        raise ValueError("runtime.reuse_global_run 必须是 null 或非空 run 名")
-    if reuse_global_run is not None and not global_branch.get("enabled", False):
-        raise ValueError("复用 Global 分数时 method.global.enabled 必须为 true")
-    devices = runtime.get("devices", [])
-    if not isinstance(devices, list) or any(not isinstance(item, str) or not item for item in devices):
-        raise ValueError("runtime.devices 必须是由非空设备名组成的列表")
-    if len(devices) > 2:
-        raise ValueError("当前运行器最多支持两张评分卡")
 
 
 def dump_config(path: Path, config: dict[str, Any]) -> None:

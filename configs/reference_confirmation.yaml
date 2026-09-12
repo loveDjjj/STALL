@@ -1,0 +1,31 @@
+# 独立于旧fit/评价/CDF/阈值源的真实参考重拟合；五次抽样允许彼此重叠。
+protocol: reference_and_encoding_confirmation_v1
+output: results/runs/reference_confirmation
+# 固定旧23单元身份、窗口和干净分数，不覆盖旧主线。
+baseline: results/paper_complete
+plans: results/runs/mainline_experts/plans.json
+patch_cache: cache/patch/looped_video
+# 每域每次200片段，同池同时拟合Global与Local；源数另计。
+fit_clips: 200
+seeds: [17, 29, 43, 59, 71]
+# 新旧Local位置匹配控制按每片段pooled D2实际位置数抽样，不复制向量。
+ridge: 0.00001
+positions_per_clip: 256
+# 重编码只做预定最多50对/生成器的固定子集，原始对照来自完全相同身份。
+robust_pairs_per_cell: 50
+robust_seed: 20260911
+# 保持帧大小和时间戳，不补帧；4:4:4避免奇数边长被隐式裁剪/缩放。
+codec: libx264
+pixel_format: yuv444p
+crf: [23, 35]
+preset: medium
+# 重编码实验先固定原FC窗口，测试特征/评分敏感性，不声称重跑选窗的端到端鲁棒性。
+robust_observation: fixed_original_windows
+# 保留当前FP32/batch8尾批与FP64评分；存储仅在/data。
+devices: [cuda:0, cuda:1]
+metadata_workers: 8
+decode_workers: 3
+encoder_threads: 2
+prefetch_depth: 4
+disk_floor_gib: 40
+bootstrap_iterations: 1000

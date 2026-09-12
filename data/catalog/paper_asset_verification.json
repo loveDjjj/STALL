@@ -1,0 +1,12 @@
+{
+  "status": "verified",
+  "remaining_videos": 34451,
+  "protected_video_paths": 28653,
+  "real_reserve_videos": 5798,
+  "deleted_videos": 40572,
+  "fit_assets": 816,
+  "retained_models": 88,
+  "patch_shards": 718,
+  "patch_index_sha256": "5825e79f65a6074e34a69dc6447735c4cf698bd46586c9c3a71e335cfc2841c0",
+  "main_sha": "7de27578647247ddbafc1210be28dbec753f7ae8"
+}

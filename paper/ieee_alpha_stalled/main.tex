@@ -1,6 +1,16 @@
 \documentclass[conference]{IEEEtran}
 
+% 切换Unicode字体编码前使用有效过渡字体；正文随后设为Times兼容字体。
+\renewcommand{\rmdefault}{lmr}
 \usepackage[UTF8,scheme=plain,fontset=fandol]{ctex}
+\setmainfont{texgyretermes-regular.otf}[
+  BoldFont=texgyretermes-bold.otf,
+  ItalicFont=texgyretermes-italic.otf,
+  BoldItalicFont=texgyretermes-bolditalic.otf]
+\setCJKmainfont{FandolSong-Regular.otf}[
+  BoldFont=FandolSong-Bold.otf,
+  ItalicFont=FandolKai-Regular.otf,
+  SmallCapsFont=FandolSong-Regular.otf]
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{booktabs}
@@ -13,8 +23,16 @@
 \usepackage{grffile}
 \usepackage{balance}
 
-\graphicspath{{figures/method/}{figures/results/}{figures/supplementary/}}
+\graphicspath{{figures/method/}{figures/results/}}
 \renewcommand{\refname}{参考文献}
+\definecolor{mainred}{RGB}{160,24,35}
+% 允许主表下并排放置两个单栏证据表，避免表格积压到结论页。
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
 
 \newcommand{\method}{Alpha-STALLED}
 \newcommand{\stall}{STALL}
@@ -23,8 +41,9 @@
 \newcommand{\slocal}{S_{\mathrm{local}}}
 
 \begin{document}
+\bstctlcite{IEEE:control}
 
-\title{\method：基于全局--局部真实视频校准的免训练生成视频检测}
+\title{\method：真实参考下的\\局部二阶动态方向检伪}
 
 \author{
   \IEEEauthorblockN{作者姓名待定}
@@ -34,8 +53,6 @@
 }
 
 \maketitle
-\zihao{-5}
-\linespread{1.12}\selectfont
 
 \input{sections/00_abstract}
 \input{sections/01_introduction}
@@ -46,9 +63,6 @@
 \input{sections/06_discussion}
 \input{sections/07_conclusion}
 \input{sections/08_declarations}
-
-\section*{致谢}
-[待补充：请补充基金、平台、数据提供者、计算资源和个人致谢。]
 
 \balance
 \bibliographystyle{IEEEtran}

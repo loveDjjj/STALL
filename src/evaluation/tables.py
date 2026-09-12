@@ -3,11 +3,77 @@
 from __future__ import annotations
 
 import pandas as pd
+import numpy as np
 
 from .metrics import binary_metrics
 
 
 REQUIRED_SCORE_COLUMNS = {"video_id", "dataset", "subset", "source_model", "final_score"}
+
+
+def component_ablation_tables(scores,pairs):
+    """固定目标参考与窗口，只移除证据；不扫描权重，不重建任一CDF。"""
+    scores=normalize_scores(scores)
+    fields=['global_score','global_spatial_score','global_temporal_score','local_score','final_score']
+    if set(fields)-set(scores):raise ValueError('组件重算需要完整分支分数')
+    values=scores[fields].to_numpy(dtype=np.float64)
+    if not np.isfinite(values).all() or (values<0).any() or (values>1).any():raise ValueError('组件分数必须有限且在[0,1]')
+    expected=.5*scores.global_score+.5*scores.local_score
+    if not np.array_equal(expected.to_numpy(),scores.final_score.to_numpy()):raise ValueError('源分数不是固定等权完整模型')
+    variants=dict(full=scores.final_score,global_only=scores.global_score,local_only=scores.local_score,
+                  without_gs=.5*scores.global_temporal_score+.5*scores.local_score,
+                  without_gt=.5*scores.global_spatial_score+.5*scores.local_score)
+    tables={};videos=[]
+    for name,final in variants.items():
+        frame=scores.copy();frame['final_score']=final
+        videos.append(frame.assign(variant=name))
+        for key,table in evaluate_fixed_pairs(frame,pairs).items():tables.setdefault(key,[]).append(table.assign(variant=name))
+    output={key:pd.concat(parts,ignore_index=True) for key,parts in tables.items()}
+    output['video_scores']=pd.concat(videos,ignore_index=True)
+    for key,keys in [('generator_metrics',['dataset','generator']),('dataset_metrics',['dataset']),('macro_metrics',['scope'])]:
+        table=output[key]
+        if table.empty:continue
+        metrics=[col for col in table if col not in (*keys,'variant','n_real','n_fake')]
+        baseline=table[table.variant=='full'].set_index(keys)[metrics]
+        rows=[]
+        for name,part in table.groupby('variant',sort=False):
+            delta=part.set_index(keys)[metrics]-baseline
+            rows.append(delta.rename(columns={metric:'delta_'+metric for metric in metrics}).reset_index().assign(variant=name))
+        output[key.replace('_metrics','_deltas')]=pd.concat(rows,ignore_index=True)
+    return output
+
+
+def evaluate_fixed_pairs(scores: pd.DataFrame, pairs: pd.DataFrame) -> dict[str,pd.DataFrame]:
+    """新入口只消费冻结配对，不在评价阶段重新抽样或平衡类别。"""
+    scores=normalize_scores(scores)
+    required={'video_id','dataset','subset','generator'}
+    if required-set(pairs):raise ValueError('配对表缺少必要字段')
+    if pairs.duplicated(['dataset','generator','video_id']).any():raise ValueError('单元内视频重复')
+    indexed=scores.set_index('video_id',verify_integrity=True)
+    rows=[]
+    for (domain,generator),pair in pairs.groupby(['dataset','generator']):
+        if not set(pair.video_id).issubset(indexed.index):raise ValueError('配对视频缺少评分')
+        selected=indexed.loc[pair.video_id].reset_index()
+        if not (selected.dataset.to_numpy()==pair.dataset.to_numpy()).all() or not (selected.subset.to_numpy()==pair.subset.to_numpy()).all():
+            raise ValueError('配对域或标签漂移')
+        fake=selected.subset.eq('annotated')
+        if not selected.loc[fake,'source_model'].eq(generator).all():raise ValueError('生成器归属错误')
+        real_count=int((~fake).sum());fake_count=int(fake.sum())
+        if real_count!=fake_count or not real_count:raise ValueError('主配对单元必须平衡且非空')
+        rows.append(dict(dataset=domain,generator=generator,n_real=real_count,n_fake=fake_count,**binary_metrics(selected)))
+    if not rows:raise ValueError('配对表为空')
+    generators=pd.DataFrame(rows)
+    metrics=[c for c in generators if c not in ('dataset','generator','n_real','n_fake')]
+    datasets=generators.groupby('dataset',as_index=False)[metrics].mean()
+    dev=['comgenvid','videofeedback','genvideo']
+    macro=pd.DataFrame(columns=['scope',*metrics])
+    if set(dev).issubset(datasets.dataset):
+        macro=pd.DataFrame([dict(scope='Macro-3',**datasets[datasets.dataset.isin(dev)][metrics].mean().to_dict())])
+    population=[]
+    for domain,group in scores.groupby('dataset'):
+        population.append(dict(dataset=domain,n_real=int(group.subset.eq('real').sum()),n_fake=int(group.subset.eq('annotated').sum()),
+                               real_prevalence=float(group.subset.eq('real').mean()),**binary_metrics(group)))
+    return dict(generator_metrics=generators,dataset_metrics=datasets,macro_metrics=macro,full_population_metrics=pd.DataFrame(population))
 
 
 def normalize_scores(frame: pd.DataFrame) -> pd.DataFrame:
@@ -22,107 +88,3 @@ def normalize_scores(frame: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("subset 字段只能使用 real 或 annotated")
     result["final_score"] = pd.to_numeric(result["final_score"], errors="raise")
     return result
-
-
-def build_metric_tables(scores: pd.DataFrame, run_name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    dataset_rows: list[dict] = []
-    generator_rows: list[dict] = []
-    for dataset, dataset_frame in scores.groupby("dataset", sort=True):
-        metrics = binary_metrics(dataset_frame, "final_score")
-        dataset_rows.append(
-            {
-                "run_name": run_name,
-                "dataset": dataset,
-                "auc": metrics["auc"],
-                "ap_real": metrics["real_positive_ap"],
-                "tpr_at_0_1pct_fpr": metrics["fake_tpr_at_0_1pct_real_fpr"],
-                "tpr_at_1pct_fpr": metrics["fake_tpr_at_1pct_real_fpr"],
-                "fpr_at_95pct_tpr": metrics["real_fpr_at_95pct_fake_tpr"],
-                "n_real": int(dataset_frame["subset"].eq("real").sum()),
-                "n_fake": int(dataset_frame["subset"].eq("annotated").sum()),
-                "n_generators": int(dataset_frame.loc[dataset_frame["subset"].eq("annotated"), "source_model"].nunique()),
-            }
-        )
-        real = dataset_frame[dataset_frame["subset"].eq("real")]
-        for generator, fake in dataset_frame[dataset_frame["subset"].eq("annotated")].groupby("source_model", sort=True):
-            paired = pd.concat([real, fake], ignore_index=True)
-            values = binary_metrics(paired, "final_score")
-            generator_rows.append(
-                {
-                    "run_name": run_name,
-                    "dataset": dataset,
-                    "generator": generator,
-                    "auc": values["auc"],
-                    "ap_real": values["real_positive_ap"],
-                    "tpr_at_0_1pct_fpr": values["fake_tpr_at_0_1pct_real_fpr"],
-                    "tpr_at_1pct_fpr": values["fake_tpr_at_1pct_real_fpr"],
-                    "fpr_at_95pct_tpr": values["real_fpr_at_95pct_fake_tpr"],
-                    "n_real": len(real),
-                    "n_fake": len(fake),
-                }
-            )
-    return pd.DataFrame(dataset_rows), pd.DataFrame(generator_rows)
-
-
-def _balanced_real_pair(
-    real: pd.DataFrame, fake: pd.DataFrame, seed: int
-) -> pd.DataFrame:
-    """按锁定论文协议构建一个生成器的真实/生成平衡配对。
-
-    真实视频有多个来源时，先为每个来源分配相同配额，再以固定种子打乱；
-    这避免真实来源比例随生成器规模而改变。该规则与历史 U0 主表一致。
-    """
-
-    target = min(len(real), len(fake))
-    if target == 0:
-        raise ValueError("生成器配对同时需要真实与生成视频")
-    groups = [
-        group.sample(n=min(len(group), max(1, target // real["source_model"].nunique())), random_state=seed)
-        for _, group in real.groupby("source_model", sort=True)
-    ]
-    sampled_real = pd.concat(groups, ignore_index=True).sample(
-        n=min(target, sum(len(group) for group in groups)), random_state=seed
-    )
-    return pd.concat([sampled_real, fake.head(len(sampled_real))], ignore_index=True)
-
-
-def build_pairwise_metric_table(
-    scores: pd.DataFrame, run_name: str, pairwise_seed: int
-) -> pd.DataFrame:
-    """生成论文主表使用的生成器配对宏平均 AUC 与 real-positive AP。"""
-
-    rows: list[dict] = []
-    for dataset, dataset_frame in scores.groupby("dataset", sort=True):
-        real = dataset_frame[dataset_frame["subset"].eq("real")]
-        generator_rows = []
-        for _, fake in dataset_frame[dataset_frame["subset"].eq("annotated")].groupby("source_model", sort=True):
-            pair = _balanced_real_pair(real, fake, pairwise_seed)
-            generator_rows.append((pair, binary_metrics(pair, "final_score")))
-        if not generator_rows:
-            raise ValueError(f"{dataset} 没有可用于论文配对指标的生成器")
-        rows.append(
-            {
-                "run_name": run_name,
-                "scope": "generator_pairwise_dataset_macro",
-                "dataset": dataset,
-                "auc": float(sum(item[1]["auc"] for item in generator_rows) / len(generator_rows)),
-                "ap_real": float(sum(item[1]["real_positive_ap"] for item in generator_rows) / len(generator_rows)),
-                "n_generators": len(generator_rows),
-                "n_pairwise_real": int(sum(len(item[0][item[0]["subset"].eq("real")]) for item in generator_rows)),
-                "n_pairwise_fake": int(sum(len(item[0][item[0]["subset"].eq("annotated")]) for item in generator_rows)),
-                "pairwise_seed": pairwise_seed,
-            }
-        )
-    table = pd.DataFrame(rows)
-    macro = {
-        "run_name": run_name,
-        "scope": "generator_pairwise_macro3",
-        "dataset": "Macro-3",
-        "auc": float(table["auc"].mean()),
-        "ap_real": float(table["ap_real"].mean()),
-        "n_generators": int(table["n_generators"].sum()),
-        "n_pairwise_real": int(table["n_pairwise_real"].sum()),
-        "n_pairwise_fake": int(table["n_pairwise_fake"].sum()),
-        "pairwise_seed": pairwise_seed,
-    }
-    return pd.concat([table, pd.DataFrame([macro])], ignore_index=True)

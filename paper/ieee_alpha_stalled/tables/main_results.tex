@@ -1,22 +1,55 @@
+% 由 export_tables.py 生成；CSV 身份及汇总经校验。
 \begin{table*}[t]
   \centering
-  \caption{三个开发基准上的参考比较。AEROBLADE、RIGID、ZED、D3 与 STALL 数字来自其公开结果，可能使用不同视频子集或预处理，仅用于定位性能范围；\method 使用本文固定的 21,421 条视频交集、real-only Local 校准与生成器配对宏平均协议。每格为 AUC/real-positive AP。}
+  \caption{三个基准的逐生成器结果。左组为 STALL v2 Table 1 的发表值\cite{benhayun2026stall}；右组为本文计算值。两组的评价身份、目标真实信息和观察预算不完全相同，分组展示不构成同协议排名。}
   \label{tab:main_results}
   {\scriptsize
-  \setlength{\tabcolsep}{4.0pt}
-  \renewcommand{\arraystretch}{1.10}
-  \begin{tabular}{lcccc}
+  \setlength{\tabcolsep}{1.4pt}
+  \renewcommand{\arraystretch}{1.08}
+  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ll*{12}{c}*{2}{>{\columncolor{mainred!4}}c}@{}}
     \toprule
-    Method & VideoFeedback & GenVideo & ComGenVid & Macro-3 \\
+    & & \multicolumn{12}{c}{发表结果$^{\dagger}$} & \multicolumn{2}{c}{本次计算$^{\ddagger}$} \\
+    \cmidrule(lr){3-14}\cmidrule(l){15-16}
+    数据集 & 生成器 & \multicolumn{2}{c}{AEROBLADE} & \multicolumn{2}{c}{RIGID} & \multicolumn{2}{c}{ZED} & \multicolumn{2}{c}{D3 (L2)} & \multicolumn{2}{c}{D3 (cos)} & \multicolumn{2}{c}{STALL} & \multicolumn{2}{c}{\method} \\
+    & & AUC & AP & AUC & AP & AUC & AP & AUC & AP & AUC & AP & AUC & AP & AUC & AP \\
     \midrule
-    AEROBLADE (published) & 0.58/0.58 & 0.59/0.61 & 0.69/0.64 & 0.62/0.61 \\
-    RIGID (published) & 0.63/0.62 & 0.65/0.63 & 0.57/0.59 & 0.61/0.59 \\
-    ZED (published) & 0.54/0.54 & 0.55/0.57 & 0.55/0.57 & 0.57/0.58 \\
-    D3-L2 (published) & 0.54/0.57 & 0.72/0.74 & 0.73/0.71 & 0.64/0.65 \\
-    D3-cos (published) & 0.55/0.57 & 0.70/0.74 & 0.73/0.71 & 0.64/0.65 \\
-    STALL (published) & 0.83/0.85 & 0.80/0.80 & 0.85/0.86 & 0.82/0.82 \\
+    \multirow{12}{*}{\rotatebox{90}{VideoFeedback}} & AnimateDiff & 0.570 & 0.550 & 0.730 & 0.740 & 0.650 & 0.620 & 0.490 & 0.490 & 0.610 & 0.570 & \textbf{0.830} & \textbf{0.860} & 0.829 & 0.848 \\
+     & Fast-SVD & 0.520 & 0.510 & 0.540 & 0.560 & 0.450 & 0.480 & 0.760 & 0.770 & 0.800 & 0.790 & \textbf{0.890} & \textbf{0.890} & 0.909 & 0.925 \\
+     & LVDM & \textbf{0.880} & \textbf{0.900} & 0.650 & 0.570 & 0.760 & 0.700 & 0.420 & 0.490 & 0.310 & 0.410 & 0.860 & 0.890 & 0.891 & 0.903 \\
+     & LaVie & 0.500 & 0.500 & 0.710 & 0.730 & 0.290 & 0.370 & 0.510 & 0.470 & 0.490 & 0.460 & \textbf{0.810} & \textbf{0.830} & 0.804 & 0.819 \\
+     & ModelScope & 0.600 & 0.560 & 0.660 & 0.620 & 0.690 & 0.590 & 0.510 & 0.520 & 0.420 & 0.460 & \textbf{0.810} & \textbf{0.830} & 0.800 & 0.802 \\
+     & Pika & 0.440 & 0.460 & 0.540 & 0.540 & 0.390 & 0.470 & \textbf{0.830} & \textbf{0.840} & 0.810 & 0.810 & 0.780 & 0.800 & 0.877 & 0.897 \\
+     & Sora & 0.650 & 0.620 & 0.430 & 0.440 & 0.560 & 0.620 & 0.620 & 0.560 & 0.670 & 0.580 & \textbf{0.810} & \textbf{0.820} & 0.770 & 0.768 \\
+     & Text2Video & 0.670 & 0.630 & 0.700 & 0.680 & 0.550 & 0.490 & 0.150 & 0.330 & 0.220 & 0.360 & \textbf{0.830} & \textbf{0.830} & 0.708 & 0.725 \\
+     & VideoCrafter2 & 0.600 & 0.580 & 0.800 & 0.760 & 0.530 & 0.500 & 0.690 & 0.710 & 0.800 & 0.790 & \textbf{0.930} & \textbf{0.940} & 0.910 & 0.919 \\
+     & ZeroScope & \textbf{0.780} & 0.780 & 0.650 & 0.590 & 0.700 & 0.620 & 0.350 & 0.450 & 0.350 & 0.440 & \textbf{0.780} & \textbf{0.810} & 0.796 & 0.818 \\
+     & Hotshot-XL & 0.200 & 0.340 & 0.510 & 0.580 & 0.440 & 0.450 & 0.640 & 0.670 & 0.600 & 0.620 & \textbf{0.790} & \textbf{0.800} & 0.780 & 0.802 \\
+    \cmidrule(l){2-16}
+     & \textbf{Average} & 0.580 & 0.580 & 0.630 & 0.620 & 0.540 & 0.540 & 0.540 & 0.570 & 0.550 & 0.570 & \textbf{0.830} & \textbf{0.850} & 0.825 & 0.839 \\
     \midrule
-    \method (D2-only, K3) & \textbf{0.8621/0.8687} & \textbf{0.8586/0.8391} & \textbf{0.9015/0.9110} & \textbf{0.8741/0.8729} \\
+    \multirow{11}{*}{\rotatebox{90}{GenVideo}} & Crafter & 0.640 & 0.650 & 0.710 & 0.660 & 0.550 & 0.560 & 0.790 & \textbf{0.820} & 0.760 & 0.790 & \textbf{0.820} & 0.800 & 0.890 & 0.873 \\
+     & Gen2 & 0.560 & 0.590 & 0.700 & 0.670 & 0.510 & 0.580 & \textbf{0.880} & \textbf{0.900} & \textbf{0.880} & \textbf{0.900} & \textbf{0.880} & 0.890 & 0.951 & 0.958 \\
+     & Lavie & 0.580 & 0.590 & 0.770 & 0.760 & 0.390 & 0.420 & 0.680 & 0.680 & 0.670 & 0.680 & \textbf{0.850} & \textbf{0.840} & 0.885 & 0.879 \\
+     & ModelScope & 0.600 & 0.600 & 0.620 & 0.590 & 0.610 & 0.570 & 0.630 & 0.640 & 0.600 & 0.630 & \textbf{0.780} & \textbf{0.780} & 0.883 & 0.880 \\
+     & MorphStudio & 0.740 & 0.730 & 0.740 & 0.690 & 0.600 & 0.600 & 0.660 & 0.710 & 0.640 & 0.690 & \textbf{0.830} & \textbf{0.840} & 0.881 & 0.877 \\
+     & Show 1 & 0.480 & 0.500 & 0.530 & 0.520 & 0.450 & 0.470 & 0.760 & \textbf{0.800} & 0.750 & 0.790 & \textbf{0.820} & \textbf{0.800} & 0.875 & 0.851 \\
+     & Sora & 0.730 & 0.700 & 0.490 & 0.480 & 0.710 & 0.790 & 0.750 & 0.750 & 0.740 & 0.740 & \textbf{0.790} & \textbf{0.800} & 0.950 & 0.954 \\
+     & WildScrape & 0.490 & 0.530 & 0.610 & 0.590 & 0.550 & 0.570 & 0.650 & \textbf{0.690} & 0.640 & \textbf{0.690} & \textbf{0.720} & 0.680 & 0.799 & 0.716 \\
+     & HotShot-XL & 0.310 & 0.390 & 0.640 & 0.650 & 0.470 & 0.460 & 0.560 & 0.640 & 0.540 & 0.620 & \textbf{0.790} & \textbf{0.780} & 0.824 & 0.820 \\
+     & MoonValley & 0.750 & 0.780 & 0.720 & 0.660 & 0.630 & 0.720 & \textbf{0.810} & \textbf{0.820} & \textbf{0.810} & \textbf{0.820} & 0.720 & 0.750 & 0.882 & 0.902 \\
+    \cmidrule(l){2-16}
+     & \textbf{Average} & 0.590 & 0.610 & 0.650 & 0.630 & 0.550 & 0.570 & 0.720 & 0.740 & 0.700 & 0.740 & \textbf{0.800} & \textbf{0.800} & 0.882 & 0.871 \\
+    \midrule
+    \multirow{3}{*}{CGV} & Sora & 0.720 & 0.670 & 0.530 & 0.550 & 0.580 & 0.590 & 0.680 & 0.650 & 0.680 & 0.650 & \textbf{0.840} & \textbf{0.850} & 0.904 & 0.908 \\
+     & VEO3 & 0.670 & 0.620 & 0.620 & 0.630 & 0.520 & 0.550 & 0.790 & 0.760 & 0.790 & 0.780 & \textbf{0.860} & \textbf{0.870} & 0.929 & 0.935 \\
+    \cmidrule(l){2-16}
+     & \textbf{Average} & 0.690 & 0.640 & 0.570 & 0.590 & 0.550 & 0.570 & 0.730 & 0.710 & 0.730 & 0.710 & \textbf{0.850} & \textbf{0.860} & 0.917 & 0.922 \\
+    \midrule
+    \multicolumn{2}{l}{\textbf{总体 Average}} & 0.620 & 0.610 & 0.610 & 0.590 & 0.570 & 0.580 & 0.640 & 0.650 & 0.640 & 0.650 & \textbf{0.820} & \textbf{0.820} & \textcolor{mainred}{\textbf{0.874}} & \textcolor{mainred}{\textbf{0.877}} \\
     \bottomrule
-  \end{tabular}}
+  \end{tabular*}
+  \par\vspace{2pt}
+  \begin{minipage}{\textwidth}\scriptsize
+  $^{\dagger}$发表 AP 与各级 Average 按原报告照录，补零不增加原始精度。$^{\ddagger}$本文 AP 为 AP-real，总体 Average 为域内生成器等权后再三域等权。左组粗体标记组内逐行显示最高值（含并列）；浅底色定位本文两列，深红强调本文总体结果。CGV：ComGenVid。
+  \end{minipage}}
 \end{table*}
