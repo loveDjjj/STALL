@@ -20,7 +20,7 @@
 | references.bib | 书目；文中实际引用的条目进入PDF |
 | build.sh / build/ | 编译入口及可再生成的中间文件；成功后更新main.pdf |
 
-其余旧表文件不在当前主稿的输入链中，也不作为当前数据来源。历史研究记录见仓库唯一[实验总账](../../docs/All_Branches_Experiments_and_Data_Summary_zh.md)。
+旧表和旧方法图已从当前树移除，可从Git恢复点efede85查看；这里只维护三张当前表。历史研究记录见仓库唯一[实验总账](../../docs/All_Branches_Experiments_and_Data_Summary_zh.md)。
 
 ## 编译与校验
 

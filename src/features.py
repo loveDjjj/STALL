@@ -17,10 +17,17 @@ from torchvision import transforms
 DINO_V3_MODEL_NAME = "dinov3_vitl16"
 DINOV3_GITHUB_URL = "https://github.com/facebookresearch/dinov3"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DINO_V3_REPO_DIR = str(Path(os.environ.get("DINO_V3_REPO_DIR", REPOSITORY_ROOT / "dinov3")).resolve())
-DINO_V3_WEIGHTS = str(Path(os.environ.get(
-    "DINO_V3_WEIGHTS", REPOSITORY_ROOT / "dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth",
-)).resolve())
+DINO_V3_REPO_DIR = str(
+    Path(os.environ.get("DINO_V3_REPO_DIR", REPOSITORY_ROOT / "dinov3")).resolve()
+)
+DINO_V3_WEIGHTS = str(
+    Path(
+        os.environ.get(
+            "DINO_V3_WEIGHTS",
+            REPOSITORY_ROOT / "dinov3/weights/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth",
+        )
+    ).resolve()
+)
 
 
 @dataclass(frozen=True)
@@ -39,11 +46,13 @@ _CACHED_HANDLE: DinoBackboneHandle | None = None
 def create_dinov3_transform(resize_size: int = 224):
     """创建 DINOv3 的固定图像预处理。"""
 
-    return transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((resize_size, resize_size), antialias=True),
-        transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    ])
+    return transforms.Compose(
+        [
+            transforms.ToTensor(),
+            transforms.Resize((resize_size, resize_size), antialias=True),
+            transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
 
 
 def resolve_dinov3_paths(
@@ -51,7 +60,9 @@ def resolve_dinov3_paths(
 ) -> tuple[str, str]:
     """解析 DINOv3 代码与权重的绝对路径。"""
 
-    return str(Path(repo_dir or DINO_V3_REPO_DIR).resolve()), str(Path(weights or DINO_V3_WEIGHTS).resolve())
+    return str(Path(repo_dir or DINO_V3_REPO_DIR).resolve()), str(
+        Path(weights or DINO_V3_WEIGHTS).resolve()
+    )
 
 
 def _model_cache_key(
@@ -110,9 +121,7 @@ class AlphaStallFeatureExtractor:
         load_dino: bool = True,
         pad_tail_batch: bool = False,
     ):
-        self.dino_repo_path, self.dino_weights_path = resolve_dinov3_paths(
-            dino_repo, dino_weights
-        )
+        self.dino_repo_path, self.dino_weights_path = resolve_dinov3_paths(dino_repo, dino_weights)
         if load_dino:
             handle = get_shared_dinov3_model(
                 device,
@@ -129,9 +138,7 @@ class AlphaStallFeatureExtractor:
         # 新协议必须显式启用，历史缓存和参考统计不自动迁移。
         self.pad_tail_batch = bool(pad_tail_batch)
 
-    def _forward_features_dict(
-        self, x: torch.Tensor, *, require_patch_tokens: bool = True
-    ) -> dict:
+    def _forward_features_dict(self, x: torch.Tensor, *, require_patch_tokens: bool = True) -> dict:
         if hasattr(self.model, "module"):
             core_model = self.model.module
         else:
@@ -150,8 +157,12 @@ class AlphaStallFeatureExtractor:
     def _frame_tensor(self, frame):
         """允许预取线程提供已完成相同变换的CPU张量；普通BGR输入路径不变。"""
         if isinstance(frame, torch.Tensor):
-            if frame.device.type != 'cpu' or frame.dtype != torch.float32 or tuple(frame.shape) != (3,224,224):
-                raise ValueError('预处理帧必须是CPU float32 [3,224,224]')
+            if (
+                frame.device.type != "cpu"
+                or frame.dtype != torch.float32
+                or tuple(frame.shape) != (3, 224, 224)
+            ):
+                raise ValueError("预处理帧必须是CPU float32 [3,224,224]")
             return frame
         return self.transform(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
 
@@ -163,9 +174,9 @@ class AlphaStallFeatureExtractor:
     def _batch_tensor(self, tensors, batch_size):
         """重复末帧补齐计算batch；调用者必须裁去补齐输出。"""
         if batch_size < 1 or not tensors or len(tensors) > batch_size:
-            raise ValueError('帧batch为空或尺寸非法')
-        if getattr(self, 'pad_tail_batch', False) and len(tensors) < batch_size:
-            tensors = [*tensors, *([tensors[-1]] * (batch_size-len(tensors)))]
+            raise ValueError("帧batch为空或尺寸非法")
+        if getattr(self, "pad_tail_batch", False) and len(tensors) < batch_size:
+            tensors = [*tensors, *([tensors[-1]] * (batch_size - len(tensors)))]
         return torch.stack(tensors)
 
     def _embed_flat_frames_global(
@@ -182,15 +193,13 @@ class AlphaStallFeatureExtractor:
                 batch = flat_frames[start : start + batch_size]
                 tensors = [self._frame_tensor(frame) for frame in batch]
                 features = self._forward_features_dict(
-                    self._batch_tensor(tensors,batch_size).to(device), require_patch_tokens=False
+                    self._batch_tensor(tensors, batch_size).to(device), require_patch_tokens=False
                 )
                 if "x_norm_clstoken" not in features:
                     raise KeyError("forward_features() 输出中缺少 'x_norm_clstoken'")
-                core_model = (
-                    self.model.module if hasattr(self.model, "module") else self.model
-                )
+                core_model = self.model.module if hasattr(self.model, "module") else self.model
                 outputs.append(
-                    core_model.head(features["x_norm_clstoken"])[:len(batch)].detach().cpu()
+                    core_model.head(features["x_norm_clstoken"])[: len(batch)].detach().cpu()
                 )
         return torch.cat(outputs, dim=0).numpy()
 
@@ -210,7 +219,7 @@ class AlphaStallFeatureExtractor:
             for start in range(0, len(flat_frames), batch_size):
                 batch = flat_frames[start : start + batch_size]
                 tensors = [self._frame_tensor(fr) for fr in batch]
-                x = self._batch_tensor(tensors,batch_size).to(device)
+                x = self._batch_tensor(tensors, batch_size).to(device)
 
                 feature_dict = self._forward_features_dict(x)
                 if "x_norm_clstoken" not in feature_dict:
@@ -223,7 +232,7 @@ class AlphaStallFeatureExtractor:
                 patch_batch = feature_dict["x_norm_patchtokens"]
 
                 num_patches = patch_batch.shape[1]
-                side = int(round(num_patches ** 0.5))
+                side = int(round(num_patches**0.5))
                 if side * side != num_patches:
                     raise ValueError(f"Patch token 数量 {num_patches} 不是平方网格")
                 batch_grid_size = (side, side)
@@ -235,13 +244,12 @@ class AlphaStallFeatureExtractor:
                         f"Patch 网格尺寸不一致: {patch_grid_size} vs {batch_grid_size}"
                     )
 
-                global_embs.append(global_batch[:len(batch)].detach().cpu())
-                patch_embs.append(patch_batch[:len(batch)].detach().cpu())
+                global_embs.append(global_batch[: len(batch)].detach().cpu())
+                patch_embs.append(patch_batch[: len(batch)].detach().cpu())
 
         global_out = torch.cat(global_embs, dim=0).numpy()
         patch_out = torch.cat(patch_embs, dim=0).numpy()
         return global_out, patch_out, patch_grid_size
-
 
     def frames_to_global_patch_embeddings(
         self, video_arrays: List[np.ndarray], batch_size: int = 32

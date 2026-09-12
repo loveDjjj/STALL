@@ -15,27 +15,55 @@ def video_metadata(path):
     import math
     import subprocess
     from fractions import Fraction
-    result=subprocess.run(['ffprobe','-v','quiet','-select_streams','v:0','-show_entries',
-                           'stream=duration,avg_frame_rate','-print_format','json',str(path)],
-                          check=True,capture_output=True,text=True,timeout=30)
-    streams=json.loads(result.stdout).get('streams',[])
-    if not streams:raise ValueError('视频缺少可用流')
-    fps=float(Fraction(streams[0].get('avg_frame_rate','0/1')))
-    duration=float(streams[0].get('duration',0))
-    if not math.isfinite(fps) or not math.isfinite(duration) or fps<=0 or duration<=0:
-        raise ValueError('视频帧率或时长无效')
-    return dict(fps=fps,duration_seconds=duration,num_frames=round(fps*duration))
+
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=duration,avg_frame_rate",
+            "-print_format",
+            "json",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    streams = json.loads(result.stdout).get("streams", [])
+    if not streams:
+        raise ValueError("视频缺少可用流")
+    fps = float(Fraction(streams[0].get("avg_frame_rate", "0/1")))
+    duration = float(streams[0].get("duration", 0))
+    if not math.isfinite(fps) or not math.isfinite(duration) or fps <= 0 or duration <= 0:
+        raise ValueError("视频帧率或时长无效")
+    return dict(fps=fps, duration_seconds=duration, num_frames=round(fps * duration))
 
 
-def downsample_indices(num_frames,current_fps,target_fps=8):
+def downsample_indices(num_frames, current_fps, target_fps=8):
     import math
-    if num_frames<1 or not math.isfinite(current_fps) or not math.isfinite(target_fps) or target_fps<=0 or current_fps<target_fps:
-        raise ValueError('不能复制帧上采样，帧率和帧数必须有效')
-    ratio=current_fps/target_fps;indices=[];position=0
+
+    if (
+        num_frames < 1
+        or not math.isfinite(current_fps)
+        or not math.isfinite(target_fps)
+        or target_fps <= 0
+        or current_fps < target_fps
+    ):
+        raise ValueError("不能复制帧上采样，帧率和帧数必须有效")
+    ratio = current_fps / target_fps
+    indices = []
+    position = 0
     while True:
-        index=round(ratio*position)
-        if index>=num_frames:break
-        indices.append(index);position+=1
+        index = round(ratio * position)
+        if index >= num_frames:
+            break
+        indices.append(index)
+        position += 1
     return indices
 
 
@@ -125,7 +153,7 @@ def decode_bounded(video_path: str | Path, frame_indices: Iterable[int]) -> np.n
     """严格随机定位失败时顺序恢复，只保留所需帧，保持原协议的BGR和请求次序。"""
     indices = list(frame_indices)
     if not indices:
-        raise ValueError('解码索引为空')
+        raise ValueError("解码索引为空")
     try:
         return decode_indexed_frames(video_path, indices, require_all=True)
     except ValueError:
@@ -133,22 +161,22 @@ def decode_bounded(video_path: str | Path, frame_indices: Iterable[int]) -> np.n
         selected = {}
         targets = set(indices)
         try:
-            for index in range(max(indices)+1):
+            for index in range(max(indices) + 1):
                 ok, frame = capture.read()
-                if not ok:break
-                if index in targets:selected[index] = frame
+                if not ok:
+                    break
+                if index in targets:
+                    selected[index] = frame
         finally:
             capture.release()
-        if targets-selected.keys():
-            raise ValueError(f'严格解码帧不足：{video_path}')
+        if targets - selected.keys():
+            raise ValueError(f"严格解码帧不足：{video_path}")
         return np.stack([selected[index] for index in indices])
 
 
 __all__ = [
     "decode_all_frames",
     "decode_indexed_frames",
-    "decode_selected_frames",
-    "decode_spans",
     "load_video_frames",
     "decode_bounded",
 ]

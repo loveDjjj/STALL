@@ -21,9 +21,7 @@ def stable_sorted(values: np.ndarray) -> np.ndarray:
     return np.sort(array, kind="mergesort")
 
 
-def empirical_cdf_right_inclusive(
-    scores: np.ndarray, reference_sorted: np.ndarray
-) -> np.ndarray:
+def empirical_cdf_right_inclusive(scores: np.ndarray, reference_sorted: np.ndarray) -> np.ndarray:
     """Compute P(reference <= score), so exact ties are included on the right."""
     reference = np.asarray(reference_sorted, dtype=np.float64)
     values = np.asarray(scores, dtype=np.float64)
@@ -50,9 +48,7 @@ def empirical_cdf_with_positive_infinity(
         raise ValueError("CDF values contain NaN or negative infinity")
     result = np.ones(len(values), dtype=np.float64)
     finite = np.isfinite(values)
-    result[finite] = empirical_cdf_right_inclusive(
-        values[finite], reference_sorted
-    )
+    result[finite] = empirical_cdf_right_inclusive(values[finite], reference_sorted)
     return result
 
 
@@ -61,9 +57,7 @@ def l2_normalized_second_order(patch: torch.Tensor) -> torch.Tensor:
     if patch.ndim != 4 or patch.shape[1] < 3:
         raise ValueError(f"expected [N,T,P,D] with T>=3, got {tuple(patch.shape)}")
     acceleration = patch[:, 2:] - 2.0 * patch[:, 1:-1] + patch[:, :-2]
-    return torch.nn.functional.normalize(
-        acceleration, p=2, dim=-1, eps=1e-12
-    )
+    return torch.nn.functional.normalize(acceleration, p=2, dim=-1, eps=1e-12)
 
 
 def l2_normalized_first_order(features: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -72,9 +66,7 @@ def l2_normalized_first_order(features: torch.Tensor) -> tuple[torch.Tensor, tor
         raise ValueError(f"expected [N,T,D] with T>=2, got {tuple(features.shape)}")
     differences = features[:, 1:] - features[:, :-1]
     zero_mask = torch.linalg.vector_norm(differences, dim=-1) == 0
-    normalized = torch.nn.functional.normalize(
-        differences, p=2, dim=-1, eps=1e-12
-    )
+    normalized = torch.nn.functional.normalize(differences, p=2, dim=-1, eps=1e-12)
     return normalized, zero_mask
 
 
@@ -132,9 +124,7 @@ def score_gaussian_aggregate_float64(
 
     target = torch.device(device)
     mean = torch.as_tensor(params.mean, dtype=torch.float64, device=target)
-    whitening = torch.as_tensor(
-        params.whitening, dtype=torch.float64, device=target
-    )
+    whitening = torch.as_tensor(params.whitening, dtype=torch.float64, device=target)
     constant = float(whitening.shape[1]) * np.log(2.0 * np.pi)
     # 批量传输和一次矩阵乘法让 GPU 看到足够大的工作单元；每个样本仍沿自身
     # 位置维度独立做相同的 mean/min/max 聚合，不改变视频或窗口的统计定义。
@@ -205,12 +195,8 @@ class GaussianMeanCandidateScorerFloat64:
             device=self.device,
         )
         offsets = self.center.unsqueeze(0) - means
-        self.precision_offsets = torch.einsum(
-            "kde,ke->kd", self.precisions, offsets
-        )
-        self.offset_quadratic = torch.sum(
-            offsets * self.precision_offsets, dim=1
-        )
+        self.precision_offsets = torch.einsum("kde,ke->kd", self.precisions, offsets)
+        self.offset_quadratic = torch.sum(offsets * self.precision_offsets, dim=1)
         self.constants = ranks * np.log(2.0 * np.pi)
 
     @torch.inference_mode()
@@ -222,16 +208,12 @@ class GaussianMeanCandidateScorerFloat64:
             )
         output = np.empty((len(values), len(self.constants)), dtype=np.float64)
         for index, sample in enumerate(values):
-            flat = sample.reshape(-1, self.dimension).to(
-                device=self.device, dtype=torch.float64
-            )
+            flat = sample.reshape(-1, self.dimension).to(device=self.device, dtype=torch.float64)
             centered = flat - self.center
             mean_centered = centered.mean(dim=0, dtype=torch.float64)
             second_centered = torch.mm(centered.T, centered) / float(len(centered))
             trace = torch.einsum("de,ked->k", second_centered, self.precisions)
-            cross = 2.0 * torch.sum(
-                mean_centered.unsqueeze(0) * self.precision_offsets, dim=1
-            )
+            cross = 2.0 * torch.sum(mean_centered.unsqueeze(0) * self.precision_offsets, dim=1)
             quadratic = trace + cross + self.offset_quadratic
             output[index] = (-0.5 * (self.constants + quadratic)).cpu().numpy()
         return output
@@ -241,19 +223,10 @@ __all__ = [
     "CDF_TIE_POLICY",
     "GaussianMeanCandidateScorerFloat64",
     "StableGaussianParams",
-    "WhiteningTransform",
-    "apply_whitening",
-    "bottomk_mean",
-    "configure_strict_fp32",
     "empirical_cdf_right_inclusive",
     "empirical_cdf_with_positive_infinity",
     "l2_normalized_first_order",
-    "l2_normalized_patch_first_order",
     "l2_normalized_second_order",
-    "log_likelihood",
     "score_gaussian_aggregate_float64",
-    "score_gaussian_mean_candidates_float64",
-    "score_mean_gaussian_float64",
-    "score_mean_gaussian_fp32",
     "stable_sorted",
 ]

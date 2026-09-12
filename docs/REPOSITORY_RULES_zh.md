@@ -2,6 +2,18 @@
 
 最新用户范围：只维护当前主线，不维护旧复现入口或源码archive。历史结果、配置和做法汇总到唯一历史文档，后续实验用主线重跑。
 
+## 2026-09-12代码整理
+
+清理前完整代码与论文材料已提交为Git恢复点 **efede85**。当前树退役5个研究包（72个Python文件）、9个配置、7个脚本和15个专用测试，并删除33个旧表文件及3张旧流程图。已有视频、Patch、模型和实验结果没有删除；停止方向的源码可从该提交查看。
+
+当前仅维护三个配置、统一CLI、主线src及论文所需evaluation。数据或结果目录中的旧研究名是资产身份，不按代码包名做递归清理。主线仍读取mainline_experts的既有plans/global参数和looped_video的Patch缓存。
+
+代码统一采用Python 3.10、Ruff 0.12.12、100列和LF；配置见pyproject.toml，开发依赖见requirements-dev.txt。Ruff当前检查语法、非法比较和未定义名称等高信号问题，格式检查独立执行。pytest.ini集中设置src路径，单文件测试不依赖收集顺序。
+
+本轮合并JSON/检查点标准化、提取CLI参数构建、移除11个已无定义的公共导出名。其余数值与解码函数保持AST一致；格式变化不代表允许绕过已有run的源码hash校验。CSV等冻结数据由.gitattributes保留原字节。
+
+论文导出所需轻量CSV和验收文件精确纳入Git，目标NPZ及逐视频raw仍留本地。开发者应从全新检出执行表格--check，避免本机隐藏资产掩盖依赖缺失。
+
 ## 目录命名
 
 活跃目录用小写snake_case，按“资产类型/数据集或用途”组织，不用paper_v1、iclr、confirmation或旧实验编号标记当前代码。测试直接放tests；正式参数放precomputed/target_reference；缓存按global、patch、fit、models、scores、contracts分类。
@@ -14,7 +26,7 @@
 
 ## 1. 方法身份与变更原则
 
-1. 论文主线是目标域适配Global + Local D2，历史结果键`adapted_Global_plus_Local`，配对Macro0.881462/0.882444。
+1. 论文主线是目标域适配Global + Local D2。当前23单元三域Average为0.874472/0.877075；历史结果键`adapted_Global_plus_Local`的0.881462/0.882444属于旧20单元。
 2. 旧B3=0.878177/0.877191，不再是后续开发基线。旧名字、文件和hash保留历史身份，不能原地重新解释。
 3. “主线已确认”不等于“YAML/入口已迁移”。完成入口回归之前，不把`predict_b3.sh`、`run_alpha_stall.sh`宣传为新主线命令。
 4. 不微调DINO，不训练真假分类器；只用fit real估计Gaussian。开发阶段曾观察fake指标，应公开，不能宣称研究从未使用fake做设计选择。
@@ -113,7 +125,7 @@ run_manifest记录git commit及dirty diff hash/未跟踪源码快照hash、环�
 ## 6. 指标与证据不变式
 
 - 当前S高为real；AUC/AP-real固定方向。AP-fake另列，不能改正类后对比旧0.882444。
-- 主表20单元固定pair_ids，不重新抽real或fake；shared real跨generator同一源权重；完整池另报类别比例。
+- 当前主表23单元使用paper_complete固定pair_ids，不重新抽real或fake；shared real跨generator同一源权重；旧20单元单独保留历史身份。
 - 样本数写清片段、唯一视频、源组、窗口、配对行，不用其中之一代替其他。
 - 预注册/冻结指向实际时间点，不允许看到结果后回填“预注册”。本轮新baseline是在旧结果已看过后选择。
 - 新Global下的消融必须固定新Global，不能拿旧B3融合结果直接减新baseline。

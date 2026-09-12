@@ -1,6 +1,6 @@
 # Alpha-STALLED论文主线与实验协议
 
-2026-09-11研究组织更新：已停止Looped并返回本分支。冻结算法和既有结果不变，后续按[真实参考Local D2研究方案](REAL_REFERENCE_D2_RESEARCH_PLAN_zh.md)检验高维方向相对强Global和局部标量统计的增量，以及真实参考重拟合的稳定性。本轮不再把下文三个组成部分当作三个预设成立的创新；目标适配和观察策略作为条件与归因控制。新实验尚未启动。
+2026-09-12状态：Looped保持停止，退役研究源码已保存在Git恢复点efede85。高维方向、位置数匹配、新真实拟合池和重编码验证均已完成并写入[IEEE正文](../paper/ieee_alpha_stalled/main.tex)。本文件保留方法与历史回归合同；下文三个组成部分不作为三个预设成立的独立创新，目标适配与观察策略作为条件和归因控制。不要根据旧计划再次启动已结束实验。
 
 最新完整评价：主实验与全部消融均已扩展至23单元，且按原文对齐VideoFeedback动态等级筛选。Macro-3 AUC/AP-real为0.874472/0.877075，详见[完整结果](../results/paper_complete/RESULTS_zh.md)、[论文正文](MANUSCRIPT_REVISION_PLAN_zh.md)与[协议核验](MANUSCRIPT_PROTOCOL_NOTES_zh.md)。下文0.881462/0.882444及20单元数量保留为既有模型回归合同，不再代表当前完整主表覆盖。
 

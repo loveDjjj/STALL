@@ -39,8 +39,12 @@ def load_official_stall_parameters(path: Path) -> dict[str, StableGaussianParams
     """
 
     required = {
-        "mu_spat", "W_spat", "calib_ll_spat",
-        "mu_temp", "W_temp", "calib_ll_temp",
+        "mu_spat",
+        "W_spat",
+        "calib_ll_spat",
+        "mu_temp",
+        "W_temp",
+        "calib_ll_temp",
     }
     with np.load(path, allow_pickle=False) as data:
         missing = required.difference(data.files)
@@ -92,19 +96,31 @@ def score_global_raw(
 
     tensor = torch.as_tensor(features)
     spatial, _ = score_gaussian_aggregate_float64(
-        tensor, spatial_params, aggregation=GLOBAL_SPATIAL_AGGREGATION,
-        device=device, compute_percentile=False,
+        tensor,
+        spatial_params,
+        aggregation=GLOBAL_SPATIAL_AGGREGATION,
+        device=device,
+        compute_percentile=False,
     )
     temporal_features, zero_mask = l2_normalized_first_order(tensor)
     temporal, _ = score_gaussian_aggregate_float64(
-        temporal_features, temporal_params, aggregation=GLOBAL_TEMPORAL_AGGREGATION,
-        device=device, invalid_mask=zero_mask, compute_percentile=False,
+        temporal_features,
+        temporal_params,
+        aggregation=GLOBAL_TEMPORAL_AGGREGATION,
+        device=device,
+        invalid_mask=zero_mask,
+        compute_percentile=False,
     )
     return GlobalRawScores(spatial=spatial, temporal_t1=temporal)
 
 
 __all__ = [
-    "GLOBAL_SPATIAL_WEIGHT", "GLOBAL_SPATIAL_AGGREGATION",
-    "GLOBAL_TEMPORAL_AGGREGATION", "GLOBAL_TEMPORAL_ORDER", "GlobalRawScores",
-    "fuse_global_components", "load_official_stall_parameters", "score_global_raw",
+    "GLOBAL_SPATIAL_WEIGHT",
+    "GLOBAL_SPATIAL_AGGREGATION",
+    "GLOBAL_TEMPORAL_AGGREGATION",
+    "GLOBAL_TEMPORAL_ORDER",
+    "GlobalRawScores",
+    "fuse_global_components",
+    "load_official_stall_parameters",
+    "score_global_raw",
 ]

@@ -74,22 +74,26 @@ def formatted(value: float, best: bool = False, red: bool = False) -> str:
 def grouped_metrics(data: list[tuple[float, float]]) -> list[str]:
     """按三位显示值比较每个指标，保留显示并列。"""
     maxima = [max(f"{p[i]:.3f}" for p in data) for i in range(2)]
-    return [formatted(v, f"{v:.3f}" == maxima[i])
-            for values in data for i, v in enumerate(values)]
+    return [formatted(v, f"{v:.3f}" == maxima[i]) for values in data for i, v in enumerate(values)]
 
 
 def table_start(caption: str, label: str, wide: bool = False) -> list[str]:
     kind = "table*" if wide else "table"
-    return ["% 由 export_tables.py 生成；CSV 身份及汇总经校验。",
-            rf"\begin{{{kind}}}[t]", r"  \centering", rf"  \caption{{{caption}}}",
-            rf"  \label{{tab:{label}}}", r"  {\scriptsize" if wide else r"  {\footnotesize"]
+    return [
+        "% 由 export_tables.py 生成；CSV 身份及汇总经校验。",
+        rf"\begin{{{kind}}}[t]",
+        r"  \centering",
+        rf"  \caption{{{caption}}}",
+        rf"  \label{{tab:{label}}}",
+        r"  {\scriptsize" if wide else r"  {\footnotesize",
+    ]
 
 
 def published_rows() -> list[tuple[str, str, list[float]]]:
     # 发表值唯一源为作者核验的 STALL v2 Table 1 转录，不从本地 STALL 结果取数。
     text = (ROOT / "docs/MANUSCRIPT_REVISION_PLAN_zh.md").read_text(encoding="utf-8")
     header = "| Benchmark | Model | AEROBLADE"
-    block = text[text.index(header):].split("\n\n", 1)[0]
+    block = text[text.index(header) :].split("\n\n", 1)[0]
     rows = []
     for line in block.splitlines()[2:]:
         fields = [s.strip().replace("**", "") for s in line.strip("|").split("|")]
@@ -111,26 +115,37 @@ def main_table(data: dict[str, list[dict[str, str]]]) -> str:
     if len(generators) != 23:
         raise ValueError("主表必须包含 23 个生成器单元")
     domain_rows = data[f"{PAPER}/main.csv"]
-    aliases = {("videofeedback", "LaVie"): "LaVie-base",
-               ("videofeedback", "Sora"): "SoRA-Clip",
-               ("videofeedback", "Text2Video"): "Text2Video-Zero",
-               ("videofeedback", "ZeroScope"): "ZeroScope-576w",
-               ("genvideo", "Show 1"): "Show_1",
-               ("genvideo", "HotShot-XL"): "HotShot"}
+    aliases = {
+        ("videofeedback", "LaVie"): "LaVie-base",
+        ("videofeedback", "Sora"): "SoRA-Clip",
+        ("videofeedback", "Text2Video"): "Text2Video-Zero",
+        ("videofeedback", "ZeroScope"): "ZeroScope-576w",
+        ("genvideo", "Show 1"): "Show_1",
+        ("genvideo", "HotShot-XL"): "HotShot",
+    }
     lines = table_start(
         r"三个基准的逐生成器结果。左组为 STALL v2 Table 1 的发表值\cite{benhayun2026stall}；"
         r"右组为本文计算值。两组的评价身份、目标真实信息和观察预算不完全相同，分组展示不构成同协议排名。",
-        "main_results", wide=True)
-    lines += [r"  \setlength{\tabcolsep}{1.4pt}", r"  \renewcommand{\arraystretch}{1.08}",
-              r"  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ll*{12}{c}*{2}{>{\columncolor{mainred!4}}c}@{}}", r"    \toprule",
-              r"    & & \multicolumn{12}{c}{发表结果$^{\dagger}$} & \multicolumn{2}{c}{本次计算$^{\ddagger}$} \\",
-              r"    \cmidrule(lr){3-14}\cmidrule(l){15-16}",
-              r"    数据集 & 生成器 & \multicolumn{2}{c}{AEROBLADE} & \multicolumn{2}{c}{RIGID} & \multicolumn{2}{c}{ZED} & \multicolumn{2}{c}{D3 (L2)} & \multicolumn{2}{c}{D3 (cos)} & \multicolumn{2}{c}{STALL} & \multicolumn{2}{c}{\method} \\",
-              "    & & " + " & ".join(["AUC & AP"] * 7) + r" \\", r"    \midrule"]
+        "main_results",
+        wide=True,
+    )
+    lines += [
+        r"  \setlength{\tabcolsep}{1.4pt}",
+        r"  \renewcommand{\arraystretch}{1.08}",
+        r"  \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ll*{12}{c}*{2}{>{\columncolor{mainred!4}}c}@{}}",
+        r"    \toprule",
+        r"    & & \multicolumn{12}{c}{发表结果$^{\dagger}$} & \multicolumn{2}{c}{本次计算$^{\ddagger}$} \\",
+        r"    \cmidrule(lr){3-14}\cmidrule(l){15-16}",
+        r"    数据集 & 生成器 & \multicolumn{2}{c}{AEROBLADE} & \multicolumn{2}{c}{RIGID} & \multicolumn{2}{c}{ZED} & \multicolumn{2}{c}{D3 (L2)} & \multicolumn{2}{c}{D3 (cos)} & \multicolumn{2}{c}{STALL} & \multicolumn{2}{c}{\method} \\",
+        "    & & " + " & ".join(["AUC & AP"] * 7) + r" \\",
+        r"    \midrule",
+    ]
     visited = set()
     for domain in DOMAINS:
         group = [r for r in published if r[0] == DOMAIN_NAMES[domain]]
-        if sum(r[1] != "Average" for r in group) != len([r for r in generators if r["dataset"] == domain]):
+        if sum(r[1] != "Average" for r in group) != len(
+            [r for r in generators if r["dataset"] == domain]
+        ):
             raise ValueError(f"生成器覆盖不同：{domain}")
         for index, (_, model, values) in enumerate(group):
             if model == "Average":
@@ -144,10 +159,16 @@ def main_table(data: dict[str, list[dict[str, str]]]) -> str:
                 row = one(generators, dataset=domain, generator=key)
                 visited.add((domain, key))
                 ours = pair(row)
-            domain_label = "CGV" if domain == "comgenvid" else rf"\rotatebox{{90}}{{{DOMAIN_NAMES[domain]}}}"
+            domain_label = (
+                "CGV" if domain == "comgenvid" else rf"\rotatebox{{90}}{{{DOMAIN_NAMES[domain]}}}"
+            )
             prefix = rf"\multirow{{{len(group)}}}{{*}}{{{domain_label}}}" if index == 0 else ""
             compared = grouped_metrics(list(zip(values[::2], values[1::2])))
-            lines.append("    " + " & ".join([prefix, model, *compared, *(formatted(x) for x in ours)]) + r" \\")
+            lines.append(
+                "    "
+                + " & ".join([prefix, model, *compared, *(formatted(x) for x in ours)])
+                + r" \\"
+            )
         lines.append(r"    \midrule")
     if len(visited) != 23:
         raise ValueError("主表生成器映射不唯一")
@@ -156,15 +177,27 @@ def main_table(data: dict[str, list[dict[str, str]]]) -> str:
     for i, expected in enumerate((0.8744719007139845, 0.8770747547781038)):
         equal(ours[i], expected)
         equal(ours[i], mean(pair(one(domain_rows, dataset=d, variant="full"))[i] for d in DOMAINS))
-    lines.append(r"    \multicolumn{2}{l}{\textbf{总体 Average}} & " + " & ".join([
-        *grouped_metrics(list(zip(values[::2], values[1::2]))),
-        *(formatted(x, best=True, red=True) for x in ours)]) + r" \\")
-    lines += [r"    \bottomrule", r"  \end{tabular*}", r"  \par\vspace{2pt}",
-              r"  \begin{minipage}{\textwidth}\scriptsize",
-              r"  $^{\dagger}$发表 AP 与各级 Average 按原报告照录，补零不增加原始精度。"
-              r"$^{\ddagger}$本文 AP 为 AP-real，总体 Average 为域内生成器等权后再三域等权。"
-              r"左组粗体标记组内逐行显示最高值（含并列）；浅底色定位本文两列，深红强调本文总体结果。CGV：ComGenVid。",
-              r"  \end{minipage}}", r"\end{table*}"]
+    lines.append(
+        r"    \multicolumn{2}{l}{\textbf{总体 Average}} & "
+        + " & ".join(
+            [
+                *grouped_metrics(list(zip(values[::2], values[1::2]))),
+                *(formatted(x, best=True, red=True) for x in ours),
+            ]
+        )
+        + r" \\"
+    )
+    lines += [
+        r"    \bottomrule",
+        r"  \end{tabular*}",
+        r"  \par\vspace{2pt}",
+        r"  \begin{minipage}{\textwidth}\scriptsize",
+        r"  $^{\dagger}$发表 AP 与各级 Average 按原报告照录，补零不增加原始精度。"
+        r"$^{\ddagger}$本文 AP 为 AP-real，总体 Average 为域内生成器等权后再三域等权。"
+        r"左组粗体标记组内逐行显示最高值（含并列）；浅底色定位本文两列，深红强调本文总体结果。CGV：ComGenVid。",
+        r"  \end{minipage}}",
+        r"\end{table*}",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -187,18 +220,30 @@ def component_table(data: dict[str, list[dict[str, str]]]) -> str:
         if filename:
             aggregate = pair(one(rows, dataset="Macro-3", variant=variant))
         else:
-            aggregate = pair(one(data[f"{directory}/macro_metrics.csv"], scope="Average", variant=variant))
+            aggregate = pair(
+                one(data[f"{directory}/macro_metrics.csv"], scope="Average", variant=variant)
+            )
         for i in range(2):
             equal(aggregate[i], mean(p[i] for p in by_domain))
         values.append([*by_domain, aggregate])
     lines = table_start(
         r"局部分支的受控贡献。每格为 AUC/AP-real，Average 为三域等权。"
         r"粗体为整表各列各指标的显示最高值（含并列）；浅底色标出冻结的完整方法。",
-        "component_ablation")
-    lines += [r"  \setlength{\tabcolsep}{2.2pt}", r"  \renewcommand{\arraystretch}{1.15}",
-              r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}", r"    \toprule",
-              r"    配置 & VF & GV & CGV & Average \\", r"    \midrule"]
-    blocks = {0: "A. 分支互补", 3: "B. 先测量后聚合（固定 $G$）", 5: "C. 时间与标量替代（固定 $G$）"}
+        "component_ablation",
+    )
+    lines += [
+        r"  \setlength{\tabcolsep}{2.2pt}",
+        r"  \renewcommand{\arraystretch}{1.15}",
+        r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}",
+        r"    \toprule",
+        r"    配置 & VF & GV & CGV & Average \\",
+        r"    \midrule",
+    ]
+    blocks = {
+        0: "A. 分支互补",
+        3: "B. 先测量后聚合（固定 $G$）",
+        5: "C. 时间与标量替代（固定 $G$）",
+    }
     for index, (label, *_rest) in enumerate(specs):
         if index in blocks:
             if index:
@@ -209,15 +254,20 @@ def component_table(data: dict[str, list[dict[str, str]]]) -> str:
         cells = []
         for j in range(4):
             ranked = grouped_metrics([v[j] for v in values])
-            cells.append("/".join(ranked[2 * index:2 * index + 2]))
+            cells.append("/".join(ranked[2 * index : 2 * index + 2]))
         lines.append("    " + " & ".join([label, *cells]) + r" \\")
-    lines += [r"    \bottomrule", r"  \end{tabular*}", r"  \par\vspace{2pt}",
-              r"  \begin{minipage}{\columnwidth}\scriptsize",
-              r"  VF/GV/CGV 为 VideoFeedback/GenVideo/ComGenVid。$G$ 为目标 Global，$L$ 为视频 CDF 后的 Local D2。"
-              r"B、C 固定 $G$ 与 FC 窗口，等权融合，各候选重建 CDF。"
-              r"同位置数指匹配 pooled 的拟合向量数（至多42/片段）。"
-              r"二维 Gaussian 拟合 (TTR, LSMI)；TTR、SPLIT 为同 DINO 控制。",
-              r"  \end{minipage}}", r"\end{table}"]
+    lines += [
+        r"    \bottomrule",
+        r"  \end{tabular*}",
+        r"  \par\vspace{2pt}",
+        r"  \begin{minipage}{\columnwidth}\scriptsize",
+        r"  VF/GV/CGV 为 VideoFeedback/GenVideo/ComGenVid。$G$ 为目标 Global，$L$ 为视频 CDF 后的 Local D2。"
+        r"B、C 固定 $G$ 与 FC 窗口，等权融合，各候选重建 CDF。"
+        r"同位置数指匹配 pooled 的拟合向量数（至多42/片段）。"
+        r"二维 Gaussian 拟合 (TTR, LSMI)；TTR、SPLIT 为同 DINO 控制。",
+        r"  \end{minipage}}",
+        r"\end{table}",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -240,8 +290,11 @@ def reference_table(data: dict[str, list[dict[str, str]]]) -> str:
         domain_values = []
         for domain in (*DOMAINS, "Average"):
             row = one(rows, dataset=domain, variant=variant)
-            selected = members if domain == "Average" else [
-                one(per_domain, dataset=domain, variant=r["variant"]) for r in members]
+            selected = (
+                members
+                if domain == "Average"
+                else [one(per_domain, dataset=domain, variant=r["variant"]) for r in members]
+            )
             for source, prefix in zip(METRICS, ("auc", "ap")):
                 observations = [float(r[source]) for r in selected]
                 equal(float(row[prefix + "_mean"]), mean(observations))
@@ -249,43 +302,71 @@ def reference_table(data: dict[str, list[dict[str, str]]]) -> str:
             domain_values.append((float(row["auc_mean"]), float(row["ap_mean"])))
             if domain == "Average":
                 standard_deviations.append(
-                    rf"{label} {float(row['auc_sd']):.3f}/{float(row['ap_sd']):.3f}")
+                    rf"{label} {float(row['auc_sd']):.3f}/{float(row['ap_sd']):.3f}"
+                )
         for i in range(2):
             equal(domain_values[-1][i], mean(p[i] for p in domain_values[:-1]))
         values.append(domain_values)
     lines = table_start(
         r"更换真实拟合视频后的五次重复。上半为逐域五次平均 AUC/AP-real，Average 为三域等权；"
         r"下半为总体配对差值均值及95\%区间。逐次重拟合后计算指标，不对预测集成。",
-        "reference_stability")
-    lines += [r"  \setlength{\tabcolsep}{2.2pt}", r"  \renewcommand{\arraystretch}{1.16}",
-              r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}", r"    \toprule",
-              r"    同池配置 & VF & GV & CGV & Average \\", r"    \midrule"]
+        "reference_stability",
+    )
+    lines += [
+        r"  \setlength{\tabcolsep}{2.2pt}",
+        r"  \renewcommand{\arraystretch}{1.16}",
+        r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}",
+        r"    \toprule",
+        r"    同池配置 & VF & GV & CGV & Average \\",
+        r"    \midrule",
+    ]
     for index, (_, label) in enumerate(specs):
         cells = []
         for j in range(4):
             ranked = grouped_metrics([v[j] for v in values])
-            cells.append("/".join(ranked[2 * index:2 * index + 2]))
+            cells.append("/".join(ranked[2 * index : 2 * index + 2]))
         lines.append("    " + " & ".join([label, *cells]) + r" \\")
-    lines += [r"  \end{tabular*}", r"  \par\vspace{3pt}",
-              r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc@{}}", r"    \midrule",
-              r"    Average 增量 & $\Delta$ AUC [95\% CI] & $\Delta$ AP [95\% CI] \\"]
-    for contrast, label, baseline in (("new_Full_vs_Global", r"Full$-G$", "global"),
-                                      ("new_D2_vs_D1", r"Full$-$D1融合", "d1")):
+    lines += [
+        r"  \end{tabular*}",
+        r"  \par\vspace{3pt}",
+        r"  \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcc@{}}",
+        r"    \midrule",
+        r"    Average 增量 & $\Delta$ AUC [95\% CI] & $\Delta$ AP [95\% CI] \\",
+    ]
+    for contrast, label, baseline in (
+        ("new_Full_vs_Global", r"Full$-G$", "global"),
+        ("new_D2_vs_D1", r"Full$-$D1融合", "d1"),
+    ):
         cells = []
         for metric, prefix in (("auc", "auc"), ("ap_real", "ap")):
-            row = one(data[f"{CONFIRM}/contrasts.csv"], dataset="Average", contrast=contrast, metric=metric)
+            row = one(
+                data[f"{CONFIRM}/contrasts.csv"],
+                dataset="Average",
+                contrast=contrast,
+                metric=metric,
+            )
             delta = float(row["delta"])
-            equal(delta, float(one(rows, dataset="Average", variant="full")[prefix + "_mean"])
-                  - float(one(rows, dataset="Average", variant=baseline)[prefix + "_mean"]))
-            cells.append(rf"\shortstack{{$+{delta:.3f}$\\$[{float(row['ci95_low']):.3f},\,{float(row['ci95_high']):.3f}]$}}")
+            equal(
+                delta,
+                float(one(rows, dataset="Average", variant="full")[prefix + "_mean"])
+                - float(one(rows, dataset="Average", variant=baseline)[prefix + "_mean"]),
+            )
+            cells.append(
+                rf"\shortstack{{$+{delta:.3f}$\\$[{float(row['ci95_low']):.3f},\,{float(row['ci95_high']):.3f}]$}}"
+            )
         lines.append("    " + " & ".join([label, *cells]) + r" \\")
-    lines += [r"    \bottomrule", r"  \end{tabular*}", r"  \par\vspace{2pt}",
-              r"  \begin{minipage}{\columnwidth}\scriptsize",
-              "  Average 样本标准差（AUC/AP）：" + "，".join(standard_deviations) + "。",
-              r"  VF/GV/CGV 同表~\ref{tab:component_ablation}；Full 为 $G+$D2，粗体为上半表各列最高值。"
-              r"每域每池200片段，共2357个新真实视频；新池与旧拟合、评价和参考的已知源组隔离。"
-              r"五池可重叠，区间条件于这五个已选池。",
-              r"  \end{minipage}}", r"\end{table}"]
+    lines += [
+        r"    \bottomrule",
+        r"  \end{tabular*}",
+        r"  \par\vspace{2pt}",
+        r"  \begin{minipage}{\columnwidth}\scriptsize",
+        "  Average 样本标准差（AUC/AP）：" + "，".join(standard_deviations) + "。",
+        r"  VF/GV/CGV 同表~\ref{tab:component_ablation}；Full 为 $G+$D2，粗体为上半表各列最高值。"
+        r"每域每池200片段，共2357个新真实视频；新池与旧拟合、评价和参考的已知源组隔离。"
+        r"五池可重叠，区间条件于这五个已选池。",
+        r"  \end{minipage}}",
+        r"\end{table}",
+    ]
     return "\n".join(lines) + "\n"
 
 
@@ -294,9 +375,11 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="只检查，不改写表格")
     args = parser.parse_args()
     data = {path: read_csv(path) for path in HASHES}
-    outputs = {"main_results.tex": main_table(data),
-               "component_ablation.tex": component_table(data),
-               "reference_stability.tex": reference_table(data)}
+    outputs = {
+        "main_results.tex": main_table(data),
+        "component_ablation.tex": component_table(data),
+        "reference_stability.tex": reference_table(data),
+    }
     for name, contents in outputs.items():
         path = HERE / "tables" / name
         if args.check:
@@ -304,8 +387,12 @@ def main() -> None:
                 raise ValueError(f"表格与已验收输入不一致：{path}")
         else:
             path.write_text(contents, encoding="utf-8")
-    published_digest = hashlib.sha256(json.dumps(published_rows(), ensure_ascii=False).encode()).hexdigest()
-    print(f"{'校验' if args.check else '导出'}通过：12 份 CSV 哈希、23 生成器映射、三域等权汇总、五次均值/SD、配对差值、3 张表逐字一致。")
+    published_digest = hashlib.sha256(
+        json.dumps(published_rows(), ensure_ascii=False).encode()
+    ).hexdigest()
+    print(
+        f"{'校验' if args.check else '导出'}通过：12 份 CSV 哈希、23 生成器映射、三域等权汇总、五次均值/SD、配对差值、3 张表逐字一致。"
+    )
     print(f"发表值转录身份 SHA256：{published_digest}")
     print("冻结 Full AUC/AP-real：0.8744719007139845 / 0.8770747547781038")
 
