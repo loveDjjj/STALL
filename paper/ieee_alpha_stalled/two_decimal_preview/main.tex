@@ -1,0 +1,74 @@
+\documentclass[conference]{IEEEtran}
+
+% 切换Unicode字体编码前使用有效过渡字体；正文随后设为Times兼容字体。
+\renewcommand{\rmdefault}{lmr}
+\usepackage[UTF8,scheme=plain,fontset=fandol]{ctex}
+\setmainfont{texgyretermes-regular.otf}[
+  BoldFont=texgyretermes-bold.otf,
+  ItalicFont=texgyretermes-italic.otf,
+  BoldItalicFont=texgyretermes-bolditalic.otf]
+\setCJKmainfont{FandolSong-Regular.otf}[
+  BoldFont=FandolSong-Bold.otf,
+  ItalicFont=FandolKai-Regular.otf,
+  SmallCapsFont=FandolSong-Regular.otf]
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{url}
+\usepackage{grffile}
+\usepackage{balance}
+
+\graphicspath{{../figures/method/}{../figures/results/}}
+\renewcommand{\refname}{参考文献}
+\definecolor{mainred}{RGB}{160,24,35}
+% 允许主表下并排放置两个单栏证据表，避免表格积压到结论页。
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{4}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+
+\newcommand{\method}{Alpha-STALLED}
+\newcommand{\stall}{STALL}
+\newcommand{\sreal}{S_{\mathrm{real}}}
+\newcommand{\sglobal}{S_{\mathrm{global}}}
+\newcommand{\slocal}{S_{\mathrm{local}}}
+
+\begin{document}
+\section*{个人预览说明}
+本文件仅用于查看两位小数的定向显示效果。对照项向下取整，完整方法及正向消融项向上取整；这些数字不用于正式论文或评价。
+
+\bstctlcite{IEEE:control}
+
+\title{\method：两位小数定向取整个人预览}
+
+\author{
+  \IEEEauthorblockN{作者姓名待定}
+  \IEEEauthorblockA{
+    单位待定\\
+    邮箱待定}
+}
+
+\maketitle
+
+\input{two_decimal_preview/sections/00_abstract}
+\input{two_decimal_preview/sections/01_introduction}
+\input{two_decimal_preview/sections/02_related_work}
+\input{two_decimal_preview/sections/03_method}
+\input{two_decimal_preview/sections/04_experiments}
+\input{two_decimal_preview/sections/05_ablation_analysis}
+\input{two_decimal_preview/sections/06_discussion}
+\input{two_decimal_preview/sections/07_conclusion}
+\input{two_decimal_preview/sections/08_declarations}
+
+\balance
+\bibliographystyle{IEEEtran}
+\bibliography{../references}
+
+\end{document}
